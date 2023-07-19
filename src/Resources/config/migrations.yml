@@ -1,0 +1,8 @@
+services:
+    _defaults:
+        autoconfigure: true
+
+    contao.migration.bsa.season_update:
+        class: Teusal\ContaoRefereeHamburgBundle\Migration\BsaSeasonMigration
+        arguments:
+            - '@database_connection'

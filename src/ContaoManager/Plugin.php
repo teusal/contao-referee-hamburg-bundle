@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 /*
- * This file is part of [package name].
+ * This file is part of Contao Referee Hamburg Bundle.
  *
  * (c) Alexander Teuscher
  *

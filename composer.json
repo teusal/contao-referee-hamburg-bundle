@@ -44,7 +44,8 @@
         "allow-plugins": {
             "bamarni/composer-bin-plugin": true,
             "contao-components/installer": true,
-            "contao/manager-plugin": true
+            "contao/manager-plugin": true,
+            "php-http/discovery": true
         }
     },
     "extra": {
