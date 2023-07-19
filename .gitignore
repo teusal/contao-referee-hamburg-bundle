@@ -1,5 +1,5 @@
 # Composer
-/composer.lock
+composer.lock
 /vendor/
 
 # PhpUnit
@@ -8,3 +8,7 @@
 
 # Tools
 /tools/*/vendor
+#/tools/*/composer.lock
+
+# pico Editor 
+*.swp
