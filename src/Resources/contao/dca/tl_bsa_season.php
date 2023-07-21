@@ -51,12 +51,10 @@ $GLOBALS['TL_DCA']['tl_bsa_season'] = [
         ],
         'operations' => [
             'edit' => [
-                'label' => &$GLOBALS['TL_LANG']['tl_bsa_season']['edit'],
                 'href' => 'act=edit',
                 'icon' => 'edit.gif',
             ],
             'toggle' => [
-                'label' => &$GLOBALS['TL_LANG']['tl_bsa_season']['toggle'],
                 'icon' => 'visible.gif',
                 'attributes' => 'onclick="Backend.getScrollOffset();return AjaxRequest.toggleAktiv(this)"',
                 'button_callback' => ['tl_bsa_season', 'toggleIcon'],
@@ -95,7 +93,6 @@ $GLOBALS['TL_DCA']['tl_bsa_season'] = [
             'inputType' => 'text',
             'eval' => ['rgxp' => 'date', 'mandatory' => true, 'doNotCopy' => true, 'datepicker' => true, 'tl_class' => 'w50 wizard'],
             'save_callback' => [
-                ['tl_bsa_season', 'validateDate'],
                 ['tl_bsa_season', 'validateEndDate'],
             ],
             'sql' => 'int(10) unsigned NULL',
@@ -110,7 +107,10 @@ $GLOBALS['TL_DCA']['tl_bsa_season'] = [
     ],
 ];
 
+
 /**
+ * class tl_bsa_season.
+ *
  * Provide miscellaneous methods that are used by the data configuration array.
  */
 class tl_bsa_season extends Backend
@@ -135,7 +135,7 @@ class tl_bsa_season extends Backend
      */
     public function validateDate($varValue, DataContainer $dc)
     {
-        $objSaison = BsaSeasonModel::findOneBy(['id!=? AND startDate<=? AND endDate>?'], [(int) ($dc->id), $varValue, $varValue], []);
+        $objSaison = BsaSeasonModel::findOneBy(['id != ? AND startDate <= ? AND endDate > ?'], [(int) ($dc->id), $varValue, $varValue], []);
 
         if (isset($objSaison)) {
             $name = $objSaison->name;
@@ -149,7 +149,7 @@ class tl_bsa_season extends Backend
     }
 
     /**
-     * Check: The end date must be smaller than the start date.
+     * Check: The end date must be smaller than the start date and should not be within another season
      *
      * @param mixed $varValue
      *
@@ -163,22 +163,29 @@ class tl_bsa_season extends Backend
             throw new Exception('Enddatum muss nach dem Startdatum sein');
         }
 
+        $this->validateDate($varValue - 1, $dc);
+
         return $varValue;
     }
 
     /**
      * Return the "toggle visibility" button.
      *
-     * @param array  $row
-     * @param string $href
-     * @param string $label
-     * @param string $title
-     * @param string $icon
-     * @param string $attributes
-     *
-     * @return string
+     * @param array         $row               Record data
+     * @param string|null   $href              Button href
+     * @param string        $label             Label
+     * @param string        $title             Title
+     * @param string|null   $icon              Icon
+     * @param string        $attributes        HTML attributes
+     * @param string        $table             Table
+     * @param array         $rootRecordIds     IDs of all root records
+     * @param array         $childRecordIds    IDs of all child records
+     * @param bool          $circularReference Whether this is a circular reference of the tree view
+     * @param string        $previous          “Previous” label
+     * @param string        $next              “Next” label
+     * @param DataContainer $dc                Data Container object
      */
-    public function toggleIcon($row, $href, $label, $title, $icon, $attributes)
+    public function toggleIcon($row, $href, $label, $title, $icon, $attributes, $table, $rootRecordIds, $childRecordIds, $circularReference, $previous, $next, DataContainer $dc): string
     {
         if (strlen(Input::get('tid')) && !$row['active']) {
             $this->toggleActive(Input::get('tid'));
@@ -214,6 +221,10 @@ class tl_bsa_season extends Backend
         if (!$this->User->isAdmin && !$this->User->hasAccess('tl_bsa_season::active', 'alexf')) {
             throw new AccessDeniedException('Not enough permissions to activate season ID "'.$intId.'"');
         }
+
+        // test
+        // $obj = BsaSeasonModel::findByPk($intId);
+        // echo 'JUHU: '.$obj->name;
 
         // Update the database
         $this->Database->prepare('UPDATE tl_bsa_season SET tstamp=?, active=(id=?)')

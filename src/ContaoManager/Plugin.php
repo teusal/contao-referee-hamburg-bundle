@@ -16,6 +16,7 @@ use Contao\CoreBundle\ContaoCoreBundle;
 use Contao\ManagerPlugin\Bundle\BundlePluginInterface;
 use Contao\ManagerPlugin\Bundle\Config\BundleConfig;
 use Contao\ManagerPlugin\Bundle\Parser\ParserInterface;
+use Contao\NewsletterBundle\ContaoNewsletterBundle;
 use Teusal\ContaoRefereeHamburgBundle\ContaoRefereeHamburgBundle;
 
 class Plugin implements BundlePluginInterface
@@ -24,7 +25,8 @@ class Plugin implements BundlePluginInterface
     {
         return [
             BundleConfig::create(ContaoRefereeHamburgBundle::class)
-                ->setLoadAfter([ContaoCoreBundle::class]),
+                ->setLoadAfter([ContaoCoreBundle::class])
+                ->setLoadAfter([ContaoNewsletterBundle::class]),
         ];
     }
 }
