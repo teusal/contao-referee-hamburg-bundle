@@ -17,6 +17,7 @@ use Contao\CoreBundle\Exception\AccessDeniedException;
 use Contao\DataContainer;
 use Contao\Date;
 use Contao\DC_Table;
+use Contao\Environment;
 use Contao\Image;
 use Contao\Input;
 use Contao\StringUtil;
@@ -44,8 +45,9 @@ $GLOBALS['TL_DCA']['tl_bsa_season'] = [
             'disableGrouping' => true,
         ],
         'label' => [
-            'fields' => ['name'],
-            'format' => '%s',
+            'fields' => ['name', 'startDate', 'endDate'],
+            'showColumns' => true,
+            'label_callback' => ['tl_bsa_season', 'getLabel'],
         ],
         'global_operations' => [
         ],
@@ -55,6 +57,7 @@ $GLOBALS['TL_DCA']['tl_bsa_season'] = [
                 'icon' => 'edit.gif',
             ],
             'toggle' => [
+                'href' => 'toggle=true',
                 'icon' => 'visible.gif',
                 'attributes' => 'onclick="Backend.getScrollOffset();return AjaxRequest.toggleAktiv(this)"',
                 'button_callback' => ['tl_bsa_season', 'toggleIcon'],
@@ -100,13 +103,13 @@ $GLOBALS['TL_DCA']['tl_bsa_season'] = [
         'active' => [
             'inputType' => 'checkbox',
             'filter' => true,
-            'toggle' => true,
+            // TODO refactor to use toggle
+            // 'toggle' => true,
             'eval' => ['fallback' => true, 'tl_class' => 'clr'],
             'sql' => "char(1) NOT NULL default ''",
         ],
     ],
 ];
-
 
 /**
  * class tl_bsa_season.
@@ -122,6 +125,24 @@ class tl_bsa_season extends Backend
     {
         parent::__construct();
         $this->import(BackendUser::class, 'User');
+    }
+
+    /**
+     * converting the star ans end date into an readable string in the configured date format.
+     *
+     * @param array         $row          Record data
+     * @param string        $currentLabel Current label
+     * @param DataContainer $dc           Data Container object
+     * @param array         $columns      Columns with existing labels
+     *
+     * @return array
+     */
+    public function getLabel($row, $currentLabel, DataContainer $dc, $columns)
+    {
+        $columns[1] = Date::parse(Config::get('dateFormat'), $columns[1]);
+        $columns[2] = Date::parse(Config::get('dateFormat'), $columns[2]);
+
+        return $columns;
     }
 
     /**
@@ -149,7 +170,7 @@ class tl_bsa_season extends Backend
     }
 
     /**
-     * Check: The end date must be smaller than the start date and should not be within another season
+     * Check: The end date must be smaller than the start date and should not be within another season.
      *
      * @param mixed $varValue
      *
@@ -187,9 +208,13 @@ class tl_bsa_season extends Backend
      */
     public function toggleIcon($row, $href, $label, $title, $icon, $attributes, $table, $rootRecordIds, $childRecordIds, $circularReference, $previous, $next, DataContainer $dc): string
     {
-        if (strlen(Input::get('tid')) && !$row['active']) {
+        if (Input::get('toggle')) {
+            if ($row['active']) {
+                throw new Exception('Eine aktive Saison kann nicht aktiviert werden.');
+            }
+
             $this->toggleActive(Input::get('tid'));
-            $this->redirect($this->getReferer());
+            $this->redirect(str_replace('tid='.Input::get('tid').'&', '', str_replace('toggle=true&', '', Environment::get('request'))));
         }
 
         // Check permissions AFTER checking the tid, so hacking attempts are logged
@@ -221,10 +246,6 @@ class tl_bsa_season extends Backend
         if (!$this->User->isAdmin && !$this->User->hasAccess('tl_bsa_season::active', 'alexf')) {
             throw new AccessDeniedException('Not enough permissions to activate season ID "'.$intId.'"');
         }
-
-        // test
-        // $obj = BsaSeasonModel::findByPk($intId);
-        // echo 'JUHU: '.$obj->name;
 
         // Update the database
         $this->Database->prepare('UPDATE tl_bsa_season SET tstamp=?, active=(id=?)')

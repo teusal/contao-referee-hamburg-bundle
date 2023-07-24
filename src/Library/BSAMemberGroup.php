@@ -12,7 +12,6 @@ declare(strict_types=1);
 
 namespace Teusal\ContaoRefereeHamburgBundle\Library;
 
-use Contao\BackendUser;
 use Contao\Database;
 use Contao\MemberGroupModel;
 use Contao\Message;
@@ -24,27 +23,17 @@ use Teusal\ContaoRefereeHamburgBundle\Model\BsaVereinObmannModel;
 /**
  * Class BSAMemberGroup.
  */
-class BSAMemberGroup extends System
+final class BSAMemberGroup extends System
 {
     // temporäre Liste für neu angelegte Gruppen
-    public $cachedGroups = [];
+    private static $cachedGroups = [];
 
     /**
-     * Konstruktor.
-     */
-    public function __construct()
-    {
-        parent::__construct();
-        $this->import(Database::class);
-        $this->import(BackendUser::class, 'User');
-    }
-
-    /**
-     * takes care for automatic groups. adds or removes the sr from the automatic groups.
+     * takes care for automatic groups. adds or removes the referee from the automatic groups.
      *
      * @param int $intSR
      */
-    public function handleAutomaticGroups($intSR): void
+    public static function handleAutomaticGroups($intSR): void
     {
         $intSR = (int) $intSR;
 
@@ -56,17 +45,17 @@ class BSAMemberGroup extends System
 
         // zuerst für gelöschte SR alle automatischen Gruppen entfernen
         if (!isset($objSR) || $objSR->__get('deleted')) {
-            $this->deleteFromGroup($intSR, 'alle');
-            $this->deleteFromGroup($intSR, 'alle_sr');
-            $this->deleteFromGroup($intSR, 'obleute');
-            $this->deleteFromGroup($intSR, 'aktive');
-            $this->deleteFromGroup($intSR, 'passive');
-            $this->deleteFromGroup($intSR, 'U18');
-            $this->deleteFromGroup($intSR, 'Ü40');
-            $this->deleteFromGroup($intSR, 'm');
-            $this->deleteFromGroup($intSR, 'w');
+            self::deleteFromGroup($intSR, 'alle');
+            self::deleteFromGroup($intSR, 'alle_sr');
+            self::deleteFromGroup($intSR, 'obleute');
+            self::deleteFromGroup($intSR, 'aktive');
+            self::deleteFromGroup($intSR, 'passive');
+            self::deleteFromGroup($intSR, 'U18');
+            self::deleteFromGroup($intSR, 'Ü40');
+            self::deleteFromGroup($intSR, 'm');
+            self::deleteFromGroup($intSR, 'w');
             // Gruppen-IDs an das Mitglied schreiben
-            $this->setGroupsToMember($intSR);
+            self::setGroupsToMember($intSR);
 
             return;
         }
@@ -76,80 +65,80 @@ class BSAMemberGroup extends System
 
         // Schiedsrichter zur Gruppe 'Alle Personen' hinzufügen
         if ($isVereinsschiedsrichter || $isVereinsobmann) {
-            $this->addToGroup($intSR, 'alle');
+            self::addToGroup($intSR, 'alle');
         } else {
-            $this->deleteFromGroup($intSR, 'alle');
+            self::deleteFromGroup($intSR, 'alle');
         }
 
         // Schiedsrichter zur Gruppe 'Alle Schiedsrichter' hinzufügen
         if ($isVereinsschiedsrichter) {
-            $this->addToGroup($intSR, 'alle_sr');
+            self::addToGroup($intSR, 'alle_sr');
         } else {
-            $this->deleteFromGroup($intSR, 'alle_sr');
+            self::deleteFromGroup($intSR, 'alle_sr');
         }
 
         // Schiedsrichter zur Gruppe 'Obleute' hinzufügen
         if ($isVereinsobmann) {
-            $this->addToGroup($intSR, 'obleute');
+            self::addToGroup($intSR, 'obleute');
         } else {
-            $this->deleteFromGroup($intSR, 'obleute');
+            self::deleteFromGroup($intSR, 'obleute');
         }
 
         if (!$isVereinsschiedsrichter) {
-            $this->deleteFromGroup($intSR, 'aktive');
-            $this->deleteFromGroup($intSR, 'passive');
-            $this->deleteFromGroup($intSR, 'U18');
-            $this->deleteFromGroup($intSR, 'Ü40');
-            $this->deleteFromGroup($intSR, 'm');
-            $this->deleteFromGroup($intSR, 'w');
+            self::deleteFromGroup($intSR, 'aktive');
+            self::deleteFromGroup($intSR, 'passive');
+            self::deleteFromGroup($intSR, 'U18');
+            self::deleteFromGroup($intSR, 'Ü40');
+            self::deleteFromGroup($intSR, 'm');
+            self::deleteFromGroup($intSR, 'w');
         } elseif ('passiv' === $objSR->__get('status')) {
-            $this->deleteFromGroup($intSR, 'aktive');
-            $this->addToGroup($intSR, 'passive');
-            $this->deleteFromGroup($intSR, 'U18');
-            $this->deleteFromGroup($intSR, 'Ü40');
-            $this->deleteFromGroup($intSR, 'm');
-            $this->deleteFromGroup($intSR, 'w');
+            self::deleteFromGroup($intSR, 'aktive');
+            self::addToGroup($intSR, 'passive');
+            self::deleteFromGroup($intSR, 'U18');
+            self::deleteFromGroup($intSR, 'Ü40');
+            self::deleteFromGroup($intSR, 'm');
+            self::deleteFromGroup($intSR, 'w');
         } elseif ('aktiv' === $objSR->__get('status')) {
             // Hinzufügen zu aktiven SR und entfernen aus den passiven
-            $this->addToGroup($intSR, 'aktive');
-            $this->deleteFromGroup($intSR, 'passive');
+            self::addToGroup($intSR, 'aktive');
+            self::deleteFromGroup($intSR, 'passive');
 
             // Ermittlung des Alters und Sortierung in die Gruppen U18 oder Ü40
             $srAlter = BsaSchiedsrichterModel::getAlter($objSR);
 
             if ($srAlter < 18) {
-                $this->addToGroup($intSR, 'U18');
-                $this->deleteFromGroup($intSR, 'Ü40');
+                self::addToGroup($intSR, 'U18');
+                self::deleteFromGroup($intSR, 'Ü40');
             } elseif ($srAlter >= 40) {
-                $this->deleteFromGroup($intSR, 'U18');
-                $this->addToGroup($intSR, 'Ü40');
+                self::deleteFromGroup($intSR, 'U18');
+                self::addToGroup($intSR, 'Ü40');
             } else {
-                $this->deleteFromGroup($intSR, 'U18');
-                $this->deleteFromGroup($intSR, 'Ü40');
+                self::deleteFromGroup($intSR, 'U18');
+                self::deleteFromGroup($intSR, 'Ü40');
             }
 
             // Aufteilung in männlich/weiblich
             if ('m' === $objSR->__get('geschlecht') && $isVereinsschiedsrichter) {
-                $this->addToGroup($intSR, 'm');
-                $this->deleteFromGroup($intSR, 'w');
+                self::addToGroup($intSR, 'm');
+                self::deleteFromGroup($intSR, 'w');
             } elseif ('w' === $objSR->__get('geschlecht') && $isVereinsschiedsrichter) {
-                $this->deleteFromGroup($intSR, 'm');
-                $this->addToGroup($intSR, 'w');
+                self::deleteFromGroup($intSR, 'm');
+                self::addToGroup($intSR, 'w');
             } else {
-                $this->deleteFromGroup($intSR, 'm');
-                $this->deleteFromGroup($intSR, 'w');
+                self::deleteFromGroup($intSR, 'm');
+                self::deleteFromGroup($intSR, 'w');
             }
         } else {
-            $this->deleteFromGroup($intSR, 'aktive');
-            $this->deleteFromGroup($intSR, 'passive');
-            $this->deleteFromGroup($intSR, 'U18');
-            $this->deleteFromGroup($intSR, 'Ü40');
-            $this->deleteFromGroup($intSR, 'm');
-            $this->deleteFromGroup($intSR, 'w');
+            self::deleteFromGroup($intSR, 'aktive');
+            self::deleteFromGroup($intSR, 'passive');
+            self::deleteFromGroup($intSR, 'U18');
+            self::deleteFromGroup($intSR, 'Ü40');
+            self::deleteFromGroup($intSR, 'm');
+            self::deleteFromGroup($intSR, 'w');
         }
 
         // Gruppen-IDs an das Mitglied schreiben
-        $this->setGroupsToMember($intSR);
+        self::setGroupsToMember($intSR);
     }
 
     /**
@@ -157,13 +146,13 @@ class BSAMemberGroup extends System
      *
      * @return bool true if at least one change was done
      */
-    public function updateHalbautomaticGroup(MemberGroupModel $group)
+    public static function updateHalbautomaticGroup(MemberGroupModel $group)
     {
         if (!isset($group)) {
             throw new \Exception('no group');
         }
 
-        if (!static::isHalbautomatic($group->__get('automatik'))) {
+        if (!self::isHalbautomatic($group->__get('automatik'))) {
             throw new \Exception('not a halbautomatic group');
         }
 
@@ -248,12 +237,12 @@ class BSAMemberGroup extends System
                 throw new \Exception('unknown halbautomatic '.$group->__get('automatik'));
         }
 
-        $arrFutureSR = $this->Database->prepare($query)
+        $arrFutureSR = Database::getInstance()->prepare($query)
             ->execute($arrParams)
             ->fetchEach('id')
         ;
 
-        $arrExistingSR = $this->Database->prepare('SELECT schiedsrichter FROM tl_bsa_gruppenmitglieder WHERE pid=?')
+        $arrExistingSR = Database::getInstance()->prepare('SELECT schiedsrichter FROM tl_bsa_gruppenmitglieder WHERE pid=?')
             ->execute($group->id)
             ->fetchEach('schiedsrichter')
         ;
@@ -270,11 +259,11 @@ class BSAMemberGroup extends System
 
         if (!empty($toDel)) {
             foreach ($toDel as $intSR) {
-                $this->Database->prepare('DELETE FROM tl_bsa_gruppenmitglieder WHERE pid=? AND schiedsrichter=?')
+                Database::getInstance()->prepare('DELETE FROM tl_bsa_gruppenmitglieder WHERE pid=? AND schiedsrichter=?')
                     ->execute($group->id, $intSR)
                 ;
 
-                $this->setGroupsToMember($intSR);
+                self::setGroupsToMember($intSR);
 
                 SRHistory::insert($intSR, $group->id, ['Kader/Gruppe', 'REMOVE'], 'Der Schiedsrichter %s wurde aus der Gruppe "%s" entfernt.', __METHOD__);
             }
@@ -287,11 +276,11 @@ class BSAMemberGroup extends System
 
         if (!empty($toAdd)) {
             foreach ($toAdd as $intSR) {
-                $this->Database->prepare('INSERT INTO tl_bsa_gruppenmitglieder (pid, tstamp, schiedsrichter) VALUES (?,?,?)')
+                Database::getInstance()->prepare('INSERT INTO tl_bsa_gruppenmitglieder (pid, tstamp, schiedsrichter) VALUES (?,?,?)')
                     ->execute($group->id, time(), $intSR)
                 ;
 
-                $this->setGroupsToMember($intSR);
+                self::setGroupsToMember($intSR);
 
                 SRHistory::insert($intSR, $group->id, ['Kader/Gruppe', 'ADD'], 'Der Schiedsrichter %s wurde in der Gruppe "%s" aufgenommen.', __METHOD__);
             }
@@ -304,7 +293,7 @@ class BSAMemberGroup extends System
     /**
      * Löscht einen Schiedsrichter aus allen Gruppen.
      */
-    public function deleteFromGroups($intSR): void
+    public static function deleteFromGroups($intSR): void
     {
         $intSR = (int) $intSR;
 
@@ -312,11 +301,11 @@ class BSAMemberGroup extends System
             throw new \Exception('wrong datatype or zero given');
         }
 
-        $arrGroupIds = $this->Database->prepare('SELECT pid FROM tl_bsa_gruppenmitglieder WHERE schiedsrichter=?')
+        $arrGroupIds = Database::getInstance()->prepare('SELECT pid FROM tl_bsa_gruppenmitglieder WHERE schiedsrichter=?')
             ->execute($intSR)
             ->fetchEach('pid')
         ;
-        $res = $this->Database->prepare('DELETE FROM tl_bsa_gruppenmitglieder WHERE schiedsrichter=?')
+        $res = Database::getInstance()->prepare('DELETE FROM tl_bsa_gruppenmitglieder WHERE schiedsrichter=?')
             ->execute($intSR)
         ;
 
@@ -327,13 +316,13 @@ class BSAMemberGroup extends System
         }
 
         // Gruppen-IDs an das Mitglied schreiben
-        $this->setGroupsToMember($intSR);
+        self::setGroupsToMember($intSR);
     }
 
     /**
      * Ermittelt die Gruppen-IDs eines Schiedsrichters und setzt die Liste der Gruppen am Login tl_member.
      */
-    public function setGroupsToMember($intSR, $idToRemove = 0, $idToAdd = 0): void
+    public static function setGroupsToMember($intSR, $idToRemove = 0, $idToAdd = 0): void
     {
         $intSR = (int) $intSR;
 
@@ -350,12 +339,12 @@ class BSAMemberGroup extends System
         }
         $query .= ' ORDER BY tl_member_group.name';
 
-        $arrGroupIds = $this->Database->prepare($query)
+        $arrGroupIds = Database::getInstance()->prepare($query)
             ->execute($intSR)
             ->fetchEach('id')
         ;
 
-        $this->Database->prepare('UPDATE tl_member SET groups=? WHERE schiedsrichter=?')
+        Database::getInstance()->prepare('UPDATE tl_member SET groups=? WHERE schiedsrichter=?')
             ->execute(serialize($arrGroupIds), $intSR)
         ;
     }
@@ -363,29 +352,29 @@ class BSAMemberGroup extends System
     /**
      * Fügt einen SR in die Gruppe Obleute ein.
      */
-    public function addToObleute($intSR): void
+    public static function addToObleute($intSR): void
     {
         if (0 === $intSR) {
             return;
         }
-        $this->addToGroup($intSR, 'obleute');
+        self::addToGroup($intSR, 'obleute');
     }
 
     /**
      * Entfernt einen SR aus der Gruppe Obleute.
      */
-    public function removeFromObleute($intSR): void
+    public static function removeFromObleute($intSR): void
     {
         if (0 === $intSR) {
             return;
         }
-        $this->deleteFromGroup($intSR, 'obleute');
+        self::deleteFromGroup($intSR, 'obleute');
     }
 
     /**
      * Updating automatic newsletters on birthday.
      */
-    public function updateOnBirthday(): void
+    public static function updateOnBirthday(): void
     {
         $arrSR = BsaSchiedsrichterModel::getPersonWithBirthdayToday();
 
@@ -396,41 +385,69 @@ class BSAMemberGroup extends System
         }
 
         foreach ($arrSR as $sr) {
-            $this->handleAutomaticGroups($sr);
+            self::handleAutomaticGroups($sr);
         }
         System::log('BSA-Gruppenverwaltung wurde ausgeführt, die Gruppen von '.\count($arrSR).' Geburtstagskind(ern) wurde(n) aktualisiert.', 'BSA Gruppenverwaltung updateOnBirthday()', TL_CRON);
     }
 
     /**
+     * tells you if an automatic is an 'vollautomatic' or not.
+     *
+     * @param mixed $automaticKey
+     */
+    public static function isVollautomatic($automaticKey): bool
+    {
+        return !empty($automaticKey)
+            && \in_array(
+                $automaticKey,
+                $GLOBALS['TL_DCA']['tl_member_group']['fields']['automatik']['options']['vollautomatik'],
+                true
+            );
+    }
+
+    /**
      * tells you if an automatic is an 'halbautomatic' or not.
      *
-     * @param mixed $automatic
+     * @param mixed $automaticKey
      */
-    public static function isHalbautomatic($automatic): bool
+    public static function isHalbautomatic($automaticKey): bool
     {
-        return isset($automatic)
-            && \strlen($automatic)
+        return !empty($automaticKey)
             && \in_array(
-                $automatic,
+                $automaticKey,
                 $GLOBALS['TL_DCA']['tl_member_group']['fields']['automatik']['options']['halbautomatik'],
                 true
             );
     }
 
     /**
+     * clearing the cache of automatic grous.
+     *
+     * @param string|null $automaticKey
+     */
+    public static function clearCachedGroups($automaticKey = null): void
+    {
+        if (!isset($automaticKey)) {
+            self::$cachedGroups = [];
+        } else {
+            unset(self::$cachedGroups[$automaticKey]);
+        }
+    }
+
+    /**
      * Fügt einen Schiedsrichter in eine Automatikgruppe ein.
      */
-    private function addToGroup($intSR, $automaticKey): void
+    private static function addToGroup($intSR, $automaticKey): void
     {
         if (!\strlen($automaticKey)) {
             return;
         }
 
-        $intGroup = $this->getAutomatikGroupId($automaticKey);
+        $intGroup = self::getAutomatikGroupId($automaticKey);
 
         if ($intGroup) {
             if (!BsaGruppenmitgliederModel::exists($intGroup, $intSR)) {
-                $this->Database->prepare('INSERT INTO tl_bsa_gruppenmitglieder (pid, tstamp, schiedsrichter) VALUES (?,?,?)')
+                Database::getInstance()->prepare('INSERT INTO tl_bsa_gruppenmitglieder (pid, tstamp, schiedsrichter) VALUES (?,?,?)')
                     ->execute($intGroup, time(), $intSR)
                 ;
 
@@ -442,16 +459,16 @@ class BSAMemberGroup extends System
     /**
      * Löscht einen Schiedsrichter aus einer Automatikgruppe.
      */
-    private function deleteFromGroup($intSR, $automaticKey): void
+    private static function deleteFromGroup($intSR, $automaticKey): void
     {
-        if (!\strlen($automaticKey)) {
+        if (empty($automaticKey)) {
             return;
         }
 
-        $intGroup = $this->getAutomatikGroupId($automaticKey);
+        $intGroup = self::getAutomatikGroupId($automaticKey);
 
         if ($intGroup) {
-            $res = $this->Database->prepare('DELETE FROM tl_bsa_gruppenmitglieder WHERE pid=? AND schiedsrichter=?')
+            $res = Database::getInstance()->prepare('DELETE FROM tl_bsa_gruppenmitglieder WHERE pid=? AND schiedsrichter=?')
                 ->execute($intGroup, $intSR)
             ;
 
@@ -463,20 +480,21 @@ class BSAMemberGroup extends System
 
     /**
      * Liefert die ID einer Gruppe.
+     *
+     * @param string $automaticKey
+     *
+     * @return int|null
      */
-    private function getAutomatikGroupId($automaticKey)
+    private static function getAutomatikGroupId($automaticKey)
     {
-        $intGroup = $this->cachedGroups[$automaticKey];
-
-        if (!$intGroup) {
+        if (!\array_key_exists($automaticKey, self::$cachedGroups)) {
             $objGroup = MemberGroupModel::findOneBy('automatik', $automaticKey);
 
             if (isset($objGroup)) {
-                $this->cachedGroups[$automaticKey] = $objGroup->id;
-                $intGroup = $objGroup->id;
+                self::$cachedGroups[$automaticKey] = $objGroup->id;
             }
         }
 
-        return $intGroup;
+        return self::$cachedGroups[$automaticKey];
     }
 }

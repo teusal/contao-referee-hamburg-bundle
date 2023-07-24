@@ -18,6 +18,7 @@ use Contao\DC_Table;
 use Contao\Image;
 use Contao\Input;
 use Contao\StringUtil;
+use Teusal\ContaoPhoneNumberNormalizerBundle\Library\PhoneNumberNormalizer;
 use Teusal\ContaoRefereeHamburgBundle\Library\SRHistory;
 use Teusal\ContaoRefereeHamburgBundle\Model\BsaFreigabenModel;
 
@@ -161,39 +162,31 @@ $GLOBALS['TL_DCA']['tl_bsa_schiedsrichter'] = [
         'telefon1' => [
             'inputType' => 'text',
             'eval' => ['maxlength' => 50, 'tl_class' => 'w50'],
-            'save_callback' => [
-                ['TelefonKonverter', 'format'],
-            ],
+            'save_callback' => [[PhoneNumberNormalizer::class, 'format']],
             'sql' => "varchar(50) NOT NULL default ''",
         ],
         'telefon2' => [
             'inputType' => 'text',
             'eval' => ['maxlength' => 50, 'tl_class' => 'w50'],
-            'save_callback' => [
-                ['TelefonKonverter', 'format'],
-            ],
+            'save_callback' => [[PhoneNumberNormalizer::class, 'format']],
             'sql' => "varchar(50) NOT NULL default ''",
         ],
         'telefon_mobil' => [
             'inputType' => 'text',
             'eval' => ['maxlength' => 50, 'tl_class' => 'w50'],
-            'save_callback' => [
-                ['TelefonKonverter', 'format'],
-            ],
+            'save_callback' => [[PhoneNumberNormalizer::class, 'format']],
             'sql' => "varchar(50) NOT NULL default ''",
         ],
         'fax' => [
             'inputType' => 'text',
             'eval' => ['maxlength' => 50, 'tl_class' => 'w50'],
-            'save_callback' => [
-                ['TelefonKonverter', 'format'],
-            ],
+            'save_callback' => [[PhoneNumberNormalizer::class, 'format']],
             'sql' => "varchar(50) NOT NULL default ''",
         ],
         'email' => [
             'inputType' => 'text',
             'search' => true,
-            'eval' => ['maxlength' => 100, 'rgxp' => 'email', 'tl_class' => 'long'],
+            'eval' => ['maxlength' => 100, 'rgxp' => 'email', 'tl_class' => 'long clr'],
             'sql' => "varchar(150) NOT NULL default ''",
         ],
         'email_kontaktformular' => [
@@ -304,7 +297,7 @@ class tl_bsa_schiedsrichter extends Backend
      */
     public function deleteIcon($row, $href, $label, $title, $icon, $attributes, $table, $rootRecordIds, $childRecordIds, $circularReference, $previous, $next, DataContainer $dc): string
     {
-        if (strlen(Input::get('did'))) {
+        if (null !== Input::get('did') && strlen(Input::get('did'))) {
             $this->executeDelete(Input::get('did'));
             $this->redirect($this->getReferer());
         }
@@ -342,7 +335,7 @@ class tl_bsa_schiedsrichter extends Backend
      */
     public function undoIcon($row, $href, $label, $title, $icon, $attributes, $table, $rootRecordIds, $childRecordIds, $circularReference, $previous, $next, DataContainer $dc): string
     {
-        if (strlen(Input::get('dud'))) {
+        if (null !== Input::get('dud') && strlen(Input::get('dud'))) {
             $this->executeUndo(Input::get('dud'));
             $this->redirect($this->getReferer());
         }
@@ -439,7 +432,7 @@ class tl_bsa_schiedsrichter extends Backend
      *
      * @return mixed
      */
-    public function setDBGeburtsdatum($varValue)
+    public function setDBGeburtsdatum($varValue, $dc)
     {
         $geburtsdatum = new Date($this->Input->post('geburtsdatum'));
 

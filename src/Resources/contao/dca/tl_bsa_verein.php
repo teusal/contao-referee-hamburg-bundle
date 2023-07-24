@@ -13,6 +13,8 @@ declare(strict_types=1);
 use Contao\Backend;
 use Contao\DataContainer;
 use Contao\DC_Table;
+use Teusal\ContaoPhoneNumberNormalizerBundle\Library\PhoneNumberNormalizer;
+use Teusal\ContaoRefereeHamburgBundle\Library\Test;
 
 /*
  * Table tl_bsa_verein
@@ -115,19 +117,19 @@ $GLOBALS['TL_DCA']['tl_bsa_verein'] = [
         'telefon1' => [
             'inputType' => 'text',
             'eval' => ['maxlength' => 100, 'tl_class' => 'w50'],
-            'save_callback' => [['TelefonKonverter', 'format']],
+            'save_callback' => [[PhoneNumberNormalizer::class, 'format']],
             'sql' => 'varchar(100) NULL',
         ],
         'telefon2' => [
             'inputType' => 'text',
             'eval' => ['maxlength' => 100, 'tl_class' => 'w50'],
-            'save_callback' => [['TelefonKonverter', 'format']],
+            'save_callback' => [[PhoneNumberNormalizer::class, 'format']],
             'sql' => 'varchar(100) NULL',
         ],
         'fax' => [
             'inputType' => 'text',
             'eval' => ['maxlength' => 100, 'tl_class' => 'w50'],
-            'save_callback' => [['TelefonKonverter', 'format']],
+            'save_callback' => [[PhoneNumberNormalizer::class, 'format']],
             'sql' => 'varchar(100) NULL',
         ],
         'email' => [
@@ -166,9 +168,16 @@ $GLOBALS['TL_DCA']['tl_bsa_verein'] = [
 
 /**
  * Class tl_bsa_verein.
+ *
+ * Provide miscellaneous methods that are used by the data configuration array.
  */
 class tl_bsa_verein extends Backend
 {
+    public function test($varValue, $dc): void
+    {
+        throw new Exception(Test::TEXT);
+    }
+
     // TODO implementation of exports
     public function exportXLS(): void
     {

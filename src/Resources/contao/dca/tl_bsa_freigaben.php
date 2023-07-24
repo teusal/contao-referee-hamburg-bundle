@@ -69,7 +69,7 @@ $GLOBALS['TL_DCA']['tl_bsa_freigaben'] = [
     // Palettes
     'palettes' => [
         '__selector__' => [],
-        'default' => 'schiedsrichter,formular_erhalten_am,zeige_strasse,zeige_plz,zeige_ort,zeige_geburtsdatum,zeige_telefon1,zeige_telefon2,zeige_telefon_mobil,zeige_fax,zeige_foto,link_email',
+        'default' => 'schiedsrichter,formular_erhalten_am;zeige_strasse,zeige_plz,zeige_ort,zeige_geburtsdatum,zeige_telefon1,zeige_telefon2,zeige_telefon_mobil,zeige_fax,zeige_foto,link_email',
     ],
 
     // Subpalettes
@@ -87,7 +87,7 @@ $GLOBALS['TL_DCA']['tl_bsa_freigaben'] = [
         'schiedsrichter' => [
             'inputType' => 'select',
             'filter' => true,
-            'eval' => ['unique' => true, 'multiple' => false, 'includeBlankOption' => true, 'blankOptionLabel' => 'Schiedsrichter wählen', 'mandatory' => true],
+            'eval' => ['unique' => true, 'multiple' => false, 'includeBlankOption' => true, 'blankOptionLabel' => 'Schiedsrichter wählen', 'mandatory' => true, 'tl_class' => 'w50'],
             'foreignKey' => 'tl_bsa_schiedsrichter.name_rev',
             'save_callback' => [['tl_bsa_freigaben', 'saveSchiedsrichter']],
             'sql' => "int(10) unsigned NOT NULL default '0'",
@@ -100,7 +100,7 @@ $GLOBALS['TL_DCA']['tl_bsa_freigaben'] = [
         'formular_erhalten_am' => [
             'inputType' => 'text',
             'flag' => DataContainer::SORT_MONTH_DESC,
-            'eval' => ['mandatory' => true, 'rgxp' => 'date', 'datepicker' => true, 'tl_class' => 'w50 wizard'],
+            'eval' => ['mandatory' => true, 'rgxp' => 'date', 'datepicker' => true, 'tl_class' => 'clr w50 wizard'],
             'sql' => "varchar(11) NOT NULL default ''",
         ],
         'zeige_geburtsdatum' => [

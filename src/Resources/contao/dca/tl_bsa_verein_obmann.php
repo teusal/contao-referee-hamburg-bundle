@@ -10,12 +10,11 @@ declare(strict_types=1);
  * @license LGPL-3.0-or-later
  */
 
+use Contao\Backend;
 use Contao\BackendUser;
 use Contao\DataContainer;
 use Contao\DC_Table;
 use Teusal\ContaoRefereeHamburgBundle\Library\BSAMemberGroup;
-use Teusal\ContaoRefereeHamburgBundle\Library\BSANewsletter;
-use Teusal\ContaoRefereeHamburgBundle\Model\BsaVereinModel;
 
 /*
  * This file is part of Contao Referee Hamburg Bundle.
@@ -49,8 +48,8 @@ $GLOBALS['TL_DCA']['tl_bsa_verein_obmann'] = [
             'disableGrouping' => true,
         ],
         'label' => [
-            'fields' => ['verein'],
-            'label_callback' => ['tl_bsa_verein_obmann', 'listRecord'],
+            'fields' => ['verein', 'obmann', 'stellv_obmann_1', 'stellv_obmann_2'],
+            'showColumns' => true,
         ],
         'global_operations' => [
         ],
@@ -93,7 +92,7 @@ $GLOBALS['TL_DCA']['tl_bsa_verein_obmann'] = [
         ],
         'obmann' => [
             'inputType' => 'select',
-            'eval' => ['multiple' => false, 'includeBlankOption' => true, 'blankOptionLabel' => 'kein Obmann'],
+            'eval' => ['multiple' => false, 'includeBlankOption' => true, 'blankOptionLabel' => 'kein Obmann', 'tl_class' => 'w50'],
             'foreignKey' => 'tl_bsa_schiedsrichter.name_rev',
             'save_callback' => [
                 ['tl_bsa_verein_obmann', 'saveObmann'],
@@ -102,7 +101,7 @@ $GLOBALS['TL_DCA']['tl_bsa_verein_obmann'] = [
         ],
         'stellv_obmann_1' => [
             'inputType' => 'select',
-            'eval' => ['multiple' => false, 'includeBlankOption' => true, 'blankOptionLabel' => 'kein stellv. Obmann', 'tl_class' => 'w50'],
+            'eval' => ['multiple' => false, 'includeBlankOption' => true, 'blankOptionLabel' => 'kein stellv. Obmann', 'tl_class' => 'w50 clr'],
             'foreignKey' => 'tl_bsa_schiedsrichter.name_rev',
             'save_callback' => [
                 ['tl_bsa_verein_obmann', 'saveStellv1'],
@@ -125,9 +124,6 @@ $GLOBALS['TL_DCA']['tl_bsa_verein_obmann'] = [
  * Class tl_bsa_verein_obmann.
  *
  * Provide miscellaneous methods that are used by the data configuration array.
- *
- * @property BSAMemberGroup $BSAMemberGroup
- * @property BSANewsletter  $BSANewsletter
  */
 class tl_bsa_verein_obmann extends Backend
 {
@@ -138,27 +134,6 @@ class tl_bsa_verein_obmann extends Backend
     {
         parent::__construct();
         $this->import(BackendUser::class, 'User');
-        $this->import(BSAMemberGroup::class);
-        $this->import(BSANewsletter::class);
-    }
-
-    /**
-     * Add the type of input field.
-     *
-     * @param array         $arrRow  Record data
-     * @param string        $label   Current label
-     * @param DataContainer $dc      Data Container object
-     * @param array         $columns Columns with existing labels
-     */
-    public function listRecord($arrRow, $label, $dc, $columns): string
-    {
-        $objVerein = BsaVereinModel::findVerein($arrRow['verein']);
-
-        if (isset($objVerein)) {
-            return $objVerein->name_kurz;
-        }
-
-        return '???';
     }
 
     /**
@@ -207,17 +182,17 @@ class tl_bsa_verein_obmann extends Backend
     public function doDelete(DataContainer $dc, $undoId): void
     {
         if (0 !== $dc->__get('activeRecord')->obmann) {
-            $this->BSAMemberGroup->removeFromObleute($dc->__get('activeRecord')->obmann);
+            BSAMemberGroup::removeFromObleute($dc->__get('activeRecord')->obmann);
             $this->BSANewsletter->synchronizeNewsletterBySchiedsrichter($dc->__get('activeRecord')->obmann);
         }
 
         if (0 !== $dc->__get('activeRecord')->stellv_obmann_1) {
-            $this->BSAMemberGroup->removeFromObleute($dc->__get('activeRecord')->stellv_obmann_1);
+            BSAMemberGroup::removeFromObleute($dc->__get('activeRecord')->stellv_obmann_1);
             $this->BSANewsletter->synchronizeNewsletterBySchiedsrichter($dc->__get('activeRecord')->stellv_obmann_1);
         }
 
         if (0 !== $dc->__get('activeRecord')->stellv_obmann_2) {
-            $this->BSAMemberGroup->removeFromObleute($dc->__get('activeRecord')->stellv_obmann_2);
+            BSAMemberGroup::removeFromObleute($dc->__get('activeRecord')->stellv_obmann_2);
             $this->BSANewsletter->synchronizeNewsletterBySchiedsrichter($dc->__get('activeRecord')->stellv_obmann_2);
         }
     }
@@ -235,12 +210,12 @@ class tl_bsa_verein_obmann extends Backend
     {
         if ($varValue !== $dc->__get('activeRecord')->$field) {
             if (0 !== $varValue) {
-                $this->BSAMemberGroup->addToObleute($varValue);
+                BSAMemberGroup::addToObleute($varValue);
                 $this->BSANewsletter->synchronizeNewsletterBySchiedsrichter($varValue);
             }
 
             if (0 !== $dc->__get('activeRecord')->$field) {
-                $this->BSAMemberGroup->removeFromObleute($dc->__get('activeRecord')->$field);
+                BSAMemberGroup::removeFromObleute($dc->__get('activeRecord')->$field);
                 $this->BSANewsletter->synchronizeNewsletterBySchiedsrichter($dc->__get('activeRecord')->$field);
             }
         }

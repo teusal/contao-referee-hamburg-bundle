@@ -12,16 +12,16 @@ declare(strict_types=1);
 
  use Contao\ArrayUtil;
  use Teusal\ContaoRefereeHamburgBundle\Model\BsaFreigabenModel;
+ use Teusal\ContaoRefereeHamburgBundle\Model\BsaSchiedsrichterModel;
  use Teusal\ContaoRefereeHamburgBundle\Model\BsaSeasonModel;
  use Teusal\ContaoRefereeHamburgBundle\Model\BsaVereinModel;
- use Teusal\ContaoRefereeHamburgBundle\Model\BsaVereinObmannModel;
 
  /*
   * BACK END MENU STRUKTUR
   */
  ArrayUtil::arrayInsert($GLOBALS['BE_MOD'], 0, [
      'bsa' => [
-         'saison' => [
+         'season' => [
              'tables' => ['tl_bsa_season'],
          ],
      ],
@@ -60,11 +60,11 @@ declare(strict_types=1);
  ]);
 
 // Models
-// $GLOBALS['TL_MODELS'] = [
-//     'tl_bsa_freigaben' => BsaFreigabenModel::class,
-//     'tl_bsa_schiedsrichter' => BsaSchiedsrichterModel::class,
-//     'tl_bsa_season' => BsaSeasonModel::class,
-//     'tl_bsa_verein_obmann' => BsaVereinObmannModel::class,
-//     'tl_bsa_verein' => BsaVereinModel::class,
-//     'tl_bsa_gruppenmitglieder' => BsaGruppenmitgliederModel::class,
-// ];
+$GLOBALS['TL_MODELS'] = [
+    'tl_bsa_freigaben' => BsaFreigabenModel::class,
+    'tl_bsa_schiedsrichter' => BsaSchiedsrichterModel::class,
+    'tl_bsa_season' => BsaSeasonModel::class,
+    //     'tl_bsa_verein_obmann' => BsaVereinObmannModel::class,
+    'tl_bsa_verein' => BsaVereinModel::class,
+    //     'tl_bsa_gruppenmitglieder' => BsaGruppenmitgliederModel::class,
+];
