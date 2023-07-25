@@ -14,7 +14,6 @@ use Contao\Backend;
 use Contao\DataContainer;
 use Contao\DC_Table;
 use Teusal\ContaoPhoneNumberNormalizerBundle\Library\PhoneNumberNormalizer;
-use Teusal\ContaoRefereeHamburgBundle\Library\Test;
 
 /*
  * Table tl_bsa_verein
@@ -144,12 +143,12 @@ $GLOBALS['TL_DCA']['tl_bsa_verein'] = [
         ],
         'homepage1' => [
             'inputType' => 'text',
-            'eval' => ['maxlength' => 100, 'tl_class' => 'long'],
+            'eval' => ['rgxp' => 'httpurl', 'maxlength' => 100, 'tl_class' => 'long'],
             'sql' => 'varchar(100) NULL',
         ],
         'homepage2' => [
             'inputType' => 'text',
-            'eval' => ['maxlength' => 100, 'tl_class' => 'long'],
+            'eval' => ['rgxp' => 'httpurl', 'maxlength' => 100, 'tl_class' => 'long'],
             'sql' => 'varchar(100) NULL',
         ],
         'anzahl_schiedsrichter_aktiv' => [
@@ -173,11 +172,6 @@ $GLOBALS['TL_DCA']['tl_bsa_verein'] = [
  */
 class tl_bsa_verein extends Backend
 {
-    public function test($varValue, $dc): void
-    {
-        throw new Exception(Test::TEXT);
-    }
-
     // TODO implementation of exports
     public function exportXLS(): void
     {

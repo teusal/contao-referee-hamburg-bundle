@@ -47,7 +47,7 @@ $GLOBALS['TL_DCA']['tl_bsa_season'] = [
         'label' => [
             'fields' => ['name', 'startDate', 'endDate'],
             'showColumns' => true,
-            'label_callback' => ['tl_bsa_season', 'getLabel'],
+            'label_callback' => [tl_bsa_season::class, 'getLabel'],
         ],
         'global_operations' => [
         ],
@@ -60,7 +60,7 @@ $GLOBALS['TL_DCA']['tl_bsa_season'] = [
                 'href' => 'toggle=true',
                 'icon' => 'visible.gif',
                 'attributes' => 'onclick="Backend.getScrollOffset();return AjaxRequest.toggleAktiv(this)"',
-                'button_callback' => ['tl_bsa_season', 'toggleIcon'],
+                'button_callback' => [tl_bsa_season::class, 'toggleIcon'],
             ],
         ],
     ],

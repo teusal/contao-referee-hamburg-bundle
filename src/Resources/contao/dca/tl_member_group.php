@@ -68,7 +68,7 @@ $GLOBALS['TL_DCA']['tl_member_group']['fields']['automatik'] = [
     'options' => ['vollautomatik' => ['alle', 'alle_sr', 'obleute', 'U18', 'Ü40', 'm', 'w', 'aktive', 'passive'], 'halbautomatik' => ['10_jahre', '25_jahre', '40_jahre', '50_jahre', '60_jahre', '70_jahre', 'ohne_sitzung', 'ohne_regelarbeit', 'ohne_sitzung_regelarbeit']],
     'reference' => &$GLOBALS['TL_LANG']['tl_member_group']['options'],
     'eval' => ['helpwizard' => true, 'includeBlankOption' => true, 'blankOptionLabel' => 'Manuelle Verwaltung', 'unique' => true],
-    'save_callback' => [['tl_bsa_member_group', 'changeAutomatik']],
+    'save_callback' => [[tl_bsa_member_group::class, 'changeAutomatik']],
     'sql' => "varchar(30) NOT NULL default ''",
 ];
 $GLOBALS['TL_DCA']['tl_member_group']['fields']['image_anzeigen'] = [
@@ -115,9 +115,9 @@ $GLOBALS['TL_DCA']['tl_member_group']['config']['ctable'] = ['tl_bsa_gruppenmitg
 $GLOBALS['TL_DCA']['tl_member_group']['config']['switchToEdit'] = true;
 $GLOBALS['TL_DCA']['tl_member_group']['config']['notCopyable'] = true;
 $GLOBALS['TL_DCA']['tl_member_group']['config']['enableVersioning'] = false;
-$GLOBALS['TL_DCA']['tl_member_group']['config']['ondelete_callback'][] = ['tl_bsa_member_group', 'executeDelete'];
+$GLOBALS['TL_DCA']['tl_member_group']['config']['ondelete_callback'][] = [tl_bsa_member_group::class, 'executeDelete'];
 $GLOBALS['TL_DCA']['tl_member_group']['config']['ondelete_callback'][] = ['\BSANewsletter', 'deleteGruppe'];
-$GLOBALS['TL_DCA']['tl_member_group']['config']['onsubmit_callback'][] = ['tl_bsa_member_group', 'executeSubmit'];
+$GLOBALS['TL_DCA']['tl_member_group']['config']['onsubmit_callback'][] = [tl_bsa_member_group::class, 'executeSubmit'];
 /*
  * disable Versioning
  */
@@ -130,7 +130,7 @@ ArrayUtil::arrayInsert($GLOBALS['TL_DCA']['tl_member_group']['list']['operations
     'edit_gruppenmitglieder' => [
         'href' => 'table=tl_bsa_gruppenmitglieder',
         'icon' => 'member.gif',
-        'button_callback' => ['tl_bsa_member_group', 'memberIcon'],
+        'button_callback' => [tl_bsa_member_group::class, 'memberIcon'],
     ],
 ]);
 ArrayUtil::arrayInsert($GLOBALS['TL_DCA']['tl_member_group']['list']['operations'], 1, [

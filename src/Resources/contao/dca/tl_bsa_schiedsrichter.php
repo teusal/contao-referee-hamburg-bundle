@@ -40,7 +40,7 @@ $GLOBALS['TL_DCA']['tl_bsa_schiedsrichter'] = [
         'dataContainer' => DC_Table::class,
         'enableVersioning' => false,
         'notDeletable' => true,
-        'onsubmit_callback' => [['tl_bsa_schiedsrichter', 'submit']],
+        'onsubmit_callback' => [[tl_bsa_schiedsrichter::class, 'submit']],
         'ondelete_callback' => [['SRHistory', 'insertByDeleteSchiedsrichter']],
         'onundo_callback' => [['SRHistory', 'insertByUndeleteSchiedsrichter']],
         'sql' => [
@@ -62,7 +62,7 @@ $GLOBALS['TL_DCA']['tl_bsa_schiedsrichter'] = [
         ],
         'label' => [
             'fields' => ['name_rev'],
-            'label_callback' => ['tl_bsa_schiedsrichter', 'listSchiedsrichter'],
+            'label_callback' => [tl_bsa_schiedsrichter::class, 'listSchiedsrichter'],
         ],
         'global_operations' => [
         ],
@@ -74,12 +74,12 @@ $GLOBALS['TL_DCA']['tl_bsa_schiedsrichter'] = [
             'delete' => [
                 'icon' => 'delete.gif',
                 'attributes' => 'onclick="if (!confirm(\''.$GLOBALS['TL_LANG']['MSC']['deleteConfirm'].'\')) return false; Backend.getScrollOffset();return AjaxRequest.executeDelete(this)"',
-                'button_callback' => ['tl_bsa_schiedsrichter', 'deleteIcon'],
+                'button_callback' => [tl_bsa_schiedsrichter::class, 'deleteIcon'],
             ],
             'undo' => [
                 'icon' => 'undo.gif',
                 'attributes' => 'onclick="Backend.getScrollOffset();return AjaxRequest.executeUndo(this)"',
-                'button_callback' => ['tl_bsa_schiedsrichter', 'undoIcon'],
+                'button_callback' => [tl_bsa_schiedsrichter::class, 'undoIcon'],
             ],
             'show' => [
                 'href' => 'act=show',

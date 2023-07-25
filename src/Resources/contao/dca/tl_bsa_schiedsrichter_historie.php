@@ -24,7 +24,7 @@ $GLOBALS['TL_DCA']['tl_bsa_schiedsrichter_historie'] = [
         'notDeletable' => true,
         'notCopyable' => true,
         'notCreatable' => true,
-        'onload_callback' => [['tl_bsa_schiedsrichter_historie', 'replacePlaceholders']],
+        'onload_callback' => [[tl_bsa_schiedsrichter_historie::class, 'replacePlaceholders']],
         'sql' => [
             'keys' => [
                 'id' => 'primary',
@@ -44,7 +44,7 @@ $GLOBALS['TL_DCA']['tl_bsa_schiedsrichter_historie'] = [
         'label' => [
             'fields' => ['tstamp', 'text'],
             'format' => '<span style="color:#b3b3b3;padding-right:3px">[%s]</span><br/>%s',
-            'label_callback' => ['tl_bsa_schiedsrichter_historie', 'colorize'],
+            'label_callback' => [tl_bsa_schiedsrichter_historie::class, 'colorize'],
         ],
         'global_operations' => [
         ],

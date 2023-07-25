@@ -12,6 +12,8 @@ declare(strict_types=1);
 
 namespace Teusal\ContaoRefereeHamburgBundle\Model;
 
+use Contao\Database;
+
 /**
  * Reads and writes referees.
  *
@@ -105,9 +107,9 @@ class BsaSchiedsrichterModel extends \Model
             $arrSR = $objSR->row();
         }
 
-        $alter = date('Y') - date('Y', $arrSR['geburtsdatum']);
+        $alter = date('Y') - date('Y', (int) ($arrSR['geburtsdatum']));
 
-        if (date('md', time()) < date('md', $arrSR['geburtsdatum'])) {
+        if (date('md', time()) < date('md', (int) ($arrSR['geburtsdatum']))) {
             --$alter;
         }
 
