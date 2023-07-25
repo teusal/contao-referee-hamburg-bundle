@@ -13,6 +13,7 @@ declare(strict_types=1);
 namespace Teusal\ContaoRefereeHamburgBundle\Model;
 
 use Contao\Database;
+use Contao\Model;
 
 /**
  * Reads and writes referees.
@@ -23,7 +24,7 @@ use Contao\Database;
  * @property string $nachname
  * @property string $geschlecht
  */
-class BsaSchiedsrichterModel extends \Model
+class BsaSchiedsrichterModel extends Model
 {
     /**
      * Table name.
@@ -60,16 +61,22 @@ class BsaSchiedsrichterModel extends \Model
 
     /**
      * Methode liefert alle Geburtstagskinder von heute.
+     *
+     * @param string $strWhere
      */
-    public static function getPersonWithBirthdayToday($strWhere = '')
+    public static function getPersonWithBirthdayToday($strWhere = ''): array
     {
         return static::getPersonWithBirthdayNextDays(0, 0, $strWhere);
     }
 
     /**
      * Methode liefert alle Geburtstagskinder der nächsten Tage.
+     *
+     * @param int    $intFirstDay
+     * @param int    $intLastDay
+     * @param string $strWhere
      */
-    public static function getPersonWithBirthdayNextDays($intFirstDay, $intLastDay, $strWhere = '')
+    public static function getPersonWithBirthdayNextDays($intFirstDay, $intLastDay, $strWhere = ''): array
     {
         if ($intFirstDay > $intLastDay) {
             return [];
@@ -93,12 +100,17 @@ class BsaSchiedsrichterModel extends \Model
     }
 
     /**
-     * Liefert das alter aus dem Datensatz eines Schiedsrichters.
+     * Liefert das Alter aus dem Datensatz eines Schiedsrichters.
+     *
+     * @param BsaSchiedsrichterModel|array $objSR
+     *
+     * @return int|null
      */
     public static function getAlter($objSR)
     {
+        // TODO refactor to object usage. overwrite __get() and pass 'alter'
         if (!isset($objSR)) {
-            return false;
+            return null;
         }
 
         if (\is_array($objSR)) {

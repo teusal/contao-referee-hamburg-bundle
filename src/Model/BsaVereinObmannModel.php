@@ -12,12 +12,16 @@ declare(strict_types=1);
 
 namespace Teusal\ContaoRefereeHamburgBundle\Model;
 
+use Contao\Model;
+
 /**
  * Read and write verein obmann data.
  *
+ * @method static BsaVereinObmannModel|null findOneBy($col, $val, array $opt=array())
+ *
  * @property int $verein
  */
-class BsaVereinObmannModel extends \Model
+class BsaVereinObmannModel extends Model
 {
     /**
      * Table name.
@@ -57,6 +61,6 @@ class BsaVereinObmannModel extends \Model
 
         $objVereinObmann = static::findOneBy(['obmann=? OR stellv_obmann_1=? OR stellv_obmann_2=?'], [$schiedsrichterId, $schiedsrichterId, $schiedsrichterId]);
 
-        return isset($objVerein) ? $objVereinObmann->verein : null;
+        return isset($objVereinObmann) ? $objVereinObmann->verein : null;
     }
 }

@@ -12,6 +12,8 @@ declare(strict_types=1);
 
 namespace Teusal\ContaoRefereeHamburgBundle\Model;
 
+use Contao\Model;
+
 /**
  * Reads and writes events.
  *
@@ -19,7 +21,7 @@ namespace Teusal\ContaoRefereeHamburgBundle\Model;
  *
  * @property int $schiedsrichter
  */
-class BsaGruppenmitgliederModel extends \Model
+class BsaGruppenmitgliederModel extends Model
 {
     /**
      * Table name.
