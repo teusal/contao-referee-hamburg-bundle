@@ -28,13 +28,20 @@ $GLOBALS['TL_LANG']['MOD']['obmann'] = ['Obleute & Stellvertreter', 'Einstellung
 $GLOBALS['TL_LANG']['MOD']['schiedsrichter'] = ['Schiedsrichter', 'Bearbeitung der Schiedsrichter.'];
 $GLOBALS['TL_LANG']['MOD']['freigaben'] = ['Web-Freigaben', 'Zeigt die Web-Freigaben der Schiedsrichter an.'];
 $GLOBALS['TL_LANG']['MOD']['schiedsrichter_historie'] = ['Schiedsrichter-Historie', 'Zeigt die Historie bzw. die Änderungen von Schiedsrichtern an.'];
+// group bsa_member
+$GLOBALS['TL_LANG']['MOD']['bsa_member'] = ['Logins, Kader & Gruppen', 'Verwaltung von Logins sowie Kader bzw. Login-Berechtigungsgruppen.'];
+$GLOBALS['TL_LANG']['MOD']['member_settings'] = ['Einstellungen für Logins', 'Konfiguration der Einstellungen für das Anlegen neuer Logins.'];
+$GLOBALS['TL_LANG']['MOD']['groups'] = ['Kader & Logingruppen', 'In diesem Bereich werden die Kader, die gleichzeitig auch Login-Berechtigungsgruppen für die Website sind, bearbeitet.'];
+$GLOBALS['TL_LANG']['MOD']['logins'] = ['Schiedsrichter-Logins', 'Hier werden die Logins verwaltet, mit denen man sich auf der Website anmelden kann.'];
+$GLOBALS['TL_LANG']['MOD']['external_logins'] = ['Externe Logins', 'Hier werden die Logins verwaltet, mit denen man sich auf der Website anmelden kann.'];
 
 /*
 * Front end modules
 */
 $GLOBALS['TL_LANG']['FMD']['bsa'] = 'BSA-Daten';
-$GLOBALS['TL_LANG']['FMD']['schiedsrichter'] = ['Schiedsrichter', 'Zeigt die Schiedsrichter an.'];
-$GLOBALS['TL_LANG']['FMD']['vereine'] = ['Verein', 'Zeigt die Vereine an.'];
-$GLOBALS['TL_LANG']['FMD']['freigaben'] = ['Freigaben-Bearbeitung', 'Modul zur Bearbeitung der Web-Freigaben im Frontend.'];
 $GLOBALS['TL_LANG']['FMD']['sportplaetze'] = ['Sportplätze anzeigen', 'Sportplätze anzeigen'];
 $GLOBALS['TL_LANG']['FMD']['sportplatz_export'] = ['Sportplätze Export', 'Exportiert Sportplätze.'];
+$GLOBALS['TL_LANG']['FMD']['vereine'] = ['Verein', 'Zeigt die Vereine an.'];
+$GLOBALS['TL_LANG']['FMD']['schiedsrichter'] = ['Schiedsrichter', 'Zeigt die Schiedsrichter an.'];
+$GLOBALS['TL_LANG']['FMD']['freigaben'] = ['Freigaben-Bearbeitung', 'Modul zur Bearbeitung der Web-Freigaben im Frontend.'];
+$GLOBALS['TL_LANG']['FMD']['bsa_member_group'] = ['Gruppen', 'Module zur Anzeige von einer oder mehreren Gruppen.'];

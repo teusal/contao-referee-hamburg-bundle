@@ -16,6 +16,7 @@ use Contao\BackendUser;
 use Contao\Database;
 use Contao\Date;
 use Contao\Email;
+use Contao\Input;
 use Contao\Message;
 use Contao\System;
 use Teusal\ContaoRefereeHamburgBundle\Model\BsaSchiedsrichterModel;
@@ -129,7 +130,11 @@ class Geburtstag extends System
     public function getSystemMessages()
     {
         if (!$this->User->hasAccess('schiedsrichter', 'modules') && $this->User->hasAccess('bsa_geburtstagsmail_settings', 'modules')) {
-            return '';
+            return null;
+        }
+
+        if (!empty(Input::get('do'))) {
+            return null;
         }
 
         $strMessage = '%s (%s) %s. Geburtstag';
@@ -180,10 +185,10 @@ class Geburtstag extends System
         }
 
         return '
-<div class="tl_confirm" style="background-image:url(\'system/modules/x_bsa_geburtstag/assets/kerze.png\'); background-size:16px 16px; background-position:5px 5px;">
-	<div style="float:left; color:#77AC45; margin-right:5px;">Kommende Geburtstage:</div>
-	<div style="float:left; color:#77AC45; margin-right:5px;">'.implode('<br/>', $arrDates).'</div>
-	<div style="color:#77AC45;">'.implode('<br/>', $arrBirthdays).'</div>
+<div class="tl_confirm">
+  <div style="float:left; margin-right:5px;">Kommende Geburtstage:</div>
+  <div style="float:left; margin-right:5px;">'.implode('<br/>', $arrDates).'</div>
+  <div>'.implode('<br/>', $arrBirthdays).'</div>
 </div>
 ';
     }

@@ -1,3 +1,9 @@
 services:
     _defaults:
         autoconfigure: true
+
+    contao.mailer.available_transports:
+        class: Teusal\ContaoRefereeHamburgBundle\Library\Mailer\AvailableTransports
+        public: true
+        arguments:
+            - '@?translator'

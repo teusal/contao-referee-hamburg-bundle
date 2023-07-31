@@ -218,13 +218,6 @@ class tl_bsa_member_group extends tl_member_group
     }
 
     /**
-     * doing stuff while load.
-     */
-    public function onLoad(DataContainer $dc): void
-    {
-    }
-
-    /**
      * whenever an automatic configuration of a group is changed the changes in the group members needs to be done.
      *
      * @param mixed $varValue

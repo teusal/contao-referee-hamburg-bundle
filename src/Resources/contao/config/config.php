@@ -12,6 +12,8 @@ declare(strict_types=1);
 
 use Contao\ArrayUtil;
 use Teusal\ContaoRefereeHamburgBundle\Library\Geburtstag;
+use Teusal\ContaoRefereeHamburgBundle\Library\Mailer\UserTransportValidator;
+use Teusal\ContaoRefereeHamburgBundle\Library\Newsletter\Newsletter;
 use Teusal\ContaoRefereeHamburgBundle\Model\BsaFreigabenModel;
 use Teusal\ContaoRefereeHamburgBundle\Model\BsaGruppenmitgliederModel;
 use Teusal\ContaoRefereeHamburgBundle\Model\BsaSchiedsrichterModel;
@@ -39,11 +41,9 @@ ArrayUtil::arrayInsert($GLOBALS['BE_MOD'], 0, [
     'bsa_sportplatz' => [
         'sporthalle' => [
             'tables' => ['tl_bsa_sportplatz', 'tl_bsa_sportplatz_nummer'],
-            'icon' => 'system/modules/x_bsa_sportplatz/assets/sportplatz.png',
         ],
         'sportplatz' => [
             'tables' => ['tl_bsa_sportplatz', 'tl_bsa_sportplatz_nummer'],
-            'icon' => 'system/modules/x_bsa_sportplatz/assets/sportplatz.png',
         ],
         'sportplatz_zuordnung' => [
             'tables' => ['tl_bsa_sportplatz_zuordnung'],
@@ -67,26 +67,21 @@ ArrayUtil::arrayInsert($GLOBALS['BE_MOD'], 0, [
         ],
         'schiedsrichter_historie' => [
             'tables' => ['tl_bsa_schiedsrichter_historie'],
-            'icon' => 'icons/content.svg',
         ],
     ],
     'bsa_member' => [
-        'bsa_member_settings' => [
+        'member_settings' => [
             'tables' => ['tl_bsa_member_settings'],
-            'icon' => '/system/themes/default/images/settings.gif',
         ],
-        'bsa_groups' => [
+        'groups' => [
             'tables' => ['tl_member_group', 'tl_bsa_gruppenmitglieder', 'tl_bsa_newsletterzuordnung'],
-            'icon' => 'system/themes/default/images/mgroup.gif',
         ],
-        'bsa_logins' => [
+        'logins' => [
             'tables' => ['tl_member'],
-            'icon' => 'system/themes/default/images/member.gif',
             'createNeeded' => ['BSAMember', 'createNeededLogins'],
         ],
-        'bsa_external_logins' => [
+        'external_logins' => [
             'tables' => $GLOBALS['BE_MOD']['accounts']['member']['tables'],
-            'icon' => 'system/themes/default/images/member.gif',
         ],
     ],
     'bsa_veranstaltung' => [
@@ -151,7 +146,7 @@ ArrayUtil::arrayInsert($GLOBALS['BE_MOD'], 0, [
             'callback' => 'VereinMail',
             'icon' => 'system/modules/newsletter/assets/icon.gif',
         ],
-        'bsa_newsletter' => $GLOBALS['BE_MOD']['content']['newsletter'],
+        'bsa_newsletter' => &$GLOBALS['BE_MOD']['content']['newsletter'],
     ],
     'bsa_ansetzungen' => [
         'bsa_tauschboerse_settings' => [
@@ -257,7 +252,7 @@ ArrayUtil::arrayInsert(
         ],
     ]
 );
-
+$GLOBALS['BE_MOD']['content']['newsletter']['send'] = [Newsletter::class, 'send'];
 /*
  * FRONT END MENU STRUKTUR
  */
@@ -303,6 +298,7 @@ $GLOBALS['TL_HOOKS']['getSearchablePages'][] = ['AnsetzungenStatistikIndexer', '
 $GLOBALS['TL_HOOKS']['getSearchablePages'][] = ['LehrgangIndexer', 'getSearchablePages'];
 $GLOBALS['TL_HOOKS']['getSearchablePages'][] = ['SchiedsrichterIndexer', 'getSearchablePages'];
 $GLOBALS['TL_HOOKS']['getSystemMessages'][] = [Geburtstag::class, 'getSystemMessages'];
+$GLOBALS['TL_HOOKS']['getSystemMessages'][] = [UserTransportValidator::class, 'getSystemMessages'];
 $GLOBALS['TL_HOOKS']['removeRecipient'][] = ['SRHistory', 'unsubscribeNewsletterToSRHistory'];
 
 /*

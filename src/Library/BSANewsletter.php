@@ -358,7 +358,7 @@ class BSANewsletter extends System
     {
         return $this->Database->prepare('SELECT schiedsrichter FROM tl_bsa_gruppenmitglieder WHERE pid=?')
             ->execute($intGroup)
-            ->fetchEach('schiedsrichter')
+            ->fetchEach('referee_id')
         ;
     }
 }

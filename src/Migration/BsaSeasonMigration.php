@@ -38,7 +38,7 @@ class BsaSeasonMigration extends AbstractMigration
 
     public function getName(): string
     {
-        return 'BSA Season 1.0.0 Update';
+        return 'Referee Bundle 1.0.0 Season Update';
     }
 
     public function shouldRun(): bool
