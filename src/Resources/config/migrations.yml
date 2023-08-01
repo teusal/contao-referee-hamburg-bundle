@@ -2,11 +2,12 @@ services:
     _defaults:
         autoconfigure: true
 
-    contao.migration.bsa.newsletter_update:
+    contao.migration.referee_100.newsletter_update:
         class: Teusal\ContaoRefereeHamburgBundle\Migration\NewsletterMigration
         arguments:
             - '@database_connection'
-    contao.migration.bsa.season_update:
+
+    contao.migration.referee_100.season_update:
         class: Teusal\ContaoRefereeHamburgBundle\Migration\BsaSeasonMigration
         arguments:
             - '@database_connection'

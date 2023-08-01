@@ -84,7 +84,7 @@ class Newsletter extends \Contao\Newsletter
 
         // Wenn wir hier her kommen, es also kein 'exit' oder 'reload()' in Newsletter gab, dann setzen wir
         // das Flag für den Info-Versand zurück, damit beim nächsten Senden eine Info versendet wird.
-        $this->Database->prepare('UPDATE tl_newsletter SET is_infomail_sent = ? WHERE id = ?')
+        $this->Database->prepare('UPDATE tl_newsletter SET infomailSent = ? WHERE id = ?')
             ->execute('', $dc->id)
         ;
 
@@ -234,18 +234,23 @@ class Newsletter extends \Contao\Newsletter
             throw new \Exception('missing newsletter channel object while sending.');
         }
 
-        if (!$_GET['preview'] && $objNewsletterChannel->__get('sendInfomail') && !$objNewsletter->__get('is_infomail_sent')) {
+        // send infomails if the option is activated
+        if (!$_GET['preview'] && $objNewsletterChannel->__get('sendInfomail') && !$objNewsletter->__get('infomailSent')) {
             $this->sendInfomails($objNewsletterChannel, $objEmail, $objNewsletter, $html, $css);
         }
 
+        // extend recipient array, translate keys firstname, lastname and salutationPersonal
+        $arrRecipient['vorname'] = $arrRecipient['firstname'];
+        $arrRecipient['nachname'] = $arrRecipient['lastname'];
+        $arrRecipient['anrede_persoenlich'] = $arrRecipient['salutationPersonal'];
+
         // Add optional reply to
-        if (\strlen($objNewsletter->__get('reply_to'))) {
-            $objEmail->replyTo($objNewsletter->__get('reply_to'));
+        if (\strlen($objNewsletter->__get('replyToAddress'))) {
+            $objEmail->replyTo($objNewsletter->__get('replyToAddress'));
         }
 
         // add optional cc
         $arrCc = $this->getCc($objNewsletter, $arrRecipient);
-
         if (!empty($arrCc) && \is_array($arrCc)) {
             $objEmail->sendCc($arrCc);
         }
@@ -265,8 +270,8 @@ class Newsletter extends \Contao\Newsletter
         parent::sendNewsletter($objEmail, $objNewsletter, $arrRecipient, $text, $html, $css);
 
         // writing the referee history if the option is activated
-        if ($objNewsletterChannel->__get('writeRefereeHistory') && $arrRecipient['referee_id'] && (!\is_array($_SESSION['REJECTED_RECIPIENTS']) || !\in_array($arrRecipient['email'], $_SESSION['REJECTED_RECIPIENTS'], true))) {
-            SRHistory::insert($arrRecipient['referee_id'], $objNewsletter->__get('pid'), ['E-Mail', 'INFO'], 'Der Schiedsrichters %s wurde via E-Mail-Verteiler "%s" angeschrieben. Betreff: '.$objEmail->__get('subject'), __METHOD__);
+        if ($objNewsletterChannel->__get('writeRefereeHistory') && $arrRecipient['refereeId'] && (!\is_array($_SESSION['REJECTED_RECIPIENTS']) || !\in_array($arrRecipient['email'], $_SESSION['REJECTED_RECIPIENTS'], true))) {
+            SRHistory::insert($arrRecipient['refereeId'], $objNewsletter->__get('pid'), ['E-Mail', 'INFO'], 'Der Schiedsrichters %s wurde via E-Mail-Verteiler "%s" angeschrieben. Betreff: '.$objEmail->__get('subject'), __METHOD__);
         }
     }
 
@@ -280,15 +285,15 @@ class Newsletter extends \Contao\Newsletter
      */
     private function getCc(Result $objNewsletter, $arrRecipient)
     {
-        if (!$objNewsletter->__get('cc_obmann')) {
+        if (!$objNewsletter->__get('ccChairman')) {
             return null;
         }
 
-        if (!$arrRecipient['referee_id']) {
+        if (!$arrRecipient['refereeId']) {
             return null;
         }
 
-        $objSR = BsaSchiedsrichterModel::findByPk($arrRecipient['referee_id']);
+        $objSR = BsaSchiedsrichterModel::findByPk($arrRecipient['refereeId']);
 
         if (!isset($objSR)) {
             return null;
@@ -338,8 +343,11 @@ class Newsletter extends \Contao\Newsletter
         foreach ($arrInfomailRecipients as $infomailRecipient) {
             $arrInfoRecipient = [
                 'email' => $infomailRecipient,
+                'firstname' => 'VORNAME',
                 'vorname' => 'VORNAME',
+                'lastname' => 'NACHNAME',
                 'nachname' => 'NACHNAME',
+                'salutationPersonal' => 'LIEBE/LIEBER',
                 'anrede_persoenlich' => 'LIEBE/LIEBER',
             ];
 
@@ -350,8 +358,8 @@ class Newsletter extends \Contao\Newsletter
             }
         }
 
-        $this->Database->prepare('UPDATE tl_newsletter SET is_infomail_sent=? WHERE id=?')->execute('1', $objNewsletter->__get('id'));
-        $objNewsletter->__set('is_infomail_sent', '1');
+        $this->Database->prepare('UPDATE tl_newsletter SET infomailSent=? WHERE id=?')->execute('1', $objNewsletter->__get('id'));
+        $objNewsletter->__set('infomailSent', '1');
 
         if (TL_MODE === 'BE') {
             Message::addConfirmation('Info-Mail wurde an '.$objNewsletter->__get('info_to').' gesendet.');

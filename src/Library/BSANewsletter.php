@@ -122,7 +122,7 @@ class BSANewsletter extends System
 
             if (0 === $objRecipients->numRows) {
                 // bisher kein Eintrag... Also einen neuen Datensatz anlegen
-                $res = $this->Database->prepare('INSERT INTO tl_newsletter_recipients (pid,tstamp,email,active,addedOn,schiedsrichter,groups,nachname,vorname,anrede_persoenlich) VALUES (?,?,?,?,?,?,?,?,?,?)')
+                $res = $this->Database->prepare('INSERT INTO tl_newsletter_recipients (pid,tstamp,email,active,addedOn,refereeId,groups,lastname,firstname,salutationPersonal) VALUES (?,?,?,?,?,?,?,?,?,?)')
                     ->execute($channelId, time(), $email, '1', time(), $objSR->id, serialize($arrGroupIds), $objSR->nachname, $objSR->vorname, $anrede)
                 ;
                 SRHistory::insert($objSR->id, $channelId, ['E-Mail-Verteiler', 'ADD'], 'Der Schiedsrichter %s wurde zum Verteiler "%s" hinzugefügt.', __METHOD__);
@@ -139,7 +139,7 @@ class BSANewsletter extends System
                 }
 
                 // bestehenden Datensatz aktualisieren...
-                $res = $this->Database->prepare('UPDATE tl_newsletter_recipients SET schiedsrichter=?, groups=?, nachname=?, vorname=?, anrede_persoenlich=? WHERE id=?')
+                $res = $this->Database->prepare('UPDATE tl_newsletter_recipients SET refereeId=?, groups=?, lastname=?, firstname=?, salutationPersonal=? WHERE id=?')
                     ->execute($objSR->id, serialize($arrGroupIds), $objSR->nachname, $objSR->vorname, $anrede, $objRecipients->__get('id'))
                 ;
 
@@ -358,7 +358,7 @@ class BSANewsletter extends System
     {
         return $this->Database->prepare('SELECT schiedsrichter FROM tl_bsa_gruppenmitglieder WHERE pid=?')
             ->execute($intGroup)
-            ->fetchEach('referee_id')
+            ->fetchEach('refereeId')
         ;
     }
 }

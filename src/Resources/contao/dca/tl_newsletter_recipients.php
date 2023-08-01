@@ -17,12 +17,18 @@ use Teusal\ContaoRefereeHamburgBundle\Model\BsaSchiedsrichterModel;
 /*
  * Change palette
  */
-$GLOBALS['TL_DCA']['tl_newsletter_recipients']['palettes']['default'] .= ';{bsa_schiedsrichter_legend},schiedsrichter,vorname,nachname,groups';
+$GLOBALS['TL_DCA']['tl_newsletter_recipients']['palettes']['default'] .= ';{bsa_schiedsrichter_legend},refereeId,firstname,lastname,groups';
+
+/*
+ * Change keys
+ */
+$GLOBALS['TL_DCA']['tl_newsletter_recipients']['config']['sql']['keys']['pid,email'] = 'index';
+$GLOBALS['TL_DCA']['tl_newsletter_recipients']['config']['sql']['keys']['pid,email,refereeId'] = 'unique';
 
 /*
  * Add fields
  */
-$GLOBALS['TL_DCA']['tl_newsletter_recipients']['fields']['referee_id'] = [
+$GLOBALS['TL_DCA']['tl_newsletter_recipients']['fields']['refereeId'] = [
     'inputType' => 'select',
     'eval' => ['disabled' => true, 'multiple' => false, 'includeBlankOption' => true, 'blankOptionLabel' => 'kein BSA-Schiedsrichter', 'tl_class' => 'clr'],
     'foreignKey' => 'tl_bsa_schiedsrichter.name_rev',
@@ -37,19 +43,19 @@ $GLOBALS['TL_DCA']['tl_newsletter_recipients']['fields']['groups'] = [
     'sql' => 'blob NULL',
     'relation' => ['type' => 'hasMany', 'load' => 'lazy'],
 ];
-$GLOBALS['TL_DCA']['tl_newsletter_recipients']['fields']['nachname'] = [
+$GLOBALS['TL_DCA']['tl_newsletter_recipients']['fields']['lastname'] = [
     'inputType' => 'text',
     'search' => true,
     'eval' => ['disabled' => true, 'maxlength' => 50, 'tl_class' => 'w50'],
     'sql' => "varchar(50) NOT NULL default ''",
 ];
-$GLOBALS['TL_DCA']['tl_newsletter_recipients']['fields']['vorname'] = [
+$GLOBALS['TL_DCA']['tl_newsletter_recipients']['fields']['firstname'] = [
     'inputType' => 'text',
     'search' => true,
     'eval' => ['disabled' => true, 'maxlength' => 50, 'tl_class' => 'w50'],
     'sql' => "varchar(50) NOT NULL default ''",
 ];
-$GLOBALS['TL_DCA']['tl_newsletter_recipients']['fields']['anrede_persoenlich'] = [
+$GLOBALS['TL_DCA']['tl_newsletter_recipients']['fields']['salutationPersonal'] = [
     'sql' => "varchar(25) NOT NULL default ''",
 ];
 
@@ -78,7 +84,7 @@ class tl_bsa_newsletter_recipients extends Backend
      */
     public function getList($arrRow)
     {
-        $objSR = BsaSchiedsrichterModel::findSchiedsrichter($arrRow['referee_id']);
+        $objSR = BsaSchiedsrichterModel::findSchiedsrichter($arrRow['refereeId']);
 
         if (isset($objSR)) {
             return $objSR->__get('name_rev');
