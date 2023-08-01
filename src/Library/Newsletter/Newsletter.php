@@ -23,6 +23,7 @@ use Contao\FrontendUser;
 use Contao\Message;
 use Contao\NewsletterChannelModel;
 use Contao\NewsletterModel;
+use Contao\NewsletterRecipientsModel;
 use Contao\StringUtil;
 use Contao\System;
 use Contao\Validator;
@@ -42,6 +43,16 @@ class Newsletter extends \Contao\Newsletter
     private $transport;
 
     /**
+     * @var array
+     */
+    private $arrAttachments;
+
+    /**
+     * @var array
+     */
+    private $arrAlreadySent = array();
+
+    /**
      * Constructor.
      */
     public function __construct()
@@ -56,7 +67,7 @@ class Newsletter extends \Contao\Newsletter
 
             if (null === $this->transport) {
                 Message::addError('Es wurde keine Konfiguration zum Mailversand für Sie anhand Ihrer E-Mail-Adresse gefunden. Sie können so keine E-Mails versenden. Bitte wenden Sie sich an einen Administrator.');
-                $this->redirect(str_replace('key=send&', '', Environment::get('request')));
+                $this->redirect($this->getReferer(true));
             }
         }
     }
@@ -78,6 +89,11 @@ class Newsletter extends \Contao\Newsletter
 
         if ($this->transport->getName() !== $objNewsletter->mailerTransport) {
             Message::addError('Sie sind nicht berechtigt, den Mailer-Transport "'.$objNewsletter->mailerTransport.'" zu verwenden. Bitte ändern Sie gegebenenfalls den Mailer-Transport in der E-Mail, um diese selbst zu versenden.');
+            $this->redirect($this->getReferer(true));
+        }
+
+        if('dev' === System::getContainer()->getParameter('kernel.environment')) {
+            Message::addInfo("Es handelt sich um eine Testumgebung. Alle Newsletter-Mails werden an mail@alexteuscher.de umgeleitet.");
         }
 
         $returnValue = parent::send($dc);
@@ -213,6 +229,20 @@ class Newsletter extends \Contao\Newsletter
     }
 
     /**
+	 * Generate the e-mail object and return it
+	 *
+	 * @param Result $objNewsletter
+	 * @param array  $arrAttachments
+	 *
+	 * @return Email
+	 */
+	protected function generateEmailObject(Result $objNewsletter, $arrAttachments)
+	{
+        $this->arrAttachments = $arrAttachments;
+        return parent::generateEmailObject($objNewsletter, $arrAttachments);
+    }
+
+    /**
      * Compile the newsletter and send it.
      *
      * @param Email  $objEmail      the email object
@@ -221,8 +251,10 @@ class Newsletter extends \Contao\Newsletter
      * @param string $text
      * @param string $html
      * @param string $css
+	 *
+	 * @return boolean
      */
-    protected function sendNewsletter(Email $objEmail, Result $objNewsletter, $arrRecipient, $text, $html, $css = null): void
+    protected function sendNewsletter(Email $objEmail, Result $objNewsletter, $arrRecipient, $text, $html, $css = null)
     {
         if (!isset($objNewsletter)) {
             throw new \Exception('missing newsletter object while sending.');
@@ -234,9 +266,23 @@ class Newsletter extends \Contao\Newsletter
             throw new \Exception('missing newsletter channel object while sending.');
         }
 
+        // there is a left join to member. since we did not re-created the unique at email, we need to skip records
+        // TODO https://github.com/teusal/contao-referee-hamburg-bundle/issues/6
+        if(in_array($arrRecipient['recipient'], $this->arrAlreadySent)) {
+            return true;
+        }
+
+        // reload the recipient because of the member left join. there could be wrong names in firstname/lastname
+        $arrRecipient = NewsletterRecipientsModel::findById($arrRecipient['recipient'])->row();
+
         // send infomails if the option is activated
         if (!$_GET['preview'] && $objNewsletterChannel->__get('sendInfomail') && !$objNewsletter->__get('infomailSent')) {
-            $this->sendInfomails($objNewsletterChannel, $objEmail, $objNewsletter, $html, $css);
+            $this->sendInfomails($objNewsletterChannel, $objNewsletter, $html, $css);
+        }
+
+        // replace email in dev environment
+        if('dev' === System::getContainer()->getParameter('kernel.environment')) {
+            $arrRecipient['email'] = 'mail@alexteuscher.de';
         }
 
         // extend recipient array, translate keys firstname, lastname and salutationPersonal
@@ -267,12 +313,16 @@ class Newsletter extends \Contao\Newsletter
         }
 
         // sending the email
-        parent::sendNewsletter($objEmail, $objNewsletter, $arrRecipient, $text, $html, $css);
+        $return = parent::sendNewsletter($objEmail, $objNewsletter, $arrRecipient, $text, $html, $css);
+
+        $this->arrAlreadySent[] = $arrRecipient['id'];
 
         // writing the referee history if the option is activated
         if ($objNewsletterChannel->__get('writeRefereeHistory') && $arrRecipient['refereeId'] && (!\is_array($_SESSION['REJECTED_RECIPIENTS']) || !\in_array($arrRecipient['email'], $_SESSION['REJECTED_RECIPIENTS'], true))) {
             SRHistory::insert($arrRecipient['refereeId'], $objNewsletter->__get('pid'), ['E-Mail', 'INFO'], 'Der Schiedsrichters %s wurde via E-Mail-Verteiler "%s" angeschrieben. Betreff: '.$objEmail->__get('subject'), __METHOD__);
         }
+
+        return $return;
     }
 
     /**
@@ -285,6 +335,10 @@ class Newsletter extends \Contao\Newsletter
      */
     private function getCc(Result $objNewsletter, $arrRecipient)
     {
+        if('dev' === System::getContainer()->getParameter('kernel.environment')) {
+            return null;
+        }
+
         if (!$objNewsletter->__get('ccChairman')) {
             return null;
         }
@@ -309,14 +363,13 @@ class Newsletter extends \Contao\Newsletter
      * sending the infomail to configured recipients.
      *
      * @param NewsletterChannelModel $objNewsletterChannel the channel object
-     * @param Email                  $objEmail             the email object
      * @param Result                 $objNewsletter        the newsletter database result
      * @param array                  $arrRecipient
      * @param string                 $text
      * @param string                 $html
      * @param string|null            $css
      */
-    private function sendInfomails(NewsletterChannelModel $objNewsletterChannel, $objEmail, $objNewsletter, $html, $css): void
+    private function sendInfomails(NewsletterChannelModel $objNewsletterChannel, $objNewsletter, $html, $css): void
     {
         if (!$objNewsletterChannel->__get('prependChannelInformation')) {
             return;
@@ -341,6 +394,8 @@ class Newsletter extends \Contao\Newsletter
         $arrInfomailRecipients = explode(',', $objNewsletterChannel->__get('infomailRecipients'));
 
         foreach ($arrInfomailRecipients as $infomailRecipient) {
+            $objInfomail = parent::generateEmailObject($objNewsletter, $this->arrAttachments);
+
             $arrInfoRecipient = [
                 'email' => $infomailRecipient,
                 'firstname' => 'VORNAME',
@@ -351,7 +406,11 @@ class Newsletter extends \Contao\Newsletter
                 'anrede_persoenlich' => 'LIEBE/LIEBER',
             ];
 
-            parent::sendNewsletter($objEmail, $objNewsletter, $arrInfoRecipient, $textInfo, $htmlInfo, $css);
+            if('dev' === System::getContainer()->getParameter('kernel.environment')) {
+                $arrInfoRecipient['email'] = 'mail@alexteuscher.de';
+            }
+
+            parent::sendNewsletter($objInfomail, $objNewsletter, $arrInfoRecipient, $textInfo, $htmlInfo, $css);
 
             if (TL_MODE === 'BE') {
                 echo 'Sending newsletter-Info to <strong>'.$infomailRecipient.'</strong><br>';
