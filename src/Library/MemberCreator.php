@@ -138,28 +138,35 @@ class MemberCreator extends System
     /**
      * Sendet eine Testmail.
      */
-    public function sendTestmail()
+    public static function sendTestmail()
     {
         if (TL_MODE !== 'BE') {
             return false;
         }
 
-        // throw new \Exception('test');
-
-        // den SR zum Backend-Login laden...
-        $data = Database::getInstance()->prepare('SELECT id FROM tl_bsa_schiedsrichter WHERE CONCAT(vorname," ",nachname) = ?')
+        // den SR zum Backend-Login anhand der E-Mailadresse laden...
+        $data = Database::getInstance()->prepare('SELECT id FROM tl_bsa_schiedsrichter WHERE email = ?')
             ->limit(1)
-            ->execute($this->User->name)
+            ->execute(BackendUser::getInstance()->email)
             ->fetchAssoc()
         ;
+
+        // den SR zum Backend-Login anhand des Namens laden...
+        if (!isset($data) || !\is_array($data) || empty($data)) {
+            $data = Database::getInstance()->prepare('SELECT id FROM tl_bsa_schiedsrichter WHERE CONCAT(vorname," ",nachname) = ?')
+                ->limit(1)
+                ->execute(BackendUser::getInstance()->name)
+                ->fetchAssoc()
+            ;
+        }
 
         if (!isset($data) || !\is_array($data) || empty($data)) {
             $data = ['id' => 461];
         }
-        $data['email'] = $this->User->email;
+        $data['email'] = BackendUser::getInstance()->email;
 
         try {
-            return $this->sendNotificationMail($data, $this->User->username, 'XYZ', true);
+            return static::sendNotificationMail($data, BackendUser::getInstance()->username, 'XYZ', true);
         } catch (TransportException $e) {
             // TODO i.e. handle send as denied exception
             throw $e;
@@ -187,24 +194,16 @@ class MemberCreator extends System
     /**
      * Sendet die Mail mit der Benachrichtigung an den übergebenen User.
      */
-    private function sendNotificationMail($sr, $username, $password, $test = false)
+    private static function sendNotificationMail($sr, $username, $password, $test = false)
     {
         $mailSuccessfullySent = false;
 
-        // Vorgaben aus den Konfigurationen laden
-        $strSenderEMail = Config::get('bsa_import_login_mail_sender');
-
-        if (!\strlen($strSenderEMail)) {
-            $strSenderEMail = $this->User->email;
-        }
-
         $objEmail = new LoginEmail();
+        $objEmail->setMailerTransport(Config::get('bsa_import_login_mail_mailer_transport'));
         $objEmail->setSchiedsrichter($sr['id']);
         $objEmail->setLogin($username, $password);
         $objEmail->setTest($test);
 
-        $objEmail->__set('from', $strSenderEMail);
-        $objEmail->__set('fromName', Config::get('bsa_import_login_mail_sender_name'));
         $objEmail->__set('subject', Config::get('bsa_import_login_mail_subject'));
         $objEmail->__set('html', System::getContainer()->get('contao.insert_tag.parser')->replaceInline(Config::get('bsa_import_login_mail_text') ?? ''));
 

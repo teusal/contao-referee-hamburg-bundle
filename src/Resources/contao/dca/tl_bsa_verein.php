@@ -116,19 +116,25 @@ $GLOBALS['TL_DCA']['tl_bsa_verein'] = [
         'telefon1' => [
             'inputType' => 'text',
             'eval' => ['maxlength' => 100, 'tl_class' => 'w50'],
-            'save_callback' => [[PhoneNumberNormalizer::class, 'format']],
+            'save_callback' => [
+                [PhoneNumberNormalizer::class, 'format'],
+            ],
             'sql' => 'varchar(100) NULL',
         ],
         'telefon2' => [
             'inputType' => 'text',
             'eval' => ['maxlength' => 100, 'tl_class' => 'w50'],
-            'save_callback' => [[PhoneNumberNormalizer::class, 'format']],
+            'save_callback' => [
+                [PhoneNumberNormalizer::class, 'format'],
+            ],
             'sql' => 'varchar(100) NULL',
         ],
         'fax' => [
             'inputType' => 'text',
             'eval' => ['maxlength' => 100, 'tl_class' => 'w50'],
-            'save_callback' => [[PhoneNumberNormalizer::class, 'format']],
+            'save_callback' => [
+                [PhoneNumberNormalizer::class, 'format'],
+            ],
             'sql' => 'varchar(100) NULL',
         ],
         'email' => [

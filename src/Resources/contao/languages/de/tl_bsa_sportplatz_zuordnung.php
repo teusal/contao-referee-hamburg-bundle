@@ -10,19 +10,11 @@ declare(strict_types=1);
  * @license LGPL-3.0-or-later
  */
 
-if (!defined('TL_ROOT')) {
-    die('You can not access this file directly!');
-}
-
 /*
  * Fields
  */
 $GLOBALS['TL_LANG']['tl_bsa_sportplatz_zuordnung']['verein'] = ['Verein', 'Bitte wählen Sie den Verein aus.'];
 $GLOBALS['TL_LANG']['tl_bsa_sportplatz_zuordnung']['sportplaetze'] = ['Sportplätze', 'Wählen Sie die Sportplätze und sortieren Sie diese für die Anzeige.'];
-
-/*
- * Reference
- */
 
 /*
  * Buttons

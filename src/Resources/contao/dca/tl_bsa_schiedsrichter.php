@@ -40,9 +40,9 @@ $GLOBALS['TL_DCA']['tl_bsa_schiedsrichter'] = [
         'dataContainer' => DC_Table::class,
         'enableVersioning' => false,
         'notDeletable' => true,
-        'onsubmit_callback' => [[tl_bsa_schiedsrichter::class, 'submit']],
-        'ondelete_callback' => [['SRHistory', 'insertByDeleteSchiedsrichter']],
-        'onundo_callback' => [['SRHistory', 'insertByUndeleteSchiedsrichter']],
+        'onsubmit_callback' => [
+            [tl_bsa_schiedsrichter::class, 'submit'],
+        ],
         'sql' => [
             'keys' => [
                 'id' => 'primary',
@@ -162,25 +162,33 @@ $GLOBALS['TL_DCA']['tl_bsa_schiedsrichter'] = [
         'telefon1' => [
             'inputType' => 'text',
             'eval' => ['maxlength' => 50, 'tl_class' => 'w50'],
-            'save_callback' => [[PhoneNumberNormalizer::class, 'format']],
+            'save_callback' => [
+                [PhoneNumberNormalizer::class, 'format'],
+            ],
             'sql' => "varchar(50) NOT NULL default ''",
         ],
         'telefon2' => [
             'inputType' => 'text',
             'eval' => ['maxlength' => 50, 'tl_class' => 'w50'],
-            'save_callback' => [[PhoneNumberNormalizer::class, 'format']],
+            'save_callback' => [
+                [PhoneNumberNormalizer::class, 'format'],
+            ],
             'sql' => "varchar(50) NOT NULL default ''",
         ],
         'telefon_mobil' => [
             'inputType' => 'text',
             'eval' => ['maxlength' => 50, 'tl_class' => 'w50'],
-            'save_callback' => [[PhoneNumberNormalizer::class, 'format']],
+            'save_callback' => [
+                [PhoneNumberNormalizer::class, 'format'],
+            ],
             'sql' => "varchar(50) NOT NULL default ''",
         ],
         'fax' => [
             'inputType' => 'text',
             'eval' => ['maxlength' => 50, 'tl_class' => 'w50'],
-            'save_callback' => [[PhoneNumberNormalizer::class, 'format']],
+            'save_callback' => [
+                [PhoneNumberNormalizer::class, 'format'],
+            ],
             'sql' => "varchar(50) NOT NULL default ''",
         ],
         'email' => [
@@ -222,7 +230,7 @@ $GLOBALS['TL_DCA']['tl_bsa_schiedsrichter'] = [
             'inputType' => 'text',
             'eval' => ['maxlength' => 10, 'minlength' => 10, 'tl_class' => 'w50'],
             'save_callback' => [
-                ['tl_bsa_schiedsrichter', 'setDBGeburtsdatum'],
+                [tl_bsa_schiedsrichter::class, 'setDBGeburtsdatum'],
             ],
             'sql' => 'date NULL',
         ],
@@ -230,7 +238,7 @@ $GLOBALS['TL_DCA']['tl_bsa_schiedsrichter'] = [
             'inputType' => 'text',
             'eval' => ['maxlength' => 10, 'minlength' => 10, 'tl_class' => 'w50'],
             'save_callback' => [
-                ['tl_bsa_schiedsrichter', 'setSRSeitDatum'],
+                [tl_bsa_schiedsrichter::class, 'setSRSeitDatum'],
             ],
             'sql' => 'date NULL',
         ],
@@ -376,17 +384,8 @@ class tl_bsa_schiedsrichter extends Backend
             ->execute($intId)
         ;
 
-        // Trigger the save_callback
-        if (is_array($GLOBALS['TL_DCA']['tl_bsa_schiedsrichter']['config']['ondelete_callback'])) {
-            foreach ($GLOBALS['TL_DCA']['tl_bsa_schiedsrichter']['config']['ondelete_callback'] as $callback) {
-                if (is_array($callback)) {
-                    $this->import($callback[0]);
-                    $this->{$callback[0]}->{$callback[1]}($intId);
-                } elseif (is_callable($callback)) {
-                    $callback($intId);
-                }
-            }
-        }
+        // add histroy to referee
+        SRHistory::insertByDeleteSchiedsrichter($intId);
     }
 
     /**
@@ -411,28 +410,19 @@ class tl_bsa_schiedsrichter extends Backend
             ->execute($intId)
         ;
 
-        // Trigger the onundo_callback
-        if (is_array($GLOBALS['TL_DCA']['tl_bsa_schiedsrichter']['config']['onundo_callback'])) {
-            foreach ($GLOBALS['TL_DCA']['tl_bsa_schiedsrichter']['config']['onundo_callback'] as $callback) {
-                if (is_array($callback)) {
-                    $this->import($callback[0]);
-                    $this->{$callback[0]}->{$callback[1]}($intId);
-                } elseif (is_callable($callback)) {
-                    $callback($intId);
-                }
-            }
-        }
+        // add histroy to referee
+        SRHistory::insertByUndeleteSchiedsrichter($intId);
     }
 
     /**
      * sets the date of birth in format 'Y-m-d' into this field.
      *
-     * @param mixed         $varValue
-     * @param DataContainer $dc
+     * @param mixed         $varValue Value to be saved
+     * @param DataContainer $dc       Data Container object
      *
      * @return mixed
      */
-    public function setDBGeburtsdatum($varValue, $dc)
+    public function setDBGeburtsdatum($varValue, DataContainer $dc)
     {
         $geburtsdatum = new Date($this->Input->post('geburtsdatum'));
 
@@ -442,12 +432,12 @@ class tl_bsa_schiedsrichter extends Backend
     /**
      * sets the referee since date in format 'Y-m-d' into this field.
      *
-     * @param mixed         $varValue
-     * @param DataContainer $dc
+     * @param mixed         $varValue Value to be saved
+     * @param DataContainer $dc       Data Container object
      *
      * @return mixed
      */
-    public function setSRSeitDatum($varValue)
+    public function setSRSeitDatum($varValue, DataContainer $dc)
     {
         $srSeit = new Date($this->Input->post('sr_seit'));
 
@@ -496,6 +486,8 @@ class tl_bsa_schiedsrichter extends Backend
 
     /**
      * Add the action to the referees history.
+     *
+     * @param DataContainer $dc Data Container object
      */
     public function submit(DataContainer $dc): void
     {

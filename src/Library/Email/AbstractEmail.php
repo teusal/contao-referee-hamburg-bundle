@@ -19,6 +19,7 @@ use Contao\Date;
 use Contao\Email;
 use Contao\Message;
 use Contao\System;
+use Teusal\ContaoRefereeHamburgBundle\Library\Mailer\AvailableTransports;
 use Teusal\ContaoRefereeHamburgBundle\Library\SRHistory;
 use Teusal\ContaoRefereeHamburgBundle\Model\BsaSchiedsrichterModel;
 use Teusal\ContaoRefereeHamburgBundle\Model\BsaVereinModel;
@@ -33,7 +34,7 @@ abstract class AbstractEmail extends Email
     protected static $countSentMails = 0;
 
     protected static $beUser = [
-        'Ersetzungen durch Daten des ausführenden Backend-Benutzers',
+        ['colspan', '<h1 style="margin-top: 15px; font-weight: bold;">Ersetzungen durch Daten des ausführenden Backend-Benutzers</h1>'],
         ['#BE-USER_NAME#', 'Name des ausführenden Backend-Benutzers'],
         ['#BE-USER_VORNAME#', 'Vorname des ausführenden Backend-Benutzers'],
         ['#BE-USER_NACHNAME#', 'Nachname des ausführenden Backend-Benutzers'],
@@ -45,13 +46,13 @@ abstract class AbstractEmail extends Email
     ];
 
     protected static $webmaster = [
-        'Ersetzungen durch Daten des Webmasters',
+        ['colspan', '<h1 style="margin-top: 15px; font-weight: bold;">Ersetzungen durch Daten des Webmasters</h1>'],
         ['#WEBMASTER_NAME#', 'Name des Webmasters'],
         ['#WEBMASTER_EMAIL#', 'E-Mail-Adresse des Webmasters'],
     ];
 
     protected static $sr = [
-        'Ersetzungen durch Daten des angeschriebenen Schiedsrichters',
+        ['colspan', '<h1 style="margin-top: 15px; font-weight: bold;">Ersetzungen durch Daten des angeschriebenen Schiedsrichters</h1>'],
         ['#SR_VORNAME#', 'Vorname des Schiedsrichter'],
         ['#SR_NACHNAME#', 'Nachname des Schiedsrichter'],
         ['#SR_NAME#', 'Vor- und Nachname des Schiedsrichter getrennt durch ein Leerzeichen'],
@@ -61,13 +62,13 @@ abstract class AbstractEmail extends Email
     ];
 
     protected static $verein = [
-        'Ersetzungen durch Daten des Vereins des angeschriebenen Schiedsrichters',
+        ['colspan', '<h1 style="margin-top: 15px; font-weight: bold;">Ersetzungen durch Daten des Vereins des angeschriebenen Schiedsrichters</h1>'],
         ['#VEREIN_NAME#', 'Langer Name des Vereins'],
         ['#VEREIN_NAME_KURZ#', 'Kurzer Name des Vereins'],
     ];
 
     protected static $currentDate = [
-        'Ersetzungen durch Daten des Vereins des angeschriebenen Schiedsrichters',
+        ['colspan', '<h1 style="margin-top: 15px; font-weight: bold;">Ersetzungen durch Daten des Vereins des angeschriebenen Schiedsrichters</h1>'],
         ['#DATUM_TTMMJJJJ#', 'Aktuelles Datum im Format Tag.Monat.Jahr, z.B. 31.12.1990'],
         ['#DATUM_MONAT#', 'Aktueller Monatsname, z.B. Dezember'],
         ['#DATUM_JAHR#', 'Aktuelles Kalenderjahr, z.B. 1990'],
@@ -85,25 +86,15 @@ abstract class AbstractEmail extends Email
 
         if (TL_MODE === 'BE') {
             $this->setBackendUser(BackendUser::getInstance());
-
-            // $user = \BackendUser::getInstance();
-            // if ($user->useSMTP) {
-            // 	\Config::set('useSMTP', true);
-            // 	\Config::set('smtpHost', $user->smtpHost);
-            // 	\Config::set('smtpUser', $user->smtpUser);
-            // 	\Config::set('smtpPass', $user->smtpPass);
-            // 	\Config::set('smtpEnc', $user->smtpEnc);
-            // 	\Config::set('smtpPort', $user->smtpPort);
-            // }
         }
 
         $this->replacementValues['WEBMASTER'] = [
-            'NAME' => 'Webmaster ('.Config::get('websiteTitle').')',
-            'EMAIL' => $GLOBALS['TL_CONFIG']['adminEmail'],
+            'NAME' => 'Webmaster ('.$GLOBALS['BSA_NAMES'][Config::get('bsa_name')].')',
+            'EMAIL' => Config::get('adminEmail'),
         ];
 
         $this->replacementValues['DATUM'] = [
-            'TTMMJJJJ' => Date::parse($GLOBALS['TL_CONFIG']['dateFormat'], time()),
+            'TTMMJJJJ' => Date::parse(Config::get('dateFormat'), time()),
             'MONAT' => Date::parse('F', time()),
             'JAHR' => Date::parse('Y', time()),
         ];
@@ -117,12 +108,13 @@ abstract class AbstractEmail extends Email
             case 'html':
                 $varValue = $this->doReplace($varValue);
                 break;
+
             case 'from':
                 if (!\strlen($varValue)) {
                     if (TL_MODE === 'BE') {
                         $varValue = BackendUser::getInstance()->email;
                     } else {
-                        $varValue = $GLOBALS['TL_CONFIG']['adminEmail'];
+                        $varValue = Config::get('adminEmail');
                     }
                 }
                 break;
@@ -131,23 +123,30 @@ abstract class AbstractEmail extends Email
         parent::__set($strKey, $varValue);
     }
 
-    final public function getSenderNameField()
+    /**
+     * validating and setting the mailer transport.
+     *
+     * @param string $mailerTransport
+     */
+    final public function setMailerTransport($mailerTransport): void
     {
-        return [
-            'label' => &$GLOBALS['TL_LANG']['mail_config']['senderName'],
-            'inputType' => 'text',
-            'reference' => array_merge(static::$beUser, static::$webmaster, $this->getSenderNameReferenceAddons()),
-            'eval' => ['helpwizard' => true, 'decodeEntities' => true, 'maxlength' => 128, 'mandatory' => true, 'tl_class' => 'w50'],
-            'save_callback' => [[static::class, 'validateSenderName']],
-        ];
+        /** @var AvailableTransports $availableTransports */
+        $availableTransports = System::getContainer()->get('contao.mailer.available_transports');
+
+        if (null === $availableTransports->getTransport($mailerTransport)) {
+            throw new \Exception('mailerTransport not set or not found');
+        }
+        $this->addHeader('X-Transport', $mailerTransport);
     }
 
-    final public function getSenderField()
+    final public function getMailerTransportField()
     {
         return [
-            'label' => &$GLOBALS['TL_LANG']['mail_config']['sender'],
-            'inputType' => 'text',
-            'eval' => ['rgxp' => 'email', 'mandatory' => false, 'tl_class' => 'w50'],
+            'label' => &$GLOBALS['TL_LANG']['mail_config']['mailerTransport'],
+            'exclude' => true,
+            'inputType' => 'select',
+            'eval' => ['tl_class' => 'w50', 'includeBlankOption' => false, 'mandatory' => true, 'includeBlankOption' => true],
+            'options_callback' => ['contao.mailer.available_transports', 'getAllTransportOptions'],
         ];
     }
 
@@ -158,7 +157,9 @@ abstract class AbstractEmail extends Email
             'inputType' => 'text',
             'reference' => array_merge(static::$beUser, static::$webmaster, static::$currentDate, static::$sr, $this->getSubjectReferenceAddons()),
             'eval' => ['helpwizard' => true, 'decodeEntities' => true, 'mandatory' => true, 'tl_class' => 'long clr'],
-            'save_callback' => [[static::class, 'validateSubject']],
+            'save_callback' => [
+                [static::class, 'validateSubject'],
+            ],
         ];
     }
 
@@ -169,7 +170,9 @@ abstract class AbstractEmail extends Email
             'inputType' => 'textarea',
             'reference' => array_merge(static::$beUser, static::$beUserSignatur, static::$webmaster, static::$currentDate, static::$sr, static::$verein, $this->getTextReferenceAddons()),
             'eval' => ['helpwizard' => true, 'rte' => 'tinyNews', 'mandatory' => true],
-            'save_callback' => [[static::class, 'validateText']],
+            'save_callback' => [
+                [static::class, 'validateText'],
+            ],
         ];
     }
 
@@ -182,15 +185,14 @@ abstract class AbstractEmail extends Email
         ];
     }
 
-    final public function validateSenderName($varValue, DataContainer $dc)
-    {
-        $arrDefined = $this->getReplacementsDefined($this->getSenderNameField());
-        $arrNeeded = $this->getReplacementsNeeded($varValue);
-        $this->validateReplacements($arrDefined, $arrNeeded);
-
-        return $varValue;
-    }
-
+    /**
+     * Validating the subject.
+     *
+     * @param mixed         $varValue Value to be saved
+     * @param DataContainer $dc       Data Container object
+     *
+     * @return mixed
+     */
     final public function validateSubject($varValue, DataContainer $dc)
     {
         $arrDefined = $this->getReplacementsDefined($this->getSubjectField());
@@ -200,6 +202,14 @@ abstract class AbstractEmail extends Email
         return $varValue;
     }
 
+    /**
+     * Validating the text.
+     *
+     * @param mixed         $varValue Value to be saved
+     * @param DataContainer $dc       Data Container object
+     *
+     * @return mixed
+     */
     final public function validateText($varValue, DataContainer $dc)
     {
         $arrDefined = $this->getReplacementsDefined($this->getTextField());
@@ -260,16 +270,29 @@ abstract class AbstractEmail extends Email
 
     /**
      * Sendet die Mail und schreibt in die SRHistory.
+     *
+     * @return bool
      */
     public function sendTo()
     {
+        if (!$this->objMessage->getHeaders()->has('X-Transport')) {
+            throw new \Exception('mailerTransport not set or not found');
+        }
+
         if (static::$countSentMails > 9) {
             static::$countSentMails = 0;
             sleep(1);
         }
 
         $arrArgs = \func_get_args();
-        $result = parent::sendTo($arrArgs[0]);
+        $email = $arrArgs[0];
+
+        // replace email in dev environment
+        if ('dev' === System::getContainer()->getParameter('kernel.environment')) {
+            $email = 'mail@alexteuscher.de';
+        }
+
+        $result = parent::sendTo($email);
 
         if ($this->srID && !$this->isTest) {
             SRHistory::insert($this->srID, null, ['E-Mail', 'INFO'], 'Der Schiedsrichters %s wurde per E-Mail angeschrieben. Betreff: '.$this->__get('subject'), __METHOD__);
@@ -287,8 +310,6 @@ abstract class AbstractEmail extends Email
     {
         return $this->objMessage->getBcc();
     }
-
-    abstract protected function getSenderNameReferenceAddons();
 
     abstract protected function getSubjectReferenceAddons();
 

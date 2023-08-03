@@ -10,10 +10,6 @@ declare(strict_types=1);
  * @license LGPL-3.0-or-later
  */
 
-if (!defined('TL_ROOT')) {
-    die('You can not access this file directly!');
-}
-
 /*
  * Legends
  */

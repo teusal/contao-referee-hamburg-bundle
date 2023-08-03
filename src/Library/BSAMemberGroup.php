@@ -13,6 +13,7 @@ declare(strict_types=1);
 namespace Teusal\ContaoRefereeHamburgBundle\Library;
 
 use Contao\Database;
+use Contao\DataContainer;
 use Contao\MemberGroupModel;
 use Contao\Message;
 use Contao\System;
@@ -25,8 +26,45 @@ use Teusal\ContaoRefereeHamburgBundle\Model\BsaVereinObmannModel;
  */
 final class BSAMemberGroup extends System
 {
+    private const AUTOMATICS = [
+        'vollautomatik' => [
+            'alle',
+            'alle_sr',
+            'obleute',
+            'U18',
+            'Ü40',
+            'm',
+            'w',
+            'aktive',
+            'passive',
+        ],
+        'halbautomatik' => [
+            '10_jahre',
+            '25_jahre',
+            '40_jahre',
+            '50_jahre',
+            '60_jahre',
+            '70_jahre',
+            'ohne_sitzung',
+            'ohne_regelarbeit',
+            'ohne_sitzung_regelarbeit',
+        ],
+    ];
+
     // temporäre Liste für neu angelegte Gruppen
     private static $cachedGroups = [];
+
+    /**
+     * returns all available options.
+     *
+     * @param DataContainer|null $dc Data Container object or null
+     *
+     * @return array available options
+     */
+    public function getAllAutomaticOptions(DataContainer $dc): array
+    {
+        return self::AUTOMATICS;
+    }
 
     /**
      * takes care for automatic groups. adds or removes the referee from the automatic groups.
@@ -400,7 +438,7 @@ final class BSAMemberGroup extends System
         return !empty($automaticKey)
             && \in_array(
                 $automaticKey,
-                $GLOBALS['TL_DCA']['tl_member_group']['fields']['automatik']['options']['vollautomatik'],
+                self::AUTOMATICS['vollautomatik'],
                 true
             );
     }
@@ -415,7 +453,7 @@ final class BSAMemberGroup extends System
         return !empty($automaticKey)
             && \in_array(
                 $automaticKey,
-                $GLOBALS['TL_DCA']['tl_member_group']['fields']['automatik']['options']['halbautomatik'],
+                self::AUTOMATICS['halbautomatik'],
                 true
             );
     }

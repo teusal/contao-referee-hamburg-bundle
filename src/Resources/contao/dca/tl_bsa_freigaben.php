@@ -24,8 +24,12 @@ $GLOBALS['TL_DCA']['tl_bsa_freigaben'] = [
     'config' => [
         'dataContainer' => DC_Table::class,
         'enableVersioning' => true,
-        'onsubmit_callback' => [[tl_bsa_freigaben::class, 'setSRName']],
-        'ondelete_callback' => [[tl_bsa_freigaben::class, 'deleteFreigabe']],
+        'onsubmit_callback' => [
+            [tl_bsa_freigaben::class, 'setSRName'],
+        ],
+        'ondelete_callback' => [
+            [tl_bsa_freigaben::class, 'deleteFreigabe'],
+        ],
         'sql' => [
             'keys' => [
                 'id' => 'primary',
@@ -89,7 +93,9 @@ $GLOBALS['TL_DCA']['tl_bsa_freigaben'] = [
             'filter' => true,
             'eval' => ['unique' => true, 'multiple' => false, 'includeBlankOption' => true, 'blankOptionLabel' => 'Schiedsrichter wählen', 'mandatory' => true, 'tl_class' => 'w50'],
             'foreignKey' => 'tl_bsa_schiedsrichter.name_rev',
-            'save_callback' => [[tl_bsa_freigaben::class, 'saveSchiedsrichter']],
+            'save_callback' => [
+                [tl_bsa_freigaben::class, 'saveSchiedsrichter'],
+            ],
             'sql' => "int(10) unsigned NOT NULL default '0'",
         ],
         'name_rev' => [
@@ -106,61 +112,81 @@ $GLOBALS['TL_DCA']['tl_bsa_freigaben'] = [
         'zeige_geburtsdatum' => [
             'inputType' => 'checkbox',
             'filter' => true,
-            'save_callback' => [[tl_bsa_freigaben::class, 'switchDateOfBirth']],
+            'save_callback' => [
+                [tl_bsa_freigaben::class, 'switchDateOfBirth'],
+            ],
             'sql' => "char(1) NOT NULL default ''",
         ],
         'zeige_strasse' => [
             'inputType' => 'checkbox',
             'filter' => true,
-            'save_callback' => [[tl_bsa_freigaben::class, 'switchStreet']],
+            'save_callback' => [
+                [tl_bsa_freigaben::class, 'switchStreet'],
+            ],
             'sql' => "char(1) NOT NULL default ''",
         ],
         'zeige_plz' => [
             'inputType' => 'checkbox',
             'filter' => true,
-            'save_callback' => [[tl_bsa_freigaben::class, 'switchZipcode']],
+            'save_callback' => [
+                [tl_bsa_freigaben::class, 'switchZipcode'],
+            ],
             'sql' => "char(1) NOT NULL default ''",
         ],
         'zeige_ort' => [
             'inputType' => 'checkbox',
             'filter' => true,
-            'save_callback' => [[tl_bsa_freigaben::class, 'switchCity']],
+            'save_callback' => [
+                [tl_bsa_freigaben::class, 'switchCity'],
+            ],
             'sql' => "char(1) NOT NULL default ''",
         ],
         'zeige_telefon1' => [
             'inputType' => 'checkbox',
             'filter' => true,
-            'save_callback' => [[tl_bsa_freigaben::class, 'switchPhone1']],
+            'save_callback' => [
+                [tl_bsa_freigaben::class, 'switchPhone1'],
+            ],
             'sql' => "char(1) NOT NULL default ''",
         ],
         'zeige_telefon2' => [
             'inputType' => 'checkbox',
             'filter' => true,
-            'save_callback' => [[tl_bsa_freigaben::class, 'switchPhone2']],
+            'save_callback' => [
+                [tl_bsa_freigaben::class, 'switchPhone2'],
+            ],
             'sql' => "char(1) NOT NULL default ''",
         ],
         'zeige_telefon_mobil' => [
             'inputType' => 'checkbox',
             'filter' => true,
-            'save_callback' => [[tl_bsa_freigaben::class, 'switchPhoneMobile']],
+            'save_callback' => [
+                [tl_bsa_freigaben::class, 'switchPhoneMobile'],
+            ],
             'sql' => "char(1) NOT NULL default ''",
         ],
         'zeige_fax' => [
             'inputType' => 'checkbox',
             'filter' => true,
-            'save_callback' => [[tl_bsa_freigaben::class, 'switchFax']],
+            'save_callback' => [
+                [tl_bsa_freigaben::class, 'switchFax'],
+            ],
             'sql' => "char(1) NOT NULL default ''",
         ],
         'link_email' => [
             'inputType' => 'checkbox',
             'filter' => true,
-            'save_callback' => [[tl_bsa_freigaben::class, 'switchEmail']],
+            'save_callback' => [
+                [tl_bsa_freigaben::class, 'switchEmail'],
+            ],
             'sql' => "char(1) NOT NULL default ''",
         ],
         'zeige_foto' => [
             'inputType' => 'checkbox',
             'filter' => true,
-            'save_callback' => [[tl_bsa_freigaben::class, 'switchPhoto']],
+            'save_callback' => [
+                [tl_bsa_freigaben::class, 'switchPhoto'],
+            ],
             'sql' => "char(1) NOT NULL default ''",
         ],
     ],
@@ -184,6 +210,8 @@ class tl_bsa_freigaben extends Backend
 
     /**
      * updating the active record with the referees name revers.
+     *
+     * @param DataContainer $dc Data Container object
      */
     public function setSRName(DataContainer $dc): void
     {
@@ -193,7 +221,8 @@ class tl_bsa_freigaben extends Backend
     /**
      * adding an entry into the referees history.
      *
-     * @param int $undoId
+     * @param DataContainer $dc     Data Container object
+     * @param int           $undoId The ID of the tl_undo database record
      */
     public function deleteFreigabe(DataContainer $dc, $undoId): void
     {
@@ -203,7 +232,8 @@ class tl_bsa_freigaben extends Backend
     /**
      * adding an entry into the referees history.
      *
-     * @param mixed $varValue
+     * @param mixed         $varValue Value to be saved
+     * @param DataContainer $dc       Data Container object
      *
      * @return mixed
      */
@@ -223,7 +253,8 @@ class tl_bsa_freigaben extends Backend
     /**
      * adding an entry into the referees history.
      *
-     * @param mixed $varValue
+     * @param mixed         $varValue Value to be saved
+     * @param DataContainer $dc       Data Container object
      *
      * @return mixed
      */
@@ -239,7 +270,8 @@ class tl_bsa_freigaben extends Backend
     /**
      * adding an entry into the referees history.
      *
-     * @param mixed $varValue
+     * @param mixed         $varValue Value to be saved
+     * @param DataContainer $dc       Data Container object
      *
      * @return mixed
      */
@@ -255,7 +287,8 @@ class tl_bsa_freigaben extends Backend
     /**
      * adding an entry into the referees history.
      *
-     * @param mixed $varValue
+     * @param mixed         $varValue Value to be saved
+     * @param DataContainer $dc       Data Container object
      *
      * @return mixed
      */
@@ -271,7 +304,8 @@ class tl_bsa_freigaben extends Backend
     /**
      * adding an entry into the referees history.
      *
-     * @param mixed $varValue
+     * @param mixed         $varValue Value to be saved
+     * @param DataContainer $dc       Data Container object
      *
      * @return mixed
      */
@@ -287,7 +321,8 @@ class tl_bsa_freigaben extends Backend
     /**
      * adding an entry into the referees history.
      *
-     * @param mixed $varValue
+     * @param mixed         $varValue Value to be saved
+     * @param DataContainer $dc       Data Container object
      *
      * @return mixed
      */
@@ -303,7 +338,8 @@ class tl_bsa_freigaben extends Backend
     /**
      * adding an entry into the referees history.
      *
-     * @param mixed $varValue
+     * @param mixed         $varValue Value to be saved
+     * @param DataContainer $dc       Data Container object
      *
      * @return mixed
      */
@@ -319,7 +355,8 @@ class tl_bsa_freigaben extends Backend
     /**
      * adding an entry into the referees history.
      *
-     * @param mixed $varValue
+     * @param mixed         $varValue Value to be saved
+     * @param DataContainer $dc       Data Container object
      *
      * @return mixed
      */
@@ -335,7 +372,8 @@ class tl_bsa_freigaben extends Backend
     /**
      * adding an entry into the referees history.
      *
-     * @param mixed $varValue
+     * @param mixed         $varValue Value to be saved
+     * @param DataContainer $dc       Data Container object
      *
      * @return mixed
      */
@@ -351,7 +389,8 @@ class tl_bsa_freigaben extends Backend
     /**
      * adding an entry into the referees history.
      *
-     * @param mixed $varValue
+     * @param mixed         $varValue Value to be saved
+     * @param DataContainer $dc       Data Container object
      *
      * @return mixed
      */
@@ -367,7 +406,8 @@ class tl_bsa_freigaben extends Backend
     /**
      * adding an entry into the referees history.
      *
-     * @param mixed $varValue
+     * @param mixed         $varValue Value to be saved
+     * @param DataContainer $dc       Data Container object
      *
      * @return mixed
      */

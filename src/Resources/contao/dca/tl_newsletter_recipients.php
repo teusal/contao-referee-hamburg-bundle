@@ -32,7 +32,7 @@ $GLOBALS['TL_DCA']['tl_newsletter_recipients']['fields']['refereeId'] = [
     'inputType' => 'select',
     'eval' => ['disabled' => true, 'multiple' => false, 'includeBlankOption' => true, 'blankOptionLabel' => 'kein BSA-Schiedsrichter', 'tl_class' => 'clr'],
     'foreignKey' => 'tl_bsa_schiedsrichter.name_rev',
-    'options_callback' => ['tl_bsa_newsletter_recipients', 'getSchiedsrichterNotDeleted'],
+    'options_callback' => [tl_bsa_newsletter_recipients::class, 'getSchiedsrichterNotDeleted'],
     'sql' => 'int(10) unsigned NULL',
 ];
 $GLOBALS['TL_DCA']['tl_newsletter_recipients']['fields']['groups'] = [
@@ -96,11 +96,11 @@ class tl_bsa_newsletter_recipients extends Backend
     /**
      * Add the type of content element.
      *
-     * @param array
+     * @param DataContainer|null $dc Data Container object or null
      *
-     * @return string
+     * @return array
      */
-    public function getSchiedsrichterNotDeleted()
+    public function getSchiedsrichterNotDeleted(DataContainer $dc)
     {
         $objSR = BsaSchiedsrichterModel::findBy('deleted', '', ['order' => 'name_rev']);
 

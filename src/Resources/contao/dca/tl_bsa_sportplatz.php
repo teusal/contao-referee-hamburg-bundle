@@ -130,7 +130,9 @@ $GLOBALS['TL_DCA']['tl_bsa_sportplatz'] = [
         'telefon1' => [
             'inputType' => 'text',
             'eval' => ['maxlength' => 25, 'tl_class' => 'w50'],
-            'save_callback' => [[PhoneNumberNormalizer::class, 'format']],
+            'save_callback' => [
+                [PhoneNumberNormalizer::class, 'format'],
+            ],
             'sql' => 'varchar(25) NULL',
         ],
         'telefon1_beschreibung' => [
@@ -141,7 +143,9 @@ $GLOBALS['TL_DCA']['tl_bsa_sportplatz'] = [
         'telefon2' => [
             'inputType' => 'text',
             'eval' => ['maxlength' => 25, 'tl_class' => 'w50'],
-            'save_callback' => [[PhoneNumberNormalizer::class, 'format']],
+            'save_callback' => [
+                [PhoneNumberNormalizer::class, 'format'],
+            ],
             'sql' => 'varchar(25) NULL',
         ],
         'telefon2_beschreibung' => [

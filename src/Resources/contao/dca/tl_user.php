@@ -19,7 +19,7 @@ use Contao\UserModel;
 /*
  * change onload
  */
-$GLOBALS['TL_DCA']['tl_user']['config']['onload_callback'][] = [bsa_user::class, 'onLoad'];
+$GLOBALS['TL_DCA']['tl_user']['config']['onload_callback'][] = [tl_bsa_user::class, 'onLoad'];
 
 /*
  * Change palette
@@ -40,16 +40,16 @@ $GLOBALS['TL_DCA']['tl_user']['fields']['signatur_html'] = [
 ];
 
 /**
- * Class bsa_user.
+ * Class tl_bsa_user.
  *
  * Provide miscellaneous methods that are used by the data configuration array.
  */
-class bsa_user extends tl_user
+class tl_bsa_user extends tl_user
 {
     /**
      * validates an existig mailer transport identified by set mailaddress and set a info if it isn't there.
      *
-     * @param DataContainer|null $dc
+     * @param DataContainer|null $dc Data Container object or null
      */
     public function onLoad(DataContainer $dc): void
     {

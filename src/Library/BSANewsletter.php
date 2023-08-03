@@ -29,7 +29,7 @@ class BSANewsletter extends System
     public function __construct()
     {
         parent::__construct();
-        $this->import(Database::class);
+        $this->import(Database::class, 'Database');
         $this->import(BackendUser::class, 'User');
     }
 
@@ -95,7 +95,7 @@ class BSANewsletter extends System
         }
 
         // Alle bestehenden Eintragungen der Empfänger löschen, die nicht in den aktuellen Newsletterkanälen sind
-        $strWhere = 'schiedsrichter='.$objSR->id.' AND pid NOT IN ('.implode(',', array_keys($arrChannelsAndGroups)).') AND groups IS NOT NULL';
+        $strWhere = 'refereeId='.$objSR->id.' AND pid NOT IN ('.implode(',', array_keys($arrChannelsAndGroups)).') AND groups IS NOT NULL';
         $arrRemovePids = $this->Database->execute('SELECT pid FROM tl_newsletter_recipients WHERE '.$strWhere)
             ->fetchEach('pid')
         ;
@@ -109,7 +109,7 @@ class BSANewsletter extends System
         }
 
         foreach ($arrChannelsAndGroups as $channelId => $arrGroupIds) {
-            $objRecipients = $this->Database->prepare('SELECT id FROM tl_newsletter_recipients WHERE pid=? AND schiedsrichter=?')
+            $objRecipients = $this->Database->prepare('SELECT id FROM tl_newsletter_recipients WHERE pid=? AND refereeId=?')
                 ->execute($channelId, $objSR->id)
             ;
 
@@ -149,7 +149,7 @@ class BSANewsletter extends System
 
                 // Timestamp setzen, wenn es eine Änderung gab
                 if ($isUpdated) {
-                    $res = $this->Database->prepare('UPDATE tl_newsletter_recipients SET tstamp=? WHERE pid=? AND schiedsrichter=?')
+                    $res = $this->Database->prepare('UPDATE tl_newsletter_recipients SET tstamp=? WHERE pid=? AND refereeId=?')
                         ->execute(time(), $channelId, $objSR->id)
                     ;
                 }
@@ -160,7 +160,8 @@ class BSANewsletter extends System
     /**
      * Löscht alle Einträge zu einer Gruppe aus der Newsletter-Empfängerliste.
      *
-     * @param int $undoId
+     * @param DataContainer $dc     Data Container object
+     * @param int           $undoId The ID of the tl_undo database record
      */
     public function deleteGruppe(DataContainer $dc, $undoId): void
     {
@@ -186,7 +187,8 @@ class BSANewsletter extends System
     /**
      * Löscht den Schiedsrichter aus der Empfängerliste beim Entfernen eines Gruppenmitgliedes.
      *
-     * @param int $undoId
+     * @param DataContainer $dc     Data Container object
+     * @param int           $undoId The ID of the tl_undo database record
      */
     public function deleteNewsletterzuordnung(DataContainer $dc, $undoId): void
     {
@@ -250,7 +252,8 @@ class BSANewsletter extends System
     /**
      * Verwaltet die Änderung eines Schiedsrichters beim Anlegen oder Ändern eines Gruppenmitglieds.
      *
-     * @param mixed $varValue
+     * @param mixed         $varValue Value to be saved
+     * @param DataContainer $dc       Data Container object
      *
      * @return mixed
      */
@@ -358,7 +361,7 @@ class BSANewsletter extends System
     {
         return $this->Database->prepare('SELECT schiedsrichter FROM tl_bsa_gruppenmitglieder WHERE pid=?')
             ->execute($intGroup)
-            ->fetchEach('refereeId')
+            ->fetchEach('schiedsrichter')
         ;
     }
 }

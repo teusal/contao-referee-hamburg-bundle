@@ -18,7 +18,7 @@ namespace Teusal\ContaoRefereeHamburgBundle\Library\Email;
 class LoginEmail extends AbstractEmail
 {
     protected static $login = [
-        'Login Ersetzungen',
+        ['colspan', '<h1 style="margin-top: 15px; font-weight: bold;">Login Ersetzungen</h1>'],
         ['#LOGIN_USERNAME#', 'Der Benutzername des Login eines Schiedsrichter'],
         ['#LOGIN_NEW_PASSWORD#', 'Das neu erzeugte Passwort zu diesem Login'],
     ];
@@ -35,11 +35,6 @@ class LoginEmail extends AbstractEmail
     {
         $this->replacementValues['LOGIN']['USERNAME'] = $username;
         $this->replacementValues['LOGIN']['NEW_PASSWORD'] = $password;
-    }
-
-    protected function getSenderNameReferenceAddons()
-    {
-        return [];
     }
 
     protected function getSubjectReferenceAddons()

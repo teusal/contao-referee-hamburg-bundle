@@ -2,6 +2,11 @@ services:
     _defaults:
         autoconfigure: true
 
+    contao.migration.referee_100.config_update:
+        class: Teusal\ContaoRefereeHamburgBundle\Migration\ConfigMigration
+        arguments:
+            - '@contao.framework'
+
     contao.migration.referee_100.newsletter_update:
         class: Teusal\ContaoRefereeHamburgBundle\Migration\NewsletterMigration
         arguments:

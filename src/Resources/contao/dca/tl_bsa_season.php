@@ -88,7 +88,7 @@ $GLOBALS['TL_DCA']['tl_bsa_season'] = [
             'inputType' => 'text',
             'eval' => ['rgxp' => 'date', 'mandatory' => true, 'doNotCopy' => true, 'datepicker' => true, 'tl_class' => 'w50 wizard'],
             'save_callback' => [
-                ['tl_bsa_season', 'validateDate'],
+                [tl_bsa_season::class, 'validateDate'],
             ],
             'sql' => 'int(10) unsigned NULL',
         ],
@@ -96,7 +96,7 @@ $GLOBALS['TL_DCA']['tl_bsa_season'] = [
             'inputType' => 'text',
             'eval' => ['rgxp' => 'date', 'mandatory' => true, 'doNotCopy' => true, 'datepicker' => true, 'tl_class' => 'w50 wizard'],
             'save_callback' => [
-                ['tl_bsa_season', 'validateEndDate'],
+                [tl_bsa_season::class, 'validateEndDate'],
             ],
             'sql' => 'int(10) unsigned NULL',
         ],
@@ -148,9 +148,8 @@ class tl_bsa_season extends Backend
     /**
      * Test: The date must not be in any other season.
      *
-     * @param mixed $varValue
-     *
-     * @throws Exception
+     * @param mixed         $varValue Value to be saved
+     * @param DataContainer $dc       Data Container object
      *
      * @return mixed
      */
@@ -172,9 +171,8 @@ class tl_bsa_season extends Backend
     /**
      * Check: The end date must be smaller than the start date and should not be within another season.
      *
-     * @param mixed $varValue
-     *
-     * @throws Exception
+     * @param mixed         $varValue Value to be saved
+     * @param DataContainer $dc       Data Container object
      *
      * @return mixed
      */

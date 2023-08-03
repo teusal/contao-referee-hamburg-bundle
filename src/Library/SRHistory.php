@@ -53,15 +53,15 @@ class SRHistory extends System
     /**
      * Erzeugt einen Eintrag im Verlauf eines Schiedsrichters beim Wiederherstellen eines Schiedsrichters.
      */
-    public function insertByUndeleteSchiedsrichter($intSR): void
+    public static function insertByUndeleteSchiedsrichter($intSR): void
     {
-        $this->insertByDeleteSchiedsrichter($intSR, 0);
+        static::insertByDeleteSchiedsrichter($intSR, 0);
     }
 
     /**
      * Erzeugt einen Eintrag im Verlauf eines Schiedsrichters beim Löschen eines Schiedsrichters.
      */
-    public function insertByDeleteSchiedsrichter($intSR, $deleted = 1): void
+    public static function insertByDeleteSchiedsrichter($intSR, $deleted = 1): void
     {
         if ($deleted) {
             $action = 'REMOVE';

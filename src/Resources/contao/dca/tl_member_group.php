@@ -10,14 +10,14 @@ declare(strict_types=1);
  * @license LGPL-3.0-or-later
  */
 
-if (!defined('TL_ROOT')) {
-    die('You can not access this file directly!');
-}
 use Contao\ArrayUtil;
+use Contao\BackendUser;
 use Contao\DataContainer;
 use Contao\Image;
 use Contao\StringUtil;
+use Teusal\ContaoRefereeHamburgBundle\Library\Addressbook\AddressbookSynchronizer;
 use Teusal\ContaoRefereeHamburgBundle\Library\BSAMemberGroup;
+use Teusal\ContaoRefereeHamburgBundle\Library\BSANewsletter;
 use Teusal\ContaoRefereeHamburgBundle\Model\BsaGruppenmitgliederModel;
 use Teusal\ContaoRefereeHamburgBundle\Model\BsaSchiedsrichterModel;
 
@@ -65,10 +65,12 @@ $GLOBALS['TL_DCA']['tl_member_group']['fields']['email'] = [
 $GLOBALS['TL_DCA']['tl_member_group']['fields']['automatik'] = [
     'filter' => true,
     'inputType' => 'select',
-    'options' => ['vollautomatik' => ['alle', 'alle_sr', 'obleute', 'U18', 'Ü40', 'm', 'w', 'aktive', 'passive'], 'halbautomatik' => ['10_jahre', '25_jahre', '40_jahre', '50_jahre', '60_jahre', '70_jahre', 'ohne_sitzung', 'ohne_regelarbeit', 'ohne_sitzung_regelarbeit']],
+    'options_callback' => [BSAMemberGroup::class, 'getAllAutomaticOptions'],
     'reference' => &$GLOBALS['TL_LANG']['tl_member_group']['options'],
     'eval' => ['helpwizard' => true, 'includeBlankOption' => true, 'blankOptionLabel' => 'Manuelle Verwaltung', 'unique' => true],
-    'save_callback' => [[tl_bsa_member_group::class, 'changeAutomatik']],
+    'save_callback' => [
+        [tl_bsa_member_group::class, 'changeAutomatik'],
+    ],
     'sql' => "varchar(30) NOT NULL default ''",
 ];
 $GLOBALS['TL_DCA']['tl_member_group']['fields']['image_anzeigen'] = [
@@ -116,7 +118,7 @@ $GLOBALS['TL_DCA']['tl_member_group']['config']['switchToEdit'] = true;
 $GLOBALS['TL_DCA']['tl_member_group']['config']['notCopyable'] = true;
 $GLOBALS['TL_DCA']['tl_member_group']['config']['enableVersioning'] = false;
 $GLOBALS['TL_DCA']['tl_member_group']['config']['ondelete_callback'][] = [tl_bsa_member_group::class, 'executeDelete'];
-$GLOBALS['TL_DCA']['tl_member_group']['config']['ondelete_callback'][] = ['\BSANewsletter', 'deleteGruppe'];
+$GLOBALS['TL_DCA']['tl_member_group']['config']['ondelete_callback'][] = [BSANewsletter::class, 'deleteGruppe'];
 $GLOBALS['TL_DCA']['tl_member_group']['config']['onsubmit_callback'][] = [tl_bsa_member_group::class, 'executeSubmit'];
 /*
  * disable Versioning
@@ -136,7 +138,7 @@ ArrayUtil::arrayInsert($GLOBALS['TL_DCA']['tl_member_group']['list']['operations
 ArrayUtil::arrayInsert($GLOBALS['TL_DCA']['tl_member_group']['list']['operations'], 1, [
     'edit_newsletterzuordnung' => [
         'href' => 'table=tl_bsa_newsletterzuordnung',
-        'icon' => 'system/modules/newsletter/assets/icon.gif',
+        'icon' => 'bundles/contaonewsletter/send.svg',
     ],
 ]);
 unset($GLOBALS['TL_DCA']['tl_member_group']['list']['operations']['copy']);
@@ -182,7 +184,7 @@ class tl_bsa_member_group extends tl_member_group
     public function __construct()
     {
         parent::__construct();
-        $this->import('BackendUser', 'User');
+        $this->import(BackendUser::class, 'User');
     }
 
     /**
@@ -220,7 +222,8 @@ class tl_bsa_member_group extends tl_member_group
     /**
      * whenever an automatic configuration of a group is changed the changes in the group members needs to be done.
      *
-     * @param mixed $varValue
+     * @param mixed         $varValue Value to be saved
+     * @param DataContainer $dc       Data Container object
      *
      * @return mixed
      */
@@ -247,7 +250,8 @@ class tl_bsa_member_group extends tl_member_group
     /**
      * handle addressbook synchronization whenever a group is deleted.
      *
-     * @param int $undoId
+     * @param DataContainer $dc     Data Container object
+     * @param int           $undoId The ID of the tl_undo database record
      */
     public function executeDelete(DataContainer $dc, $undoId): void
     {
@@ -262,6 +266,8 @@ class tl_bsa_member_group extends tl_member_group
 
     /**
      * handle addressbook synchronization whenever the synchronization flag is changed.
+     *
+     * @param DataContainer $dc Data Container object
      */
     public function executeSubmit(DataContainer $dc): void
     {

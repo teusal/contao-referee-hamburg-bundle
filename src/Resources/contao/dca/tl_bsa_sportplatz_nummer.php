@@ -10,7 +10,6 @@ declare(strict_types=1);
  * @license LGPL-3.0-or-later
  */
 
-use Contao\Backend;
 use Contao\DataContainer;
 use Contao\DC_Table;
 
@@ -34,16 +33,13 @@ $GLOBALS['TL_DCA']['tl_bsa_sportplatz_nummer'] = [
             'mode' => DataContainer::MODE_PARENT,
             'fields' => ['dfbnet_nummer'],
             'headerFields' => ['name', 'anschrift'],
-            'panelLayout' => 'filter;search,limit',
-            'child_record_callback' => [tl_bsa_sportplatz_nummer::class, 'listChildRecord'],
+            'panelLayout' => 'limit',
             'disableGrouping' => true,
         ],
+        'label' => [
+            'fields' => ['dfbnet_nummer'],
+        ],
         'global_operations' => [
-            'all' => [
-                'href' => 'act=select',
-                'class' => 'header_edit_all',
-                'attributes' => 'onclick="Backend.getScrollOffset();"',
-            ],
         ],
         'operations' => [
             'edit' => [
@@ -82,26 +78,8 @@ $GLOBALS['TL_DCA']['tl_bsa_sportplatz_nummer'] = [
         ],
         'dfbnet_nummer' => [
             'inputType' => 'text',
-            'eval' => ['mandatory' => true, 'unique' => true, 'rgxp' => 'digit', 'maxlength' => 10, 'minlength' => 10],
+            'eval' => ['mandatory' => true, 'unique' => true, 'rgxp' => 'digit', 'maxlength' => 10, 'minlength' => 10, 'tl_class' => 'w50'],
             'sql' => 'varchar(10) NULL',
         ],
     ],
 ];
-
-/**
- * Class tl_bsa_sportplatz_nummer.
- *
- * Provide miscellaneous methods that are used by the data configuration array.
- */
-class tl_bsa_sportplatz_nummer extends Backend
-{
-    /**
-     * Defines how child elements are rendered in "parent view".
-     *
-     * @param array $arrRow Record Data
-     */
-    public function listChildRecord($arrRow): string
-    {
-        return '<div>'.$arrRow['dfbnet_nummer'].'</div>';
-    }
-}

@@ -24,7 +24,9 @@ $GLOBALS['TL_DCA']['tl_bsa_schiedsrichter_historie'] = [
         'notDeletable' => true,
         'notCopyable' => true,
         'notCreatable' => true,
-        'onload_callback' => [[tl_bsa_schiedsrichter_historie::class, 'replacePlaceholders']],
+        'onload_callback' => [
+            [tl_bsa_schiedsrichter_historie::class, 'replacePlaceholders'],
+        ],
         'sql' => [
             'keys' => [
                 'id' => 'primary',
@@ -112,7 +114,7 @@ class tl_bsa_schiedsrichter_historie extends Backend
     /**
      * Colorize the log entries depending on their category.
      *
-     * @param DataContainer|null $dc
+     * @param DataContainer|null $dc Data Container object or null
      */
     public function replacePlaceholders(DataContainer $dc): void
     {

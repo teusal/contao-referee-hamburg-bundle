@@ -15,6 +15,7 @@ use Contao\BackendUser;
 use Contao\DataContainer;
 use Contao\DC_Table;
 use Teusal\ContaoRefereeHamburgBundle\Library\BSAMemberGroup;
+use Teusal\ContaoRefereeHamburgBundle\Library\BSANewsletter;
 
 /*
  * This file is part of Contao Referee Hamburg Bundle.
@@ -29,7 +30,9 @@ $GLOBALS['TL_DCA']['tl_bsa_verein_obmann'] = [
     'config' => [
         'dataContainer' => DC_Table::class,
         'enableVersioning' => true,
-        'ondelete_callback' => [[tl_bsa_verein_obmann::class, 'doDelete']],
+        'ondelete_callback' => [
+            [tl_bsa_verein_obmann::class, 'doDelete'],
+        ],
         'sql' => [
             'keys' => [
                 'id' => 'primary',
@@ -95,7 +98,7 @@ $GLOBALS['TL_DCA']['tl_bsa_verein_obmann'] = [
             'eval' => ['multiple' => false, 'includeBlankOption' => true, 'blankOptionLabel' => 'kein Obmann', 'tl_class' => 'w50'],
             'foreignKey' => 'tl_bsa_schiedsrichter.name_rev',
             'save_callback' => [
-                ['tl_bsa_verein_obmann', 'saveObmann'],
+                [tl_bsa_verein_obmann::class, 'saveObmann'],
             ],
             'sql' => 'int(10) unsigned NULL',
         ],
@@ -104,7 +107,7 @@ $GLOBALS['TL_DCA']['tl_bsa_verein_obmann'] = [
             'eval' => ['multiple' => false, 'includeBlankOption' => true, 'blankOptionLabel' => 'kein stellv. Obmann', 'tl_class' => 'w50 clr'],
             'foreignKey' => 'tl_bsa_schiedsrichter.name_rev',
             'save_callback' => [
-                ['tl_bsa_verein_obmann', 'saveStellv1'],
+                [tl_bsa_verein_obmann::class, 'saveStellv1'],
             ],
             'sql' => 'int(10) unsigned NULL',
         ],
@@ -113,7 +116,7 @@ $GLOBALS['TL_DCA']['tl_bsa_verein_obmann'] = [
             'eval' => ['multiple' => false, 'includeBlankOption' => true, 'blankOptionLabel' => 'kein stellv. Obmann', 'tl_class' => 'w50'],
             'foreignKey' => 'tl_bsa_schiedsrichter.name_rev',
             'save_callback' => [
-                ['tl_bsa_verein_obmann', 'saveStellv2'],
+                [tl_bsa_verein_obmann::class, 'saveStellv2'],
             ],
             'sql' => 'int(10) unsigned NULL',
         ],
@@ -124,6 +127,8 @@ $GLOBALS['TL_DCA']['tl_bsa_verein_obmann'] = [
  * Class tl_bsa_verein_obmann.
  *
  * Provide miscellaneous methods that are used by the data configuration array.
+ *
+ * @property BSANewsletter $BSANewsletter
  */
 class tl_bsa_verein_obmann extends Backend
 {
@@ -134,12 +139,14 @@ class tl_bsa_verein_obmann extends Backend
     {
         parent::__construct();
         $this->import(BackendUser::class, 'User');
+        $this->import(BSANewsletter::class, 'BSANewsletter');
     }
 
     /**
      * Add the type of content element.
      *
-     * @param mixed $varValue
+     * @param mixed         $varValue Value to be saved
+     * @param DataContainer $dc       Data Container object
      *
      * @return mixed
      */
@@ -151,7 +158,8 @@ class tl_bsa_verein_obmann extends Backend
     /**
      * Add the type of content element.
      *
-     * @param mixed $varValue
+     * @param mixed         $varValue Value to be saved
+     * @param DataContainer $dc       Data Container object
      *
      * @return mixed
      */
@@ -163,7 +171,8 @@ class tl_bsa_verein_obmann extends Backend
     /**
      * Add the type of content element.
      *
-     * @param mixed $varValue
+     * @param mixed         $varValue Value to be saved
+     * @param DataContainer $dc       Data Container object
      *
      * @return mixed
      */
@@ -175,9 +184,8 @@ class tl_bsa_verein_obmann extends Backend
     /**
      * Add the type of content element.
      *
-     * @param int $undoId
-     *
-     * @return mixed
+     * @param DataContainer $dc     Data Container object
+     * @param int           $undoId The ID of the tl_undo database record
      */
     public function doDelete(DataContainer $dc, $undoId): void
     {
@@ -200,13 +208,12 @@ class tl_bsa_verein_obmann extends Backend
     /**
      * Add the type of content element.
      *
-     * @param mixed         $varValue
-     * @param DataContainer $dc
-     * @param string        $field
+     * @param mixed  $varValue
+     * @param string $field
      *
      * @return mixed
      */
-    private function updateObleuteGroup($varValue, $dc, $field)
+    private function updateObleuteGroup($varValue, DataContainer $dc, $field)
     {
         if ($varValue !== $dc->__get('activeRecord')->$field) {
             if (0 !== $varValue) {

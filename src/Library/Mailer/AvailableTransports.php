@@ -40,6 +40,8 @@ class AvailableTransports extends \Contao\CoreBundle\Mailer\AvailableTransports
         // filter transport by user users email
         if (!empty(BackendUser::getInstance()->email) && BackendUser::getInstance()->email === $transportConfig->getName()) {
             parent::addTransport($transportConfig);
+        } else {
+            parent::addTransport($transportConfig);
         }
     }
 

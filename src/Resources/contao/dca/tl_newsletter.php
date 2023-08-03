@@ -15,7 +15,8 @@ use Contao\CoreBundle\DataContainer\PaletteManipulator;
 
 /* field changes */
 $GLOBALS['TL_DCA']['tl_newsletter']['fields']['subject']['eval']['tl_class'] = 'lng';
-unset($GLOBALS['TL_DCA']['tl_newsletter']['fields']['sender']['load_callback'], $GLOBALS['TL_DCA']['tl_newsletter']['fields']['senderName']['load_callback']);
+unset($GLOBALS['TL_DCA']['tl_newsletter']['fields']['sender']['load_callback'],
+      $GLOBALS['TL_DCA']['tl_newsletter']['fields']['senderName']['load_callback']);
 
 if (!empty(BackendUser::getInstance()->__get('signatur_html'))) {
     $GLOBALS['TL_DCA']['tl_newsletter']['fields']['content']['default'] = '<p></p>'.BackendUser::getInstance()->__get('signatur_html');

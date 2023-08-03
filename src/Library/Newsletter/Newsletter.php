@@ -17,7 +17,6 @@ use Contao\CoreBundle\Mailer\TransportConfig;
 use Contao\Database\Result;
 use Contao\DataContainer;
 use Contao\Email;
-use Contao\Environment;
 use Contao\FilesModel;
 use Contao\FrontendUser;
 use Contao\Message;
@@ -50,7 +49,7 @@ class Newsletter extends \Contao\Newsletter
     /**
      * @var array
      */
-    private $arrAlreadySent = array();
+    private $arrAlreadySent = [];
 
     /**
      * Constructor.
@@ -92,8 +91,8 @@ class Newsletter extends \Contao\Newsletter
             $this->redirect($this->getReferer(true));
         }
 
-        if('dev' === System::getContainer()->getParameter('kernel.environment')) {
-            Message::addInfo("Es handelt sich um eine Testumgebung. Alle Newsletter-Mails werden an mail@alexteuscher.de umgeleitet.");
+        if ('dev' === System::getContainer()->getParameter('kernel.environment')) {
+            Message::addInfo('Es handelt sich um eine Testumgebung. Alle Newsletter-Mails werden an mail@alexteuscher.de umgeleitet.');
         }
 
         $returnValue = parent::send($dc);
@@ -229,16 +228,16 @@ class Newsletter extends \Contao\Newsletter
     }
 
     /**
-	 * Generate the e-mail object and return it
-	 *
-	 * @param Result $objNewsletter
-	 * @param array  $arrAttachments
-	 *
-	 * @return Email
-	 */
-	protected function generateEmailObject(Result $objNewsletter, $arrAttachments)
-	{
+     * Generate the e-mail object and return it.
+     *
+     * @param array $arrAttachments
+     *
+     * @return Email
+     */
+    protected function generateEmailObject(Result $objNewsletter, $arrAttachments)
+    {
         $this->arrAttachments = $arrAttachments;
+
         return parent::generateEmailObject($objNewsletter, $arrAttachments);
     }
 
@@ -251,8 +250,8 @@ class Newsletter extends \Contao\Newsletter
      * @param string $text
      * @param string $html
      * @param string $css
-	 *
-	 * @return boolean
+     *
+     * @return bool
      */
     protected function sendNewsletter(Email $objEmail, Result $objNewsletter, $arrRecipient, $text, $html, $css = null)
     {
@@ -268,7 +267,7 @@ class Newsletter extends \Contao\Newsletter
 
         // there is a left join to member. since we did not re-created the unique at email, we need to skip records
         // TODO https://github.com/teusal/contao-referee-hamburg-bundle/issues/6
-        if(in_array($arrRecipient['recipient'], $this->arrAlreadySent)) {
+        if (\in_array($arrRecipient['recipient'], $this->arrAlreadySent, true)) {
             return true;
         }
 
@@ -281,7 +280,7 @@ class Newsletter extends \Contao\Newsletter
         }
 
         // replace email in dev environment
-        if('dev' === System::getContainer()->getParameter('kernel.environment')) {
+        if ('dev' === System::getContainer()->getParameter('kernel.environment')) {
             $arrRecipient['email'] = 'mail@alexteuscher.de';
         }
 
@@ -297,6 +296,7 @@ class Newsletter extends \Contao\Newsletter
 
         // add optional cc
         $arrCc = $this->getCc($objNewsletter, $arrRecipient);
+
         if (!empty($arrCc) && \is_array($arrCc)) {
             $objEmail->sendCc($arrCc);
         }
@@ -335,7 +335,7 @@ class Newsletter extends \Contao\Newsletter
      */
     private function getCc(Result $objNewsletter, $arrRecipient)
     {
-        if('dev' === System::getContainer()->getParameter('kernel.environment')) {
+        if ('dev' === System::getContainer()->getParameter('kernel.environment')) {
             return null;
         }
 
@@ -406,7 +406,7 @@ class Newsletter extends \Contao\Newsletter
                 'anrede_persoenlich' => 'LIEBE/LIEBER',
             ];
 
-            if('dev' === System::getContainer()->getParameter('kernel.environment')) {
+            if ('dev' === System::getContainer()->getParameter('kernel.environment')) {
                 $arrInfoRecipient['email'] = 'mail@alexteuscher.de';
             }
 

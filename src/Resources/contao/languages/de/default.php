@@ -40,6 +40,7 @@ $GLOBALS['TL_LANG']['genders'] = [
 /*
  * Fields
  */
+$GLOBALS['TL_LANG']['mail_config']['mailerTransport'] = ['Mailer-Transport', 'Hier geben Sie den Mailer-Transport der E-Mail an.'];
 $GLOBALS['TL_LANG']['mail_config']['senderName'] = ['Absendername', 'Hier geben Sie den Namen des Absenders ein, Ersetzungen sind möglich (siehe Hilfe).'];
 $GLOBALS['TL_LANG']['mail_config']['sender'] = ['Absenderadresse', 'Hier können Sie eine individuelle Absenderadresse eingeben. Wenn das Feld leer gelassen wird, wird die E-Mailadresse des Backend-Benutzers benutzt.'];
 $GLOBALS['TL_LANG']['mail_config']['subject'] = ['Betreff', 'Bitte geben Sie den Betreff der E-Mail ein, Ersetzungen sind möglich (siehe Hilfe).'];

@@ -75,7 +75,9 @@ $GLOBALS['TL_DCA']['tl_bsa_global_settings'] = [
         'addressbookPassword' => [
             'inputType' => 'textStore',
             'eval' => ['decodeEntities' => true, 'tl_class' => 'w50'],
-            'save_callback' => [[tl_bsa_global_settings::class, 'storeAddressbookPass']],
+            'save_callback' => [
+                [tl_bsa_global_settings::class, 'storeAddressbookPass'],
+            ],
         ],
         'defaultAddressbookTokenId' => [
             'inputType' => 'text',
@@ -92,7 +94,8 @@ class tl_bsa_global_settings extends Backend
     /**
      * Store the unfiltered addressbook password.
      *
-     * @param mixed $varValue
+     * @param mixed         $varValue Value to be saved
+     * @param DataContainer $dc       Data Container object
      *
      * @return mixed
      */
