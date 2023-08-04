@@ -12,154 +12,187 @@ declare(strict_types=1);
 
 namespace Teusal\ContaoRefereeHamburgBundle\Library;
 
+use Contao\BackendUser;
+use Contao\Config;
+use Contao\Controller;
+use Contao\Database;
+use Contao\DataContainer;
+use Contao\Environment;
+use Contao\Input;
+use Contao\MemberModel;
+use Contao\Message;
 use Contao\System;
+use Teusal\ContaoRefereeHamburgBundle\Model\BsaSchiedsrichterModel;
+use Teusal\ContaoRefereeHamburgBundle\Model\BsaVereinObmannModel;
 
 /**
- * Class BSAMember
+ * Class BSAMember.
+ *
+ * @property MemberCreator $MemberCreator
  */
 class BSAMember extends System
 {
-	/**
-	 * Konstruktor
-	 */
-	public function __construct() {
-		parent::__construct();
-		$this->loadDataContainer('tl_member');
-		$this->import('tl_member');
-		$this->import('Database');
-		$this->import('BackendUser', 'User');
-		$this->import('MemberCreator');
-		$this->import('BSAMemberGroup');
-	}
+    /**
+     * Konstruktor.
+     */
+    public function __construct()
+    {
+        parent::__construct();
+        // $this->loadDataContainer('tl_member');
+        $this->import(Database::class, 'Database');
+        $this->import(BackendUser::class, 'User');
+        $this->import(MemberCreator::class, 'MemberCreator');
+    }
 
-	/**
-	 * Liefert das Array mit angelegten Logins
-	 */
-	public function executeSubmitSchiedsrichter ($var) {
-		$intId = 0;
-		if($var instanceof \DataContainer) {
-			$intId = $var->id;
-		}
-		else {
-			$intId = intval($var);
-		}
+    /**
+     * Liefert das Array mit angelegten Logins.
+     *
+     * @param DataContainer|int $var
+     */
+    public function executeSubmitSchiedsrichter($var): void
+    {
+        $intId = 0;
 
-		// Den Schiedsrichter laden
-		$objSR = \BsaSchiedsrichterModel::findSchiedsrichter($intId);
+        if ($var instanceof DataContainer) {
+            $intId = $var->id;
+        } else {
+            $intId = (int) $var;
+        }
 
-		if(!isset($objSR)) {
-			throw new \Exception('Schiedsrichter zu ID '.$intId.' nicht gefunden!');
-		}
+        // Den Schiedsrichter laden
+        $objSR = BsaSchiedsrichterModel::findSchiedsrichter($intId);
 
-		// Die personenbezogenen Daten an den Login tl_member �bernehmen
-		$this->setPersonalData($objSR);
+        if (!isset($objSR)) {
+            throw new \Exception('Schiedsrichter zu ID '.$intId.' nicht gefunden!');
+        }
 
-		// nur Obleute oder aktive Schiedsrichter sollen automatisch verwaltete Logins haben
-		$needsLogin = $this->needsLogin($objSR->id);
+        // Die personenbezogenen Daten an den Login tl_member übernehmen
+        $this->setPersonalData($objSR);
 
-		// existierenden Login tl_member laden
-		$objMember = \MemberModel::findOneBy('schiedsrichter', $objSR->id);
+        // nur Obleute oder aktive Schiedsrichter sollen automatisch verwaltete Logins haben
+        $needsLogin = $this->needsLogin($objSR->id);
 
-		if($objSR->__get('deleted') || !$needsLogin) {
-			// Mitglied deaktivieren
-			if(isset($objMember) && !$objMember->__get('disable')) {
-				// Login deaktivieren
-				$this->tl_member->toggleVisibility($objMember->id, false);
-				// aus allen Gruppen entfernen
-				$this->BSAMemberGroup->deleteFromGroups($objSR->id);
-			}
-		}
-		else {
-			if(!isset($objMember) && $needsLogin) {
-				// Login anlegen
-				$this->MemberCreator->createLoginIfNeeded($objSR->id);
-				if($GLOBALS['TL_CONFIG']['bsa_import_login_send_mail']) {
-					$this->MemberCreator->sendNotificationMails($objSR->id);
-				}
+        // existierenden Login tl_member laden
+        $objMember = MemberModel::findOneBy('schiedsrichter', $objSR->id);
 
-				// Den neuen Login laden
-				$objMember = \MemberModel::findOneBy('schiedsrichter', $objSR->id);
-			}
+        if ($objSR->__get('deleted') || !$needsLogin) {
+            // Mitglied deaktivieren
+            if (isset($objMember) && !$objMember->disable) {
+                // Login deaktivieren
+                $objMember->disable = true;
+                $objMember->save();
+                // aus allen Gruppen entfernen
+                BSAMemberGroup::deleteFromGroups($objSR->id);
+            }
+        } else {
+            if (!isset($objMember) && $needsLogin) {
+                // Login anlegen
+                $this->MemberCreator->createLoginIfNeeded($objSR->id);
 
-			if(isset($objMember) && $objMember->__get('disable')) {
-				// Login aktivieren
-				$this->tl_member->toggleVisibility($objMember->id, true);
-			}
+                if (Config::get('bsa_import_login_send_mail')) {
+                    $this->MemberCreator->sendNotificationMails($objSR->id);
+                }
 
-			// Die Automatik-Grupen verwalten
-			$this->BSAMemberGroup->handleAutomaticGroups($objSR->id);
-		}
-	}
+                // Den neuen Login laden
+                $objMember = MemberModel::findOneBy('schiedsrichter', $objSR->id);
+            }
 
-	/**
-	 * Setzt Vor-, Nachname und E-Mail am Login tl_member
-	 */
-	private function needsLogin($intID) {
-		return \BsaSchiedsrichterModel::isVereinsschiedsrichter($intID) || \BsaVereinObmannModel::isVereinsobmann($intID);
-	}
+            if (isset($objMember) && $objMember->__get('disable')) {
+                // Login aktivieren
+                $objMember->disable = false;
+                $objMember->save();
+            }
 
-	/**
-	 * Setzt Vor-, Nachname und E-Mail am Login tl_member
-	 */
-	private function setPersonalData($objSR) {
-		$objMember = \MemberModel::findOneBy('schiedsrichter', $objSR->id);
-		if(isset($objMember)) {
-			$objMember->__set('firstname', $objSR->__get('vorname'));
-			$objMember->__set('lastname', $objSR->__get('nachname'));
-			if(strlen($objSR->__get('email'))) {
-				$objMember->__set('email', $objSR->__get('email'));
-			}
-			$objMember->save();
-		}
-	}
+            // Die Automatik-Grupen verwalten
+            BSAMemberGroup::handleAutomaticGroups($objSR->id);
+        }
+    }
 
-	/**
-	 * Liefert das Array mit angelegten Logins
-	 */
-	public function getCreatedLogins() {
-		return $this->MemberCreator->getCreatedLogins();
-	}
+    /**
+     * Liefert das Array mit angelegten Logins.
+     */
+    public function getCreatedLogins()
+    {
+        return $this->MemberCreator->getCreatedLogins();
+    }
 
-	/**
-	 * Pr�ft alle Schiedsrichter und vereinslose Personen ob sie einen neuen Login ben�tigen und legt den Zugang an.
-	 */
-	public function createNeededLogins() {
-		if(\Input::get('key') != 'createNeeded') {
-			return;
-		}
+    /**
+     * Prüft alle Schiedsrichter und vereinslose Personen ob sie einen neuen Login benötigen und legt den Zugang an.
+     */
+    public function createNeededLogins(): void
+    {
+        if ('createNeeded' !== Input::get('key')) {
+            return;
+        }
 
-		$redirectUrl = str_replace('&key=createNeeded', '', \Environment::get('request'));
+        $redirectUrl = str_replace('&key=createNeeded', '', Environment::get('request'));
 
-		if(!$GLOBALS['TL_CONFIG']['bsa_import_login_create']) {
-			\Message::addError($GLOBALS['TL_LANG']['ERROR']['login_create_inactive']);
-			$this->redirect($redirectUrl);
-		}
+        if (!Config::get('bsa_import_login_create')) {
+            Message::addError($GLOBALS['TL_LANG']['ERROR']['login_create_inactive']);
+            Controller::redirect($redirectUrl);
+        }
 
-		$arrSR = $this->Database->prepare('SELECT tl_bsa_schiedsrichter.id, tl_bsa_schiedsrichter.name_rev FROM tl_bsa_schiedsrichter LEFT JOIN tl_member ON tl_bsa_schiedsrichter.id = tl_member.schiedsrichter WHERE tl_bsa_schiedsrichter.email!=? AND tl_bsa_schiedsrichter.deleted=? AND tl_member.id IS NULL ORDER BY name_rev')
-		                        ->execute('', '')
-		                        ->fetchAllAssoc();
+        $arrSR = $this->Database->prepare('SELECT tl_bsa_schiedsrichter.id, tl_bsa_schiedsrichter.name_rev FROM tl_bsa_schiedsrichter LEFT JOIN tl_member ON tl_bsa_schiedsrichter.id = tl_member.schiedsrichter WHERE tl_bsa_schiedsrichter.email!=? AND tl_bsa_schiedsrichter.deleted=? AND tl_member.id IS NULL ORDER BY name_rev')
+            ->execute('', '')
+            ->fetchAllAssoc()
+        ;
 
-		if(empty($arrSR)) {
-			\Message::addInfo($GLOBALS['TL_LANG']['INFO']['login_create_not_required']);
-			$this->redirect($redirectUrl);
-		}
+        if (!empty($arrSR)) {
+            foreach ($arrSR as $key => $sr) {
+                if (!$this->needsLogin($sr['id'])) {
+                    unset($arrSR[$key]);
+                }
+            }
+        }
 
-		$arrLoginNames = array();
-		foreach($arrSR AS $sr) {
-			$this->executeSubmitSchiedsrichter($sr['id']);
-			if(is_array($this->MemberCreator->getCreatedLogins()) && array_key_exists($sr['id'], $this->MemberCreator->getCreatedLogins())) {
-				$arrLoginNames[] = $sr['name_rev'];
-				if($GLOBALS['TL_CONFIG']['bsa_import_login_send_mail']) {
-					$this->MemberCreator->sendNotificationMails($sr['id']);
-				}
-			}
-			else {
-				\Message::addError(sprintf($GLOBALS['TL_LANG']['ERROR']['login_create_error'], $sr['name_rev']));
-			}
-		}
+        if (empty($arrSR)) {
+            Message::addInfo($GLOBALS['TL_LANG']['INFO']['login_create_not_required']);
+            Controller::redirect($redirectUrl);
+        }
 
-		\Message::addConfirmation(sprintf($GLOBALS['TL_LANG']['INFO']['login_created'], count($arrLoginNames), implode("; ", $arrLoginNames)));
-		$this->redirect($redirectUrl);
-	}
-};
-?>
+        $arrLoginNames = [];
+
+        foreach ($arrSR as $sr) {
+            $this->executeSubmitSchiedsrichter($sr['id']);
+
+            if (\is_array($this->MemberCreator->getCreatedLogins()) && \array_key_exists($sr['id'], $this->MemberCreator->getCreatedLogins())) {
+                $arrLoginNames[] = $sr['name_rev'];
+
+                if (Config::get('bsa_import_login_send_mail')) {
+                    $this->MemberCreator->sendNotificationMails($sr['id']);
+                }
+            } else {
+                Message::addError(sprintf($GLOBALS['TL_LANG']['ERROR']['login_create_error'], $sr['name_rev']));
+            }
+        }
+
+        Message::addConfirmation(sprintf($GLOBALS['TL_LANG']['INFO']['login_created'], \count($arrLoginNames), implode('; ', $arrLoginNames)));
+        Controller::redirect($redirectUrl);
+    }
+
+    /**
+     * Setzt Vor-, Nachname und E-Mail am Login tl_member.
+     */
+    private function needsLogin($intID)
+    {
+        return BsaSchiedsrichterModel::isVereinsschiedsrichter($intID) || BsaVereinObmannModel::isVereinsobmann($intID);
+    }
+
+    /**
+     * Setzt Vor-, Nachname und E-Mail am Login tl_member.
+     */
+    private function setPersonalData($objSR): void
+    {
+        $objMember = MemberModel::findOneBy('schiedsrichter', $objSR->id);
+
+        if (isset($objMember)) {
+            $objMember->__set('firstname', $objSR->__get('vorname'));
+            $objMember->__set('lastname', $objSR->__get('nachname'));
+
+            if (\strlen($objSR->__get('email'))) {
+                $objMember->__set('email', $objSR->__get('email'));
+            }
+            $objMember->save();
+        }
+    }
+}

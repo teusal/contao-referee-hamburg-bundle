@@ -15,19 +15,17 @@ namespace Teusal\ContaoRefereeHamburgBundle\Model;
 use Contao\Model;
 
 /**
- * Reads and writes events
+ * Reads and writes events.
  *
- * @property int $datum
+ * @property int    $datum
  * @property string $typ
  */
 class BsaVeranstaltungModel extends Model
 {
-
-	/**
-	 * Table name
+    /**
+     * Table name.
      *
-	 * @var string
-	 */
-	protected static $strTable = 'tl_bsa_veranstaltung';
-
+     * @var string
+     */
+    protected static $strTable = 'tl_bsa_veranstaltung';
 }

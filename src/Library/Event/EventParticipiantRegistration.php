@@ -20,20 +20,20 @@ use Teusal\ContaoRefereeHamburgBundle\Model\BsaVereinModel;
 use Teusal\ContaoRefereeHamburgBundle\Model\BsaVereinObmannModel;
 
 /**
- * Class EventParticipiantRegistration
+ * Class EventParticipiantRegistration.
  */
 class EventParticipiantRegistration extends AbstractEventParticipiantHandler
 {
     /**
-     * Query participiants of a club in the GUI and register them to the specified event
+     * Query participiants of a club in the GUI and register them to the specified event.
      */
-    public function execute() :string
+    public function execute(): string
     {
-        if (Input::get('key') != 'besucher') {
+        if ('besucher' !== Input::get('key')) {
             return '';
         }
 
-        if (Input::get('start') == 'true') {
+        if ('true' === Input::get('start')) {
             $this->Session->set('clubId', '');
             $this->redirect(str_replace('&start=true', '', Environment::get('request')));
         }
@@ -42,29 +42,34 @@ class EventParticipiantRegistration extends AbstractEventParticipiantHandler
 
         if (Input::post('clubId')) {
             $this->Session->set('clubId', Input::post('clubId'));
-            if ($clubId != $this->Session->get('clubId')) {
+
+            if ($clubId !== $this->Session->get('clubId')) {
                 $this->reload();
             }
         }
 
         $clubId = $this->Session->get('clubId');
         $typ = Input::post('typ');
-        $arrClubs = $this->Database->execute("SELECT id, name_kurz FROM tl_bsa_verein WHERE anzeigen=1 ORDER BY name_kurz")
-            ->fetchAllAssoc();
+        $arrClubs = $this->Database->execute('SELECT id, name_kurz FROM tl_bsa_verein WHERE anzeigen=1 ORDER BY name_kurz')
+            ->fetchAllAssoc()
+        ;
 
         // register participiant
-        if (Input::post('FORM_SUBMIT') == 'participiant_registration') {
+        if ('participiant_registration' === Input::post('FORM_SUBMIT')) {
             $submitMode = Input::post('SUBMIT_MODE');
-            if ($submitMode == 'reset') {
+
+            if ('reset' === $submitMode) {
                 $this->Session->set('clubId', '');
             }
-            if ($submitMode == 'next') {
-                for ($i = sizeof($arrClubs); $i >= 0; $i--) {
-                    if ($arrClubs[$i - 1]['id'] == $clubId) {
-                        if ($i == sizeof($arrClubs))
+
+            if ('next' === $submitMode) {
+                for ($i = \count($arrClubs); $i >= 0; --$i) {
+                    if ($arrClubs[$i - 1]['id'] === $clubId) {
+                        if ($i === \count($arrClubs)) {
                             $this->Session->set('clubId', '');
-                        else
+                        } else {
                             $this->Session->set('clubId', $arrClubs[$i]['id']);
+                        }
                         break;
                     }
                 }
@@ -73,33 +78,37 @@ class EventParticipiantRegistration extends AbstractEventParticipiantHandler
             $objClub = BsaVereinModel::findByPk($clubId);
 
             $arrToSave = Input::post('sr');
-            if(empty($arrToSave)) {
-                Message::addInfo('Es wurden keine neuen Teilnehmer für den Verein '. $objClub->name_kurz .' eingetragen.');
+
+            if (empty($arrToSave)) {
+                Message::addInfo('Es wurden keine neuen Teilnehmer für den Verein '.$objClub->name_kurz.' eingetragen.');
             } else {
                 foreach ($arrToSave as $toSave) {
-                    $exist = $this->Database->prepare("SELECT * FROM tl_bsa_teilnehmer WHERE pid=? AND sr_id=?")
-                        ->execute($this->objEvent->id, $toSave);
+                    $exist = $this->Database->prepare('SELECT * FROM tl_bsa_teilnehmer WHERE pid=? AND sr_id=?')
+                        ->execute($this->objEvent->id, $toSave)
+                    ;
+
                     if ($exist->next()) {
-                        Message::addError('Ein Eintrag für "'. $exist->sr .'" existiert bereits. Es wurde daher kein neuer Eintrag angelegt.');
+                        Message::addError('Ein Eintrag für "'.$exist->sr.'" existiert bereits. Es wurde daher kein neuer Eintrag angelegt.');
                     } else {
-                        $insert = $this->Database->prepare("INSERT INTO tl_bsa_teilnehmer (pid, tstamp, sr_id, sr, typ) SELECT ?, ?, id, name_rev, ? FROM tl_bsa_schiedsrichter WHERE id = ?")
-                            ->execute($this->objEvent->id, time(), $typ, $toSave);
+                        $this->Database->prepare('INSERT INTO tl_bsa_teilnehmer (pid, tstamp, sr_id, sr, typ) SELECT ?, ?, id, name_rev, ? FROM tl_bsa_schiedsrichter WHERE id = ?')
+                            ->execute($this->objEvent->id, time(), $typ, $toSave)
+                        ;
                     }
                 }
-                Message::addConfirmation(count($arrToSave).' Teilnehmer wurden für den Verein '. $objClub->name_kurz .' eingetragen.');
+                Message::addConfirmation(\count($arrToSave).' Teilnehmer wurden für den Verein '.$objClub->name_kurz.' eingetragen.');
             }
             $this->reload();
         }
 
         $strHTML = '
-'. Message::generate() .'
-'. $this->getBackButton() .'
-'. $this->getHeader() .'
+'.Message::generate().'
+'.$this->getBackButton().'
+'.$this->getHeader().'
 
-<form action="'. StringUtil::ampersand(Environment::get('request')) .'" id="participiant_registration_form" class="tl_form tl_edit_form" method="post">
+<form action="'.StringUtil::ampersand(Environment::get('request')).'" id="participiant_registration_form" class="tl_form tl_edit_form" method="post">
     <div class="tl_formbody_edit">
         <input type="hidden" name="FORM_SUBMIT" id="FORM_SUBMIT" value="participiant_registration" />
-        <input type="hidden" name="REQUEST_TOKEN" value="'. REQUEST_TOKEN .'">
+        <input type="hidden" name="REQUEST_TOKEN" value="'.REQUEST_TOKEN.'">
         <input type="hidden" name="SUBMIT_MODE" id="SUBMIT_MODE" value="next" />
 
 ';
@@ -112,7 +121,7 @@ class EventParticipiantRegistration extends AbstractEventParticipiantHandler
 ';
 
         foreach ($arrClubs as $club) {
-            $strHTML .= '                    <option value="'. $club['id'] .'"'. ($clubId == $club['id'] ? ' selected="selected"' : '') .'>'. $club['name_kurz'] .'</option>
+            $strHTML .= '                    <option value="'.$club['id'].'"'.($clubId === $club['id'] ? ' selected="selected"' : '').'>'.$club['name_kurz'].'</option>
 ';
         }
 
@@ -128,8 +137,9 @@ class EventParticipiantRegistration extends AbstractEventParticipiantHandler
                 <h3>Typ:</h3>
                 <select class="tl_select" name="typ">
 ';
+
             foreach ($GLOBALS['TL_LANG']['tl_bsa_teilnehmer']['typen'] as $key => $value) {
-                $strHTML .= '                    <option value="'. $key .'"'. ($key == $typ ? ' selected="selected"' : '') .'>'. $value .'</option>
+                $strHTML .= '                    <option value="'.$key.'"'.($key === $typ ? ' selected="selected"' : '').'>'.$value.'</option>
 ';
             }
 
@@ -146,24 +156,30 @@ class EventParticipiantRegistration extends AbstractEventParticipiantHandler
 
             $objChairman = BsaVereinObmannModel::findOneBy('verein', $clubId);
             $sql = '';
+
             if (isset($objChairman)) {
-                if ($objChairman->__get('obmann'))
-                    $sql .= ' OR id='. $objChairman->__get('obmann');
-                if ($objChairman->__get('stellv_obmann_1'))
-                    $sql .= ' OR id='. $objChairman->__get('stellv_obmann_1');
-                if ($objChairman->__get('stellv_obmann_2'))
-                    $sql .= ' OR id='. $objChairman->__get('stellv_obmann_2');
+                if ($objChairman->__get('obmann')) {
+                    $sql .= ' OR id='.$objChairman->__get('obmann');
+                }
+
+                if ($objChairman->__get('stellv_obmann_1')) {
+                    $sql .= ' OR id='.$objChairman->__get('stellv_obmann_1');
+                }
+
+                if ($objChairman->__get('stellv_obmann_2')) {
+                    $sql .= ' OR id='.$objChairman->__get('stellv_obmann_2');
+                }
             }
 
-            $arrReferees = $this->Database->prepare('SELECT * FROM tl_bsa_schiedsrichter WHERE (verein=?'. $sql .') AND deleted=? ORDER BY name_rev')
+            $arrReferees = $this->Database->prepare('SELECT * FROM tl_bsa_schiedsrichter WHERE (verein=?'.$sql.') AND deleted=? ORDER BY name_rev')
                 ->execute($clubId, '')
-                ->fetchAllAssoc();
-
+                ->fetchAllAssoc()
+            ;
 
             foreach ($arrReferees as $referee) {
                 $strHTML .= '                <div>
-                    <input type="checkbox" name="sr[]" id="sr_'. $referee['id'] .'" value="'. $referee['id'] .'" class="tl_checkbox" '. ($this->isAlreadyRegistered($referee['id']) ? 'checked="checked" disabled="disabled" ' : ' ') .'/>
-                    <label for="sr_'. $referee['id'] .'">'. $referee['name_rev'] .'</label>
+                    <input type="checkbox" name="sr[]" id="sr_'.$referee['id'].'" value="'.$referee['id'].'" class="tl_checkbox" '.($this->isAlreadyRegistered($referee['id']) ? 'checked="checked" disabled="disabled" ' : ' ').'/>
+                    <label for="sr_'.$referee['id'].'">'.$referee['name_rev'].'</label>
                 </div>
 ';
             }
@@ -180,8 +196,8 @@ class EventParticipiantRegistration extends AbstractEventParticipiantHandler
         $strHTML .= '
     <div class="tl_formbody_submit">
         <div class="tl_submit_container">
-            <button type="submit" name="save1" id="save1" class="tl_submit" accesskey="s"'. ($clubId ? '' : ' disabled') .'>Teilnahme(n) speichern + Weiter</button>
-            <button type="submit" name="save2" id="save2" class="tl_submit" onclick="document.getElementById(\'SUBMIT_MODE\').value=\'reset\';"'. ($clubId ? '' : ' disabled') .'>Teilnahme(n) speichern + Verein zurücksetzen</button>
+            <button type="submit" name="save1" id="save1" class="tl_submit" accesskey="s"'.($clubId ? '' : ' disabled').'>Teilnahme(n) speichern + Weiter</button>
+            <button type="submit" name="save2" id="save2" class="tl_submit" onclick="document.getElementById(\'SUBMIT_MODE\').value=\'reset\';"'.($clubId ? '' : ' disabled').'>Teilnahme(n) speichern + Verein zurücksetzen</button>
         </div>
     </div>
 ';

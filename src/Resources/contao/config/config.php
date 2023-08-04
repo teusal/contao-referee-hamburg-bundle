@@ -11,6 +11,10 @@ declare(strict_types=1);
  */
 
 use Contao\ArrayUtil;
+use Teusal\ContaoRefereeHamburgBundle\Library\BSAMember;
+use Teusal\ContaoRefereeHamburgBundle\Library\Event\EventMatchOfficialsRegistration;
+use Teusal\ContaoRefereeHamburgBundle\Library\Event\EventParticipiantImport;
+use Teusal\ContaoRefereeHamburgBundle\Library\Event\EventParticipiantRegistration;
 use Teusal\ContaoRefereeHamburgBundle\Library\Geburtstag;
 use Teusal\ContaoRefereeHamburgBundle\Library\Mailer\UserTransportValidator;
 use Teusal\ContaoRefereeHamburgBundle\Library\Newsletter\Newsletter;
@@ -20,14 +24,10 @@ use Teusal\ContaoRefereeHamburgBundle\Model\BsaSchiedsrichterModel;
 use Teusal\ContaoRefereeHamburgBundle\Model\BsaSeasonModel;
 use Teusal\ContaoRefereeHamburgBundle\Model\BsaSportplatzModel;
 use Teusal\ContaoRefereeHamburgBundle\Model\BsaSportplatzNummerModel;
+use Teusal\ContaoRefereeHamburgBundle\Model\BsaTeilnehmerModel;
+use Teusal\ContaoRefereeHamburgBundle\Model\BsaVeranstaltungModel;
 use Teusal\ContaoRefereeHamburgBundle\Model\BsaVereinModel;
 use Teusal\ContaoRefereeHamburgBundle\Model\BsaVereinObmannModel;
-use Teusal\ContaoRefereeHamburgBundle\Library\BSAMember;
-use Teusal\ContaoRefereeHamburgBundle\Model\BsaVeranstaltungModel;
-use Teusal\ContaoRefereeHamburgBundle\Model\BsaTeilnehmerModel;
-use Teusal\ContaoRefereeHamburgBundle\Library\Event\EventMatchOfficialsRegistration;
-use Teusal\ContaoRefereeHamburgBundle\Library\Event\EventParticipiantRegistration;
-use Teusal\ContaoRefereeHamburgBundle\Library\Event\EventParticipiantImport;
 
 /*
  * BACK END MENU STRUKTUR
