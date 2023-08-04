@@ -30,4 +30,16 @@ class BsaSeasonModel extends Model
      * @var string
      */
     protected static $strTable = 'tl_bsa_season';
+
+    /**
+     * provides the id of the current season.
+     *
+     * @return int|null
+     */
+    public static function getCurrentSeasonId()
+    {
+        $currentSeason = static::findOneBy('active', true, []);
+
+        return isset($currentSeason) ? $currentSeason->id : null;
+    }
 }

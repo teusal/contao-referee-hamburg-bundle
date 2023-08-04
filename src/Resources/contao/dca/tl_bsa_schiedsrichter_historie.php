@@ -180,7 +180,7 @@ class tl_bsa_schiedsrichter_historie extends Backend
      * @param DataContainer $dc      Data Container object
      * @param array         $columns with existing labels
      *
-     * @return array|string
+     * @return string
      */
     public function colorize($row, $label, DataContainer $dc, $columns)
     {
