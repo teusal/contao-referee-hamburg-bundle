@@ -3,13 +3,16 @@
 declare(strict_types=1);
 
 /*
- * This file is part of Contao Referee Hamburg Bundle.
- *
- * (c) Alexander Teuscher
- *
- * @license LGPL-3.0-or-later
- */
+* This file is part of Contao Referee Hamburg Bundle.
+*
+* (c) Alexander Teuscher
+*
+* @license LGPL-3.0-or-later
+*/
 
+/*
+ * Back end modules
+ */
 // group bsa
 $GLOBALS['TL_LANG']['MOD']['bsa'] = 'BSA Einstellungen';
 $GLOBALS['TL_LANG']['MOD']['global_settings'] = ['globale Einstellungen', 'Konfigurieren Sie hier die globalen Einstellungen.'];
@@ -34,10 +37,21 @@ $GLOBALS['TL_LANG']['MOD']['member_settings'] = ['Einstellungen für Logins', 'K
 $GLOBALS['TL_LANG']['MOD']['groups'] = ['Kader & Logingruppen', 'In diesem Bereich werden die Kader, die gleichzeitig auch Login-Berechtigungsgruppen für die Website sind, bearbeitet.'];
 $GLOBALS['TL_LANG']['MOD']['logins'] = ['Schiedsrichter-Logins', 'Hier werden die Logins verwaltet, mit denen man sich auf der Website anmelden kann.'];
 $GLOBALS['TL_LANG']['MOD']['external_logins'] = ['Externe Logins', 'Hier werden die Logins verwaltet, mit denen man sich auf der Website anmelden kann.'];
+// group bsa_veranstaltung
+$GLOBALS['TL_LANG']['MOD']['bsa_veranstaltung'] = ['Veranstaltungen', 'Mit diesem Modul können Sie Veranstaltungen Sitzung, Training & Regelarbeit sowie die anwesenden Teilnehmer erfassen.'];
+$GLOBALS['TL_LANG']['MOD']['sitzung'] = ['Sitzung', 'Verwaltung der Sitzungen', 'Sitzungen'];
+$GLOBALS['TL_LANG']['MOD']['obleute'] = ['Obleutesitzung', 'Verwaltung der Obleutesitzungen', 'Obleutesitzungen'];
+$GLOBALS['TL_LANG']['MOD']['training'] = ['Training', 'Verwaltung des Trainings', 'Training'];
+$GLOBALS['TL_LANG']['MOD']['regelarbeit'] = ['Regelarbeit', 'Verwaltung der Regelarbeiten', 'Regelarbeiten'];
+$GLOBALS['TL_LANG']['MOD']['coaching'] = ['Coaching', 'Verwaltung des Coachings', 'Coaching'];
+$GLOBALS['TL_LANG']['MOD']['lehrgang'] = ['Lehrgänge', 'Verwaltung von Lehrgängen', 'Lehrgang'];
+$GLOBALS['TL_LANG']['MOD']['helsen'] = ['Helsen-Test', 'Verwaltung von Helsen-Tests', 'Helsen-Test'];
+$GLOBALS['TL_LANG']['MOD']['sonstige'] = ['Sonstige', 'Verwaltung von weiteren Veranstaltungen', 'Sonstiges'];
+$GLOBALS['TL_LANG']['MOD']['export_veranstaltungen'] = ['XLS-Export', 'Export der Auswertung über Veranstaltungen'];
 
 /*
-* Front end modules
-*/
+ * Front end modules
+ */
 $GLOBALS['TL_LANG']['FMD']['bsa'] = 'BSA-Daten';
 $GLOBALS['TL_LANG']['FMD']['sportplaetze'] = ['Sportplätze anzeigen', 'Sportplätze anzeigen'];
 $GLOBALS['TL_LANG']['FMD']['sportplatz_export'] = ['Sportplätze Export', 'Exportiert Sportplätze.'];
@@ -45,3 +59,4 @@ $GLOBALS['TL_LANG']['FMD']['vereine'] = ['Verein', 'Zeigt die Vereine an.'];
 $GLOBALS['TL_LANG']['FMD']['schiedsrichter'] = ['Schiedsrichter', 'Zeigt die Schiedsrichter an.'];
 $GLOBALS['TL_LANG']['FMD']['freigaben'] = ['Freigaben-Bearbeitung', 'Modul zur Bearbeitung der Web-Freigaben im Frontend.'];
 $GLOBALS['TL_LANG']['FMD']['bsa_member_group'] = ['Gruppen', 'Module zur Anzeige von einer oder mehreren Gruppen.'];
+$GLOBALS['TL_LANG']['FMD']['veranstaltung_export'] = ['Veranstaltungen exportieren', 'Stellt die xls-Auswertung eines Vereins als Download zu Verfügung.'];

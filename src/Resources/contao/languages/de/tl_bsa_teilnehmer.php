@@ -1,15 +1,5 @@
 <?php
 
-/*
- * This file is part of Contao Referee Hamburg Bundle.
- *
- * (c) Alexander Teuscher
- *
- * @license LGPL-3.0-or-later
- */
-
-use Contao\Input;
-
 declare(strict_types=1);
 
 /*
@@ -20,14 +10,13 @@ declare(strict_types=1);
  * @license LGPL-3.0-or-later
  */
 
-if (!defined('TL_ROOT')) {
-    die('You can not access this file directly!');
-}
+use Contao\Input;
 
 /*
  * Fields
  */
-$GLOBALS['TL_LANG']['tl_bsa_teilnehmer']['sr'] = ['Teilnehmer', 'Wählen Sie den Schiedsrichter oder Obmann aus, der an dieser Veranstaltung teilgenommen hat.'];
+$GLOBALS['TL_LANG']['tl_bsa_teilnehmer']['sr_id'] = ['Teilnehmer', 'Wählen Sie den Schiedsrichter oder Obmann aus, der an dieser Veranstaltung teilgenommen hat.'];
+$GLOBALS['TL_LANG']['tl_bsa_teilnehmer']['sr'] = ['Teilnehmer', 'Der Teilnehmer, der an dieser Veranstaltung teilgenommen hat.'];
 $GLOBALS['TL_LANG']['tl_bsa_teilnehmer']['typ'] = ['Typ', 'Wählen Sie die Art der Teilnahme aus: anwesend, entschuldigt, Spiel oder Verhandlung'];
 
 /*

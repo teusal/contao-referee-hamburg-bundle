@@ -22,6 +22,12 @@ use Teusal\ContaoRefereeHamburgBundle\Model\BsaSportplatzModel;
 use Teusal\ContaoRefereeHamburgBundle\Model\BsaSportplatzNummerModel;
 use Teusal\ContaoRefereeHamburgBundle\Model\BsaVereinModel;
 use Teusal\ContaoRefereeHamburgBundle\Model\BsaVereinObmannModel;
+use Teusal\ContaoRefereeHamburgBundle\Library\BSAMember;
+use Teusal\ContaoRefereeHamburgBundle\Model\BsaVeranstaltungModel;
+use Teusal\ContaoRefereeHamburgBundle\Model\BsaTeilnehmerModel;
+use Teusal\ContaoRefereeHamburgBundle\Library\Event\EventMatchOfficialsRegistration;
+use Teusal\ContaoRefereeHamburgBundle\Library\Event\EventParticipiantRegistration;
+use Teusal\ContaoRefereeHamburgBundle\Library\Event\EventParticipiantImport;
 
 /*
  * BACK END MENU STRUKTUR
@@ -78,7 +84,7 @@ ArrayUtil::arrayInsert($GLOBALS['BE_MOD'], 0, [
         ],
         'logins' => [
             'tables' => ['tl_member'],
-            'createNeeded' => ['BSAMember', 'createNeededLogins'],
+            'createNeeded' => [BSAMember::class, 'createNeededLogins'],
         ],
         'external_logins' => [
             'tables' => $GLOBALS['BE_MOD']['accounts']['member']['tables'],
@@ -87,146 +93,117 @@ ArrayUtil::arrayInsert($GLOBALS['BE_MOD'], 0, [
     'bsa_veranstaltung' => [
         'sitzung' => [
             'tables' => ['tl_bsa_veranstaltung', 'tl_bsa_teilnehmer'],
-            'icon' => '/system/modules/x_bsa_veranstaltung/assets/conference-16x16.png',
-            'spiele' => ['Veranstaltung', 'spieleEintragen'],
-            'besucher' => ['Veranstaltung', 'besucherEintragen'],
-            'import' => ['Veranstaltung', 'csvImport'],
+            'spiele' => [EventMatchOfficialsRegistration::class, 'execute'],
+            'besucher' => [EventParticipiantRegistration::class, 'execute'],
+            'import' => [EventParticipiantImport::class, 'execute'],
         ],
         'obleute' => [
             'tables' => ['tl_bsa_veranstaltung', 'tl_bsa_teilnehmer'],
-            'icon' => '/system/modules/x_bsa_veranstaltung/assets/conference-16x16.png',
-            'besucher' => ['Veranstaltung', 'besucherEintragen'],
-            'import' => ['Veranstaltung', 'csvImport'],
+            'besucher' => [EventParticipiantRegistration::class, 'execute'],
+            'import' => [EventParticipiantImport::class, 'execute'],
         ],
         'training' => [
             'tables' => ['tl_bsa_veranstaltung', 'tl_bsa_teilnehmer'],
-            'icon' => '/system/modules/x_bsa_veranstaltung/assets/conference-16x16.png',
-            'spiele' => ['Veranstaltung', 'spieleEintragen'],
-            'besucher' => ['Veranstaltung', 'besucherEintragen'],
-            'import' => ['Veranstaltung', 'csvImport'],
+            'spiele' => [EventMatchOfficialsRegistration::class, 'execute'],
+            'besucher' => [EventParticipiantRegistration::class, 'execute'],
+            'import' => [EventParticipiantImport::class, 'execute'],
         ],
         'regelarbeit' => [
             'tables' => ['tl_bsa_veranstaltung', 'tl_bsa_teilnehmer'],
-            'icon' => '/system/modules/x_bsa_veranstaltung/assets/conference-16x16.png',
-            'import' => ['Veranstaltung', 'csvImport'],
+            'import' => [EventParticipiantImport::class, 'execute'],
         ],
         'coaching' => [
             'tables' => ['tl_bsa_veranstaltung', 'tl_bsa_teilnehmer'],
-            'icon' => '/system/modules/x_bsa_veranstaltung/assets/conference-16x16.png',
-            'import' => ['Veranstaltung', 'csvImport'],
+            'import' => [EventParticipiantImport::class, 'execute'],
         ],
         'lehrgang' => [
             'tables' => ['tl_bsa_veranstaltung', 'tl_bsa_teilnehmer'],
-            'icon' => '/system/modules/x_bsa_veranstaltung/assets/conference-16x16.png',
-            'import' => ['Veranstaltung', 'csvImport'],
+            'import' => [EventParticipiantImport::class, 'execute'],
         ],
         'helsen' => [
             'tables' => ['tl_bsa_veranstaltung', 'tl_bsa_teilnehmer'],
-            'icon' => '/system/modules/x_bsa_veranstaltung/assets/conference-16x16.png',
         ],
         'sonstige' => [
             'tables' => ['tl_bsa_veranstaltung', 'tl_bsa_teilnehmer'],
-            'icon' => '/system/modules/x_bsa_veranstaltung/assets/conference-16x16.png',
         ],
         'export_veranstaltungen' => [
             'callback' => 'ModuleExportVeranstaltungen',
-            'icon' => 'system/modules/x_bsa_ansetzungen/assets/excel.png',
         ],
     ],
     'bsa_newsletter' => [
         'bsa_geburtstagsmail_settings' => [
             'tables' => ['tl_bsa_geburtstagsmail_setting'],
-            'icon' => '/system/themes/default/images/settings.gif',
         ],
         'bsa_simple_mail' => [
             'callback' => 'SimpleMail',
-            'icon' => 'system/modules/newsletter/assets/icon.gif',
         ],
         'bsa_verein_mail' => [
             'callback' => 'VereinMail',
-            'icon' => 'system/modules/newsletter/assets/icon.gif',
         ],
         'bsa_newsletter' => &$GLOBALS['BE_MOD']['content']['newsletter'],
     ],
     'bsa_ansetzungen' => [
         'bsa_tauschboerse_settings' => [
             'tables' => ['tl_bsa_tauschboerse_settings'],
-            'icon' => '/system/themes/default/images/settings.gif',
         ],
         'bsa_export_ansetzungen_settings' => [
             'tables' => ['tl_bsa_export_ansetzungen_settings'],
-            'icon' => '/system/themes/default/images/settings.gif',
         ],
         'bsa_spiele' => [
             'tables' => ['tl_bsa_spiel'],
-            'icon' => 'system/modules/x_bsa_ansetzungen/assets/ball.png',
         ],
         'edit_vereinsansetzungen' => [
             'callback' => 'ModuleEditVereinsansetzungen',
-            'icon' => 'system/themes/default/images/edit.gif',
         ],
         'export_ansetzungen' => [
             'callback' => 'ModuleExportAnsetzungen',
-            'icon' => 'system/modules/x_bsa_ansetzungen/assets/excel.png',
         ],
         'export_ansetzungen_statistiken' => [
             'callback' => 'ModuleExportAnsetzungenStatistiken',
-            'icon' => 'system/modules/x_bsa_ansetzungen/assets/excel.png',
         ],
     ],
     'bsa_beobachtungen' => [
         'bsa_beobachtung_settings' => [
             'tables' => ['tl_bsa_beobachtung_settings'],
-            'icon' => '/system/themes/default/images/settings.gif',
         ],
         'beobachtung' => [
             'tables' => ['tl_bsa_beobachtung'],
-            'icon' => 'system/modules/x_bsa_beobachtung/assets/beobachtung.png',
             'beo_erfassung' => ['ImportBeobachtung', 'executeImport'],
             'create_by_nr' => ['tl_bsa_beobachtung', 'askSpielnummer'],
             'export' => ['ExportBeobachtung', 'exportXLS'],
         ],
         'beobachtung_ausgang' => [
             'tables' => ['tl_bsa_beobachtung_ausgang'],
-            'icon' => 'system/modules/x_bsa_beobachtung/assets/beobachtung.png',
             'bestaetigung' => ['tl_bsa_beobachtung_ausgang', 'executeBestaetigung'],
             'beo_erfassung' => ['ImportBeobachtungAusgang', 'executeImport'],
         ],
         'export_beobachtungen' => [
             'callback' => 'ModuleExportBeobachtungen',
-            'icon' => 'system/modules/x_bsa_ansetzungen/assets/excel.png',
         ],
         'export_beobachter' => [
             'callback' => 'ModuleExportBeobachter',
-            'icon' => 'system/modules/x_bsa_ansetzungen/assets/excel.png',
         ],
     ],
     'bsa_dfbnet' => [
         'bsa_dfbnet_settings' => [
             'tables' => ['tl_bsa_dfbnet_settings'],
-            'icon' => '/system/themes/default/images/settings.gif',
         ],
         'dfbnet_import_ansetzungen' => [
             'callback' => 'ModuleDFBnetAnsetzungenImport',
-            'icon' => '/system/themes/default/images/cssimport.gif',
         ],
         'dfbnet_import_hallenrunden' => [
             'callback' => 'ModuleDFBnetHalleImport',
-            'icon' => '/system/themes/default/images/cssimport.gif',
         ],
         'dfbnet_import_schiedsrichter' => [
             'callback' => 'ModuleDFBnetSchiedsrichterImport',
-            'icon' => '/system/themes/default/images/cssimport.gif',
         ],
     ],
     'bsa_anwaerter' => [
         'bsa_anwaerterlehrgang_settings' => [
             'tables' => ['tl_bsa_anwaerterlehrgang_settings'],
-            'icon' => '/system/themes/default/images/settings.gif',
         ],
         'bsa_lehrgang' => [
             'tables' => ['tl_bsa_lehrgang', 'tl_bsa_anwaerter'],
-            'icon' => 'system/modules/x_bsa_anwaerter/assets/lehrgang.png',
             'einladung_pdf' => ['tl_bsa_anwaerter', 'downloadEinladung'],
             'mail' => ['LehrgangSelectMailer', 'process'],
             'mail_bestaetigung' => ['LehrgangBestaetigungMailer', 'process'],
@@ -248,7 +225,6 @@ ArrayUtil::arrayInsert(
     [
         'bsa_calendar_settings' => [
             'tables' => ['tl_bsa_calendar_settings'],
-            'icon' => '/system/themes/default/images/settings.gif',
         ],
     ]
 );
@@ -332,8 +308,8 @@ $GLOBALS['TL_MODELS'] = [
     'tl_bsa_sportplatz_nummer' => BsaSportplatzNummerModel::class,
     // 'tl_bsa_sportplatz_zuordnung' => BSASportplatzZuordnungModel::class,
     // 'tl_bsa_tauschboerse' => BSATauschbörseModel::class,
-    // 'tl_bsa_teilnehmer' => BSATeilnehmerModel::class,
-    // 'tl_bsa_veranstaltung' => BSAVeranstaltungModel::class,
+    'tl_bsa_teilnehmer' => BsaTeilnehmerModel::class,
+    'tl_bsa_veranstaltung' => BsaVeranstaltungModel::class,
     'tl_bsa_verein' => BsaVereinModel::class,
     'tl_bsa_verein_obmann' => BsaVereinObmannModel::class,
 ];

@@ -1,15 +1,5 @@
 <?php
 
-/*
- * This file is part of Contao Referee Hamburg Bundle.
- *
- * (c) Alexander Teuscher
- *
- * @license LGPL-3.0-or-later
- */
-
-use Contao\Input;
-
 declare(strict_types=1);
 
 /*
@@ -20,9 +10,7 @@ declare(strict_types=1);
  * @license LGPL-3.0-or-later
  */
 
-if (!defined('TL_ROOT')) {
-    die('You can not access this file directly!');
-}
+use Contao\Input;
 
 /*
  * Fields
