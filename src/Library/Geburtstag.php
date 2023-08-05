@@ -13,12 +13,13 @@ declare(strict_types=1);
 namespace Teusal\ContaoRefereeHamburgBundle\Library;
 
 use Contao\BackendUser;
-use Contao\Database;
+use Contao\Config;
 use Contao\Date;
-use Contao\Email;
 use Contao\Input;
 use Contao\Message;
 use Contao\System;
+use Teusal\ContaoRefereeHamburgBundle\Library\Email\AbstractEmail;
+use Teusal\ContaoRefereeHamburgBundle\Library\Email\BSAEmail;
 use Teusal\ContaoRefereeHamburgBundle\Model\BsaSchiedsrichterModel;
 use Teusal\ContaoRefereeHamburgBundle\Model\BsaVereinModel;
 
@@ -44,43 +45,20 @@ class Geburtstag extends System
      */
     public function sendMail($test = false): void
     {
-        if (!$GLOBALS['TL_CONFIG']['geb_mailing_aktiv']) {
+        if (!Config::get('geb_mailing_aktiv')) {
             return;
         }
 
-        $strFrom = $GLOBALS['TL_CONFIG']['geb_sender'];
-        $strFromName = $GLOBALS['TL_CONFIG']['geb_sender_name'];
+        $strMailerTransport = Config::get('geb_mailer_transport');
 
-        $strSubject = $GLOBALS['TL_CONFIG']['geb_subject'];
-        $strText = $GLOBALS['TL_CONFIG']['geb_text'];
-        $strBcc = $GLOBALS['TL_CONFIG']['geb_bcc'];
-
-        if (!\strlen($strFrom)) {
-            $strFrom = $GLOBALS['TL_CONFIG']['adminEmail'];
-        }
+        $strSubject = Config::get('geb_subject');
+        $strText = Config::get('geb_text');
+        $strBcc = Config::get('geb_bcc');
 
         if (!$test) {
             $arrSR = BsaSchiedsrichterModel::getPersonWithBirthdayToday('email<>""');
         } else {
-            if (TL_MODE !== 'BE') {
-                return;
-            }
-
-            // Beim testen kein BCC an den Admin
-            unset($strBcc);
-
-            // den SR zum Backend-Login laden...
-            $data = Database::getInstance()->prepare('SELECT id FROM tl_bsa_schiedsrichter WHERE CONCAT(vorname," ",nachname) = ?')
-                ->limit(1)
-                ->execute($this->User->name)
-                ->fetchAssoc()
-            ;
-
-            if (!isset($data) || !\is_array($data)) {
-                $data = ['id' => 461];
-            }
-            $data['email'] = $this->User->email;
-
+            $data = AbstractEmail::getRefereeForTestmail();
             $arrSR = [$data];
         }
 
@@ -96,16 +74,15 @@ class Geburtstag extends System
 
         foreach ($arrSR as $sr) {
             $objEmail = new BSAEmail();
+            $objEmail->setMailerTransport($strMailerTransport);
             $objEmail->setSchiedsrichter($sr['id']);
             $objEmail->setTest($test);
 
             try {
-                $objEmail->__set('from', $strFrom);
-                $objEmail->__set('fromName', $strFromName);
                 $objEmail->__set('subject', $strSubject);
                 $objEmail->__set('html', $strText);
 
-                if (\strlen($strBcc)) {
+                if (!empty($strBcc)) {
                     $objEmail->sendBcc(explode(',', $strBcc));
                 }
 
@@ -125,7 +102,7 @@ class Geburtstag extends System
     }
 
     /**
-     * Kommende Geburtstage im Beckend auflisten.
+     * Kommende Geburtstage im Backend auflisten.
      */
     public function getSystemMessages()
     {
@@ -156,7 +133,7 @@ class Geburtstag extends System
 
             $message = sprintf($strMessage, $sr['name_rev'], BsaVereinModel::findVerein($sr['verein'])->__get('name_kurz'), BsaSchiedsrichterModel::getAlter($sr));
 
-            if (!\strlen($sr['email'])) {
+            if (empty($sr['email'])) {
                 $message .= ' <span style="color:#CC3333;">!keine E-Mailadresse!</span>';
             }
             $arrBirthdays[] = $message;
@@ -196,9 +173,9 @@ class Geburtstag extends System
     /**
      * Sendet eine Info per Mail über kommende Geburtstage (heute und in 4 Tagen).
      */
-    public function sendInfoMail(): void
+    public function sendInfoMail($test = false): void
     {
-        if (!$GLOBALS['TL_CONFIG']['geb_info_aktiv']) {
+        if (!Config::get('geb_info_aktiv')) {
             return;
         }
 
@@ -213,7 +190,7 @@ class Geburtstag extends System
         foreach ($arrSR as $sr) {
             $html .= '<p>';
             $html .= '<strong>'.$sr['name_rev'].'</strong><br/>';
-            $html .= Date::parse($GLOBALS['TL_CONFIG']['dateFormat'], $sr['geburtsdatum']).' ('.BsaSchiedsrichterModel::getAlter($sr).'. Geburtstag)<br/>';
+            $html .= Date::parse(Config::get('dateFormat'), $sr['geburtsdatum']).' ('.BsaSchiedsrichterModel::getAlter($sr).'. Geburtstag)<br/>';
             $html .= 'Verein: '.BsaVereinModel::findVerein($sr['verein'])->__get('name_kurz').'<br/>';
             $html .= 'E-Mailadresse: '.(\strlen($sr['email']) ? $sr['email'] : '-').'<br/>';
 
@@ -240,7 +217,7 @@ class Geburtstag extends System
         foreach ($arrSR as $sr) {
             $html .= '<p>';
             $html .= '<strong>'.$sr['name_rev'].'</strong><br/>';
-            $html .= Date::parse($GLOBALS['TL_CONFIG']['dateFormat'], $sr['geburtsdatum']).' ('.(BsaSchiedsrichterModel::getAlter($sr) + 1).'. Geburtstag)<br/>';
+            $html .= Date::parse(Config::get('dateFormat'), $sr['geburtsdatum']).' ('.(BsaSchiedsrichterModel::getAlter($sr) + 1).'. Geburtstag)<br/>';
             $html .= 'Verein: '.BsaVereinModel::findVerein($sr['verein'])->__get('name_kurz').'<br/>';
             $html .= 'E-Mailadresse: '.(\strlen($sr['email']) ? $sr['email'] : '-').'<br/>';
 
@@ -263,10 +240,11 @@ class Geburtstag extends System
             return;
         }
 
-        $objEmail = new Email();
-        $objEmail->__set('from', $GLOBALS['TL_CONFIG']['geb_info_sender']);
-        $objEmail->__set('subject', 'Kommende Geburtstage im '.$GLOBALS['BSA_NAMES'][$GLOBALS['TL_CONFIG']['bsa_name']]);
+        $objEmail = new BSAEmail();
+        $objEmail->setMailerTransport(Config::get('geb_info_mailer_transport'));
+        $objEmail->setTest($test);
+        $objEmail->__set('subject', 'Kommende Geburtstage im '.$GLOBALS['BSA_NAMES'][Config::get('bsa_name')]);
         $objEmail->__set('html', $html);
-        $objEmail->sendTo(explode(',', $GLOBALS['TL_CONFIG']['geb_info_recipients']));
+        $objEmail->sendTo($test ? $this->User->email : explode(',', Config::get('geb_info_recipients')));
     }
 }

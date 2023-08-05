@@ -10,7 +10,7 @@ declare(strict_types=1);
  * @license LGPL-3.0-or-later
  */
 
-namespace Teusal\ContaoRefereeHamburgBundle\Library;
+namespace Teusal\ContaoRefereeHamburgBundle\Library\Member;
 
 use Contao\BackendUser;
 use Contao\Config;
@@ -20,6 +20,7 @@ use Contao\MemberModel;
 use Contao\Message;
 use Contao\System;
 use Symfony\Component\Mailer\Exception\TransportException;
+use Teusal\ContaoRefereeHamburgBundle\Library\Email\AbstractEmail;
 use Teusal\ContaoRefereeHamburgBundle\Library\Email\LoginEmail;
 
 /**
@@ -35,7 +36,7 @@ class MemberCreator extends System
     public function __construct()
     {
         parent::__construct();
-        $this->import(Database::class);
+        $this->import(Database::class, 'Database');
         $this->import(BackendUser::class, 'User');
     }
 
@@ -86,18 +87,26 @@ class MemberCreator extends System
             unset($usernameAppended);
         }
 
-        $password = substr(md5(uniqid(mt_rand(), true)), 0, 8);
+        $password = substr(md5(uniqid((string) (mt_rand()), true)), 0, 8);
         $pwd = password_hash($password, PASSWORD_DEFAULT);
 
-        $res = $this->Database->prepare('INSERT INTO tl_member (tstamp, firstname, lastname, email, groups, login, username, password, schiedsrichter, dateAdded) VALUES (?,?,?,?,?,?,?,?,?,?)')
-            ->execute($jetzt->__get('tstamp'), $sr['vorname'], $sr['nachname'], $sr['email'], serialize([]), true, $username, $pwd, $sr['id'], $jetzt->__get('tstamp'))
+        $gender = 'misc';
+
+        if ('m' === $sr['geschlecht']) {
+            $gender = 'male';
+        } elseif ('w' === $sr['geschlecht']) {
+            $gender = 'female';
+        }
+
+        $res = $this->Database->prepare('INSERT INTO tl_member (tstamp, firstname, lastname, dateOfBirth, gender, street, postal, city, phone, mobile, fax, email, groups, login, username, password, schiedsrichter, dateAdded) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)')
+            ->execute($jetzt->__get('tstamp'), $sr['vorname'], $sr['nachname'], $sr['geburtsdatum'], $gender, $sr['strasse'], $sr['plz'], $sr['ort'], $sr['telefon1'], $sr['telefon_mobil'], $sr['fax'], $sr['email'], serialize([]), true, $username, $pwd, $sr['id'], $jetzt->__get('tstamp'))
         ;
 
         if (0 === $res->__get('affectedRows')) {
             return false;
         }
 
-        SRHistory::insert($srID, $res->insertId, ['Login', 'ADD'], 'Der Login des Schiedsrichters %s wurde mit dem Benutzernamen "%s" erstellt.', __METHOD__);
+        SRHistory::insert($srID, $res->__get('insertId'), ['Login', 'ADD'], 'Der Login des Schiedsrichters %s wurde mit dem Benutzernamen "%s" erstellt.', __METHOD__);
 
         $this->createdLogins[$srID] = ['sr' => $sr, 'username' => $username, 'password' => $password, 'notificationMailSent' => false];
 
@@ -144,26 +153,7 @@ class MemberCreator extends System
             return false;
         }
 
-        // den SR zum Backend-Login anhand der E-Mailadresse laden...
-        $data = Database::getInstance()->prepare('SELECT id FROM tl_bsa_schiedsrichter WHERE email = ?')
-            ->limit(1)
-            ->execute(BackendUser::getInstance()->email)
-            ->fetchAssoc()
-        ;
-
-        // den SR zum Backend-Login anhand des Namens laden...
-        if (!isset($data) || !\is_array($data) || empty($data)) {
-            $data = Database::getInstance()->prepare('SELECT id FROM tl_bsa_schiedsrichter WHERE CONCAT(vorname," ",nachname) = ?')
-                ->limit(1)
-                ->execute(BackendUser::getInstance()->name)
-                ->fetchAssoc()
-            ;
-        }
-
-        if (!isset($data) || !\is_array($data) || empty($data)) {
-            $data = ['id' => 461];
-        }
-        $data['email'] = BackendUser::getInstance()->email;
+        $data = AbstractEmail::getRefereeForTestmail();
 
         try {
             return static::sendNotificationMail($data, BackendUser::getInstance()->username, 'XYZ', true);
@@ -207,11 +197,11 @@ class MemberCreator extends System
         $objEmail->__set('subject', Config::get('bsa_import_login_mail_subject'));
         $objEmail->__set('html', System::getContainer()->get('contao.insert_tag.parser')->replaceInline(Config::get('bsa_import_login_mail_text') ?? ''));
 
-        if (!$test && \strlen(Config::get('bsa_import_login_mail_bcc'))) {
+        if (!$test && !empty(Config::get('bsa_import_login_mail_bcc'))) {
             $objEmail->sendBcc(explode(',', Config::get('bsa_import_login_mail_bcc')));
         }
 
-        if (\strlen($sr['email'])) {
+        if (!empty($sr['email'])) {
             $mailSuccessfullySent = $objEmail->sendTo([$sr['email']]);
         }
 

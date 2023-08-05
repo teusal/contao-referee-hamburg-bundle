@@ -14,6 +14,7 @@ namespace Teusal\ContaoRefereeHamburgBundle\Library\Email;
 
 use Contao\BackendUser;
 use Contao\Config;
+use Contao\Database;
 use Contao\DataContainer;
 use Contao\Date;
 use Contao\Email;
@@ -53,6 +54,7 @@ abstract class AbstractEmail extends Email
 
     protected static $sr = [
         ['colspan', '<h1 style="margin-top: 15px; font-weight: bold;">Ersetzungen durch Daten des angeschriebenen Schiedsrichters</h1>'],
+        ['#SR_ANREDE#', 'Anrede des Schiedsrichters (Liebe, Lieber oder Liebe/Lieber)'],
         ['#SR_VORNAME#', 'Vorname des Schiedsrichter'],
         ['#SR_NACHNAME#', 'Nachname des Schiedsrichter'],
         ['#SR_NAME#', 'Vor- und Nachname des Schiedsrichter getrennt durch ein Leerzeichen'],
@@ -76,6 +78,7 @@ abstract class AbstractEmail extends Email
 
     private $srID;
     private $isTest = false;
+    private $isDevEnvironment = false;
 
     /**
      * Konstruktor.
@@ -83,6 +86,10 @@ abstract class AbstractEmail extends Email
     public function __construct()
     {
         parent::__construct();
+
+        if ('dev' === System::getContainer()->getParameter('kernel.environment')) {
+            $this->isDevEnvironment = true;
+        }
 
         if (TL_MODE === 'BE') {
             $this->setBackendUser(BackendUser::getInstance());
@@ -240,6 +247,20 @@ abstract class AbstractEmail extends Email
         if (isset($objSR)) {
             $this->srID = $objSR->id;
 
+            switch ($objSR->__get('geschlecht')) {
+                case 'm':
+                case 'male':
+                    $this->replacementValues['SR']['ANREDE'] = 'Lieber';
+                    break;
+                case 'w':
+                case 'female':
+                    $this->replacementValues['SR']['ANREDE'] = 'Liebe';
+                    break;
+
+                default:
+                    $this->replacementValues['SR']['ANREDE'] = 'Liebe/Lieber';
+                    break;
+            }
             $this->replacementValues['SR']['VORNAME'] = $objSR->__get('vorname');
             $this->replacementValues['SR']['NACHNAME'] = $objSR->__get('nachname');
             $this->replacementValues['SR']['NAME'] = $objSR->__get('vorname').' '.$objSR->__get('nachname');
@@ -288,8 +309,13 @@ abstract class AbstractEmail extends Email
         $email = $arrArgs[0];
 
         // replace email in dev environment
-        if ('dev' === System::getContainer()->getParameter('kernel.environment')) {
+        if ($this->isDevEnvironment) {
             $email = 'mail@alexteuscher.de';
+        }
+        // remove cc and bcc in dev environment as well as for testmails
+        if ($this->isDevEnvironment || $this->isTest) {
+            parent::sendCc([]);
+            parent::sendBcc([]);
         }
 
         $result = parent::sendTo($email);
@@ -304,11 +330,45 @@ abstract class AbstractEmail extends Email
     }
 
     /**
-     * Liefert die gesetzte Bcc-Adresse.
+     * returns an array with referee data to use as reference in testmails.
+     *
+     * @return array data of a referee
      */
-    public function getBcc()
+    public static function getRefereeForTestmail(): array
     {
-        return $this->objMessage->getBcc();
+        if (TL_MODE !== 'BE') {
+            throw new \Exception('getRefereeForTestmail is only available in Backend!');
+        }
+
+        // den SR zum Backend-Login anhand der E-Mailadresse laden...
+        $data = Database::getInstance()->prepare('SELECT id FROM tl_bsa_schiedsrichter WHERE email = ?')
+            ->limit(1)
+            ->execute(BackendUser::getInstance()->email)
+            ->fetchAssoc()
+        ;
+
+        // den SR zum Backend-Login anhand des Namens laden...
+        if (!isset($data) || !\is_array($data) || empty($data)) {
+            $data = Database::getInstance()->prepare('SELECT id FROM tl_bsa_schiedsrichter WHERE CONCAT(vorname," ",nachname) = ?')
+                ->limit(1)
+                ->execute(BackendUser::getInstance()->name)
+                ->fetchAssoc()
+            ;
+        }
+
+        if (!isset($data) || !\is_array($data) || empty($data)) {
+            $data = [
+                'id' => -1,
+                'geschlecht' => 'm',
+                'vorname' => 'Max',
+                'nachname' => 'Mustermann',
+                'name_rev' => 'Mustermann, Max',
+            ];
+        }
+
+        $data['email'] = BackendUser::getInstance()->email;
+
+        return $data;
     }
 
     abstract protected function getSubjectReferenceAddons();

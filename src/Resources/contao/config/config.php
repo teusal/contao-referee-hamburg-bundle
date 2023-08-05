@@ -11,12 +11,12 @@ declare(strict_types=1);
  */
 
 use Contao\ArrayUtil;
-use Teusal\ContaoRefereeHamburgBundle\Library\BSAMember;
 use Teusal\ContaoRefereeHamburgBundle\Library\Event\EventMatchOfficialsRegistration;
 use Teusal\ContaoRefereeHamburgBundle\Library\Event\EventParticipiantImport;
 use Teusal\ContaoRefereeHamburgBundle\Library\Event\EventParticipiantRegistration;
 use Teusal\ContaoRefereeHamburgBundle\Library\Geburtstag;
 use Teusal\ContaoRefereeHamburgBundle\Library\Mailer\UserTransportValidator;
+use Teusal\ContaoRefereeHamburgBundle\Library\Member\BSAMember;
 use Teusal\ContaoRefereeHamburgBundle\Library\Newsletter\Newsletter;
 use Teusal\ContaoRefereeHamburgBundle\Model\BsaFreigabenModel;
 use Teusal\ContaoRefereeHamburgBundle\Model\BsaGruppenmitgliederModel;

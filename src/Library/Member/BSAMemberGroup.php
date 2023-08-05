@@ -10,7 +10,7 @@ declare(strict_types=1);
  * @license LGPL-3.0-or-later
  */
 
-namespace Teusal\ContaoRefereeHamburgBundle\Library;
+namespace Teusal\ContaoRefereeHamburgBundle\Library\Member;
 
 use Contao\Database;
 use Contao\DataContainer;

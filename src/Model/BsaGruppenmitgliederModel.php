@@ -12,12 +12,11 @@ declare(strict_types=1);
 
 namespace Teusal\ContaoRefereeHamburgBundle\Model;
 
+use Contao\Database;
 use Contao\Model;
 
 /**
- * Reads and writes events.
- *
- * @copyright Leo Feyer 2005-2013
+ * Reads and writes group members.
  *
  * @property int $schiedsrichter
  */

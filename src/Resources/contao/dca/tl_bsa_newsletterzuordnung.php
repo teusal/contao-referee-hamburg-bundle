@@ -14,7 +14,7 @@ use Contao\Backend;
 use Contao\BackendUser;
 use Contao\DataContainer;
 use Contao\DC_Table;
-use Teusal\ContaoRefereeHamburgBundle\Library\BSANewsletter;
+use Teusal\ContaoRefereeHamburgBundle\Library\Newsletter\BSANewsletter;
 
 $GLOBALS['TL_DCA']['tl_bsa_newsletterzuordnung'] = [
     // Config

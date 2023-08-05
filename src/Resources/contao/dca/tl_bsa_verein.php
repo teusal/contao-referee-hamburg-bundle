@@ -11,6 +11,7 @@ declare(strict_types=1);
  */
 
 use Contao\Backend;
+use Contao\Config;
 use Contao\DataContainer;
 use Contao\DC_Table;
 use Teusal\ContaoPhoneNumberNormalizerBundle\Library\PhoneNumberNormalizer;
@@ -188,6 +189,6 @@ class tl_bsa_verein extends Backend
         $this->ExportHandler->set('protect', false);
         $fileToken = $this->ExportHandler->writeToken();
 
-        $this->redirect('http://export.'.$GLOBALS['TL_CONFIG']['bsa_domain'].'/vereine.php?token='.$this->ExportHandler->getTokenId($fileToken));
+        $this->redirect('http://export.'.Config::get('bsa_domain').'/vereine.php?token='.$this->ExportHandler->getTokenId($fileToken));
     }
 }

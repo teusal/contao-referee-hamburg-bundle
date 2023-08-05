@@ -10,7 +10,7 @@ declare(strict_types=1);
  * @license LGPL-3.0-or-later
  */
 
-namespace Teusal\ContaoRefereeHamburgBundle\Library;
+namespace Teusal\ContaoRefereeHamburgBundle\Library\Member;
 
 use Contao\BackendUser;
 use Contao\Config;
@@ -179,19 +179,36 @@ class BSAMember extends System
     }
 
     /**
-     * Setzt Vor-, Nachname und E-Mail am Login tl_member.
+     * Setzt Vor-, Nachname und E-Mail sowie weitere personenbezogene Daten am Login tl_member.
      */
     private function setPersonalData($objSR): void
     {
         $objMember = MemberModel::findOneBy('schiedsrichter', $objSR->id);
 
         if (isset($objMember)) {
+            $gender = 'misc';
+
+            if ('m' === $objSR->__get('geschlecht')) {
+                $gender = 'male';
+            } elseif ('w' === $objSR->__get('geschlecht')) {
+                $gender = 'female';
+            }
+
             $objMember->__set('firstname', $objSR->__get('vorname'));
             $objMember->__set('lastname', $objSR->__get('nachname'));
+            $objMember->__set('dateOfBirth', $objSR->__get('geburtsdatum'));
+            $objMember->__set('gender', $gender);
+            $objMember->__set('street', $objSR->__get('strasse'));
+            $objMember->__set('postal', $objSR->__get('plz'));
+            $objMember->__set('city', $objSR->__get('ort'));
+            $objMember->__set('phone', $objSR->__get('telefon1'));
+            $objMember->__set('mobile', $objSR->__get('telefon_mobil'));
+            $objMember->__set('fax', $objSR->__get('fax'));
 
-            if (\strlen($objSR->__get('email'))) {
+            if (!empty($objSR->__get('email'))) {
                 $objMember->__set('email', $objSR->__get('email'));
             }
+
             $objMember->save();
         }
     }

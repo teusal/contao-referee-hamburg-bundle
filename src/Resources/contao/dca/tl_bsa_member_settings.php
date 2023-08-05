@@ -16,7 +16,7 @@ use Contao\DC_File;
 use Contao\Input;
 use Contao\Message;
 use Teusal\ContaoRefereeHamburgBundle\Library\Email\LoginEmail;
-use Teusal\ContaoRefereeHamburgBundle\Library\MemberCreator;
+use Teusal\ContaoRefereeHamburgBundle\Library\Member\MemberCreator;
 
 $objEmail = new LoginEmail();
 

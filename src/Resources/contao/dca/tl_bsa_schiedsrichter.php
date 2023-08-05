@@ -19,6 +19,9 @@ use Contao\Image;
 use Contao\Input;
 use Contao\StringUtil;
 use Teusal\ContaoPhoneNumberNormalizerBundle\Library\PhoneNumberNormalizer;
+use Teusal\ContaoRefereeHamburgBundle\Library\Addressbook\AddressbookSynchronizer;
+use Teusal\ContaoRefereeHamburgBundle\Library\Member\BSAMember;
+use Teusal\ContaoRefereeHamburgBundle\Library\Newsletter\BSANewsletter;
 use Teusal\ContaoRefereeHamburgBundle\Library\SRHistory;
 use Teusal\ContaoRefereeHamburgBundle\Model\BsaFreigabenModel;
 
@@ -42,6 +45,9 @@ $GLOBALS['TL_DCA']['tl_bsa_schiedsrichter'] = [
         'notDeletable' => true,
         'onsubmit_callback' => [
             [tl_bsa_schiedsrichter::class, 'submit'],
+            [BSAMember::class, 'executeSubmitSchiedsrichter'],
+            [BSANewsletter::class, 'executeSubmitSchiedsrichter'],
+            [AddressbookSynchronizer::class, 'executeSubmitSchiedsrichter'],
         ],
         'sql' => [
             'keys' => [
@@ -266,6 +272,15 @@ $GLOBALS['TL_DCA']['tl_bsa_schiedsrichter'] = [
         'is_new' => [
             'exclude' => true,
             'sql' => "char(1) NOT NULL default '1'",
+        ],
+        'import_key' => [
+            'exclude' => true,
+            'eval' => ['doNotShow' => true],
+            'sql' => 'varchar(6) NULL',
+        ],
+        'addressbook_vcards' => [
+            'exclude' => true,
+            'sql' => 'blob NULL',
         ],
     ],
 ];

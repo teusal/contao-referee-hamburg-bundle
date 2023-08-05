@@ -10,12 +10,13 @@ declare(strict_types=1);
  * @license LGPL-3.0-or-later
  */
 
-namespace Teusal\ContaoRefereeHamburgBundle\Library;
+namespace Teusal\ContaoRefereeHamburgBundle\Library\Newsletter;
 
 use Contao\BackendUser;
 use Contao\Database;
 use Contao\DataContainer;
 use Contao\System;
+use Teusal\ContaoRefereeHamburgBundle\Library\SRHistory;
 use Teusal\ContaoRefereeHamburgBundle\Model\BsaSchiedsrichterModel;
 
 /**
@@ -31,6 +32,16 @@ class BSANewsletter extends System
         parent::__construct();
         $this->import(Database::class, 'Database');
         $this->import(BackendUser::class, 'User');
+    }
+
+    /**
+     * synchronize data in neewsletter recipients of a referee.
+     *
+     * @param DataContainer $dc Data Container object
+     */
+    public function executeSubmitSchiedsrichter(DataContainer $dc): void
+    {
+        $this->synchronizeNewsletterBySchiedsrichter($dc->id);
     }
 
     /**
@@ -115,8 +126,8 @@ class BSANewsletter extends System
 
             if (0 === $objRecipients->numRows) {
                 // Ein zweiter Versuch des Ladens ohne SR-ID, damit Einträge gefunden werden, die zuvor ohne ID eingetragen wurden
-                $objRecipients = $this->Database->prepare('SELECT id FROM tl_newsletter_recipients WHERE pid=? AND email=?')
-                    ->execute($channelId, $email)
+                $objRecipients = $this->Database->prepare('SELECT id FROM tl_newsletter_recipients WHERE pid=? AND email=? AND refereeId=?')
+                    ->execute($channelId, $email, null)
                 ;
             }
 
@@ -201,52 +212,6 @@ class BSANewsletter extends System
         foreach ($arrSR as $intSR) {
             $this->synchronizeNewsletterBySchiedsrichter($intSR, null, $toDelete, null);
         }
-    }
-
-    /**
-     * Löscht den Schiedsrichter aus der Empfängerliste beim Löschen des Schiedsrichters.
-     *
-     * @param int $intSR
-     */
-    public function deleteSchiedsrichter($intSR): void
-    {
-        $this->synchronizeNewsletterBySchiedsrichter($intSR, '');
-    }
-
-    /**
-     * Verwaltet die Änderung eines Schiedsrichters beim Anlegen oder Ändern eines Gruppenmitglieds.
-     *
-     * @param mixed $varValue
-     *
-     * @return mixed
-     */
-    public function saveSchiedsrichterDeleted($varValue, DataContainer $dc)
-    {
-        if ($varValue !== $dc->__get('activeRecord')->deleted) {
-            if ($varValue) {
-                $this->synchronizeNewsletterBySchiedsrichter($dc->id, $dc->__get('email'));
-            } else {
-                $this->synchronizeNewsletterBySchiedsrichter($dc->id, '');
-            }
-        }
-
-        return $varValue;
-    }
-
-    /**
-     * Verwaltet die Änderung eines Schiedsrichters beim Anlegen oder Ändern eines Gruppenmitglieds.
-     *
-     * @param mixed $varValue
-     *
-     * @return mixed
-     */
-    public function saveSchiedsrichterEmail($varValue, DataContainer $dc)
-    {
-        if ($varValue !== $dc->__get('activeRecord')->email) {
-            $this->synchronizeNewsletterBySchiedsrichter($dc->id, $varValue);
-        }
-
-        return $varValue;
     }
 
     /**

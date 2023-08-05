@@ -20,8 +20,8 @@ use Contao\MemberGroupModel;
 use Contao\Message;
 use Contao\StringUtil;
 use Teusal\ContaoRefereeHamburgBundle\Library\Addressbook\AddressbookSynchronizer;
-use Teusal\ContaoRefereeHamburgBundle\Library\BSAMemberGroup;
-use Teusal\ContaoRefereeHamburgBundle\Library\BSANewsletter;
+use Teusal\ContaoRefereeHamburgBundle\Library\Member\BSAMemberGroup;
+use Teusal\ContaoRefereeHamburgBundle\Library\Newsletter\BSANewsletter;
 use Teusal\ContaoRefereeHamburgBundle\Library\SRHistory;
 use Teusal\ContaoRefereeHamburgBundle\Model\BsaSchiedsrichterModel;
 

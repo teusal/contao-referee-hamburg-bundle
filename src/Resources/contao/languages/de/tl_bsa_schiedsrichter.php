@@ -48,3 +48,11 @@ $GLOBALS['TL_LANG']['tl_bsa_schiedsrichter']['cut'] = ['Verschieben', 'Diesen Sc
 $GLOBALS['TL_LANG']['tl_bsa_schiedsrichter']['copy'] = ['Kopieren', 'Diesen Schiedsrichter kopieren.'];
 $GLOBALS['TL_LANG']['tl_bsa_schiedsrichter']['delete'] = ['Löschen', 'Diesen Schiedsrichter löschen.'];
 $GLOBALS['TL_LANG']['tl_bsa_schiedsrichter']['show'] = ['Anzeigen', 'Die Details dieses Schiedsrichter anzeigen.'];
+
+/*
+ * Import
+ */
+$GLOBALS['TL_LANG']['tl_bsa_schiedsrichter']['source'] = ['DFBnet-Schiedsrichterliste', 'Wählen Sie die Datei aus, die importiert werden soll.'];
+$GLOBALS['TL_LANG']['tl_bsa_schiedsrichter']['dfbnet_import'] = ['DFBnet-Import', 'Datenimport für Schiedsrichter'];
+$GLOBALS['TL_LANG']['tl_bsa_schiedsrichter']['import'] = ['DFBnet-Import', 'DFBnet-Report importieren und Schiedsrichter anlegen bzw. aktualisieren.'];
+$GLOBALS['TL_LANG']['tl_bsa_schiedsrichter']['import_key'] = ['Import-Key', 'Wird für die Verarbeitung während des Imports benötigt.'];

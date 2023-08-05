@@ -14,8 +14,8 @@ use Contao\Backend;
 use Contao\BackendUser;
 use Contao\DataContainer;
 use Contao\DC_Table;
-use Teusal\ContaoRefereeHamburgBundle\Library\BSAMemberGroup;
-use Teusal\ContaoRefereeHamburgBundle\Library\BSANewsletter;
+use Teusal\ContaoRefereeHamburgBundle\Library\Member\BSAMemberGroup;
+use Teusal\ContaoRefereeHamburgBundle\Library\Newsletter\BSANewsletter;
 
 /*
  * This file is part of Contao Referee Hamburg Bundle.
