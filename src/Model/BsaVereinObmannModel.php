@@ -12,6 +12,7 @@ declare(strict_types=1);
 
 namespace Teusal\ContaoRefereeHamburgBundle\Model;
 
+use Contao\Database;
 use Contao\Model;
 
 /**
@@ -62,5 +63,21 @@ class BsaVereinObmannModel extends Model
         $objVereinObmann = static::findOneBy(['obmann=? OR stellv_obmann_1=? OR stellv_obmann_2=?'], [$schiedsrichterId, $schiedsrichterId, $schiedsrichterId]);
 
         return isset($objVereinObmann) ? $objVereinObmann->verein : null;
+    }
+
+    /**
+     * returns the list of email addresses assigned by a chairman or a vice chairman to the specified club.
+     *
+     * @param int $clubId the id of the club
+     *
+     * @return array an array with all email addresses
+     */
+    public static function getEmailAddressesOfChairmans(int $clubId): array
+    {
+        return Database::getInstance()
+            ->prepare('SELECT tl_bsa_schiedsrichter.email FROM tl_bsa_schiedsrichter JOIN tl_bsa_verein_obmann ON (tl_bsa_schiedsrichter.id=tl_bsa_verein_obmann.obmann OR tl_bsa_schiedsrichter.id=tl_bsa_verein_obmann.stellv_obmann_1 OR tl_bsa_schiedsrichter.id=tl_bsa_verein_obmann.stellv_obmann_2) WHERE tl_bsa_verein_obmann.verein=? AND tl_bsa_schiedsrichter.email<>? ORDER BY tl_bsa_schiedsrichter.email')
+            ->execute($clubId, '')
+            ->fetchEach('email')
+    ;
     }
 }

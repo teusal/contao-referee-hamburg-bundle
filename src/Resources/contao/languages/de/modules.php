@@ -48,10 +48,16 @@ $GLOBALS['TL_LANG']['MOD']['lehrgang'] = ['Lehrgänge', 'Verwaltung von Lehrgän
 $GLOBALS['TL_LANG']['MOD']['helsen'] = ['Helsen-Test', 'Verwaltung von Helsen-Tests', 'Helsen-Test'];
 $GLOBALS['TL_LANG']['MOD']['sonstige'] = ['Sonstige', 'Verwaltung von weiteren Veranstaltungen', 'Sonstiges'];
 $GLOBALS['TL_LANG']['MOD']['export_veranstaltungen'] = ['XLS-Export', 'Export der Auswertung über Veranstaltungen'];
+// group bsa_newsletter
+$GLOBALS['TL_LANG']['MOD']['bsa_mailing'] = 'Mailings';
+$GLOBALS['TL_LANG']['MOD']['geburtstagsmail_settings'] = ['Geburtstags-Mail', 'Einstellungen für die E-Mail zum Geburtstag bearbeiten.'];
+$GLOBALS['TL_LANG']['MOD']['simple_mail'] = ['Mail an Einzelempfänger', 'Eine E-Mail an eine einzelne Person senden'];
+$GLOBALS['TL_LANG']['MOD']['verein_mail'] = ['Mail an Vereinsobleute', 'Eine E-Mail an die Obleute eines Vereins senden'];
+$GLOBALS['TL_LANG']['MOD']['bsa_newsletter'] = ['Mail an Verteilerliste', 'Eine E-Mail an einen Mailverteiler senden.'];
 
 /*
- * Front end modules
- */
+* Front end modules
+*/
 $GLOBALS['TL_LANG']['FMD']['bsa'] = 'BSA-Daten';
 $GLOBALS['TL_LANG']['FMD']['sportplaetze'] = ['Sportplätze anzeigen', 'Sportplätze anzeigen'];
 $GLOBALS['TL_LANG']['FMD']['sportplatz_export'] = ['Sportplätze Export', 'Exportiert Sportplätze.'];
@@ -60,3 +66,5 @@ $GLOBALS['TL_LANG']['FMD']['schiedsrichter'] = ['Schiedsrichter', 'Zeigt die Sch
 $GLOBALS['TL_LANG']['FMD']['freigaben'] = ['Freigaben-Bearbeitung', 'Modul zur Bearbeitung der Web-Freigaben im Frontend.'];
 $GLOBALS['TL_LANG']['FMD']['bsa_member_group'] = ['Gruppen', 'Module zur Anzeige von einer oder mehreren Gruppen.'];
 $GLOBALS['TL_LANG']['FMD']['veranstaltung_export'] = ['Veranstaltungen exportieren', 'Stellt die xls-Auswertung eines Vereins als Download zu Verfügung.'];
+$GLOBALS['TL_LANG']['FMD']['bsa_newsletter_send'] = ['Newsletter senden', ''];
+$GLOBALS['TL_LANG']['FMD']['bsa_geburtstag'] = ['Geburtstagsgruß', 'Zeigt einen Geburtstagsgruß für Schiedsrichter an, die das Geburtsdatum freigegeben haben.'];

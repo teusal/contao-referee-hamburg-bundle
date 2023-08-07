@@ -28,6 +28,8 @@ use Teusal\ContaoRefereeHamburgBundle\Model\BsaTeilnehmerModel;
 use Teusal\ContaoRefereeHamburgBundle\Model\BsaVeranstaltungModel;
 use Teusal\ContaoRefereeHamburgBundle\Model\BsaVereinModel;
 use Teusal\ContaoRefereeHamburgBundle\Model\BsaVereinObmannModel;
+use Teusal\ContaoRefereeHamburgBundle\Module\Email\ModuleClubEmail;
+use Teusal\ContaoRefereeHamburgBundle\Module\Email\ModuleRefereeEmail;
 
 /*
  * BACK END MENU STRUKTUR
@@ -130,15 +132,15 @@ ArrayUtil::arrayInsert($GLOBALS['BE_MOD'], 0, [
             'callback' => 'ModuleExportVeranstaltungen',
         ],
     ],
-    'bsa_newsletter' => [
-        'bsa_geburtstagsmail_settings' => [
+    'bsa_mailing' => [
+        'geburtstagsmail_settings' => [
             'tables' => ['tl_bsa_geburtstagsmail_setting'],
         ],
-        'bsa_simple_mail' => [
-            'callback' => 'SimpleMail',
+        'simple_mail' => [
+            'callback' => ModuleRefereeEmail::class,
         ],
-        'bsa_verein_mail' => [
-            'callback' => 'VereinMail',
+        'verein_mail' => [
+            'callback' => ModuleClubEmail::class,
         ],
         'bsa_newsletter' => &$GLOBALS['BE_MOD']['content']['newsletter'],
     ],

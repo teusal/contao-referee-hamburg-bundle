@@ -244,10 +244,16 @@ abstract class AbstractEmail extends Email
     {
         $objSR = BsaSchiedsrichterModel::findSchiedsrichter($intSR);
 
-        if (isset($objSR)) {
-            $this->srID = $objSR->id;
+        if (!isset($objSR)) {
+            $this->srID = null;
+            unset($this->replacementValues['SR']);
 
-            switch ($objSR->__get('geschlecht')) {
+            return;
+        }
+
+        $this->srID = $objSR->id;
+
+        switch ($objSR->__get('geschlecht')) {
                 case 'm':
                 case 'male':
                     $this->replacementValues['SR']['ANREDE'] = 'Lieber';
@@ -261,20 +267,26 @@ abstract class AbstractEmail extends Email
                     $this->replacementValues['SR']['ANREDE'] = 'Liebe/Lieber';
                     break;
             }
-            $this->replacementValues['SR']['VORNAME'] = $objSR->__get('vorname');
-            $this->replacementValues['SR']['NACHNAME'] = $objSR->__get('nachname');
-            $this->replacementValues['SR']['NAME'] = $objSR->__get('vorname').' '.$objSR->__get('nachname');
-            $this->replacementValues['SR']['NAME_REV'] = $objSR->__get('name_rev');
-            $this->replacementValues['SR']['EMAIL'] = $objSR->__get('email');
-            $this->replacementValues['SR']['ALTER'] = BsaSchiedsrichterModel::getAlter($objSR);
+        $this->replacementValues['SR']['VORNAME'] = $objSR->__get('vorname');
+        $this->replacementValues['SR']['NACHNAME'] = $objSR->__get('nachname');
+        $this->replacementValues['SR']['NAME'] = $objSR->__get('vorname').' '.$objSR->__get('nachname');
+        $this->replacementValues['SR']['NAME_REV'] = $objSR->__get('name_rev');
+        $this->replacementValues['SR']['EMAIL'] = $objSR->__get('email');
+        $this->replacementValues['SR']['ALTER'] = BsaSchiedsrichterModel::getAlter($objSR);
 
-            $this->setVerein($objSR->__get('verein'));
-        }
+        $this->setVerein($objSR->__get('verein'));
     }
 
     final public function setVerein($intVerein): void
     {
         $objVerein = BsaVereinModel::findByPk($intVerein);
+
+        if (!isset($objVerein)) {
+            unset($this->replacementValues['VEREIN']);
+
+            return;
+        }
+
         $this->replacementValues['VEREIN']['NAME'] = (isset($objVerein) ? $objVerein->__get('name') : '-');
         $this->replacementValues['VEREIN']['NAME_KURZ'] = (isset($objVerein) ? $objVerein->__get('name_kurz') : '-');
     }

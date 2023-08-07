@@ -23,6 +23,7 @@ use Contao\Model;
  * @property string $vorname
  * @property string $nachname
  * @property string $geschlecht
+ * @property string $email
  */
 class BsaSchiedsrichterModel extends Model
 {

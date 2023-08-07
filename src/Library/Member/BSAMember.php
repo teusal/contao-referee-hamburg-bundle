@@ -38,7 +38,6 @@ class BSAMember extends System
     public function __construct()
     {
         parent::__construct();
-        // $this->loadDataContainer('tl_member');
         $this->import(Database::class, 'Database');
         $this->import(BackendUser::class, 'User');
         $this->import(MemberCreator::class, 'MemberCreator');

@@ -17,7 +17,9 @@ use Contao\Model;
 /**
  * Reads and writes clubs.
  *
+ * @property string $nummer
  * @property string $name_kurz
+ * @property bool   $anzeigen
  */
 class BsaVereinModel extends Model
 {

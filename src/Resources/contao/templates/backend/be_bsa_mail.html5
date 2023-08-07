@@ -1,0 +1,41 @@
+<?php echo $this->messages; ?>
+
+<div id="tl_buttons">
+	<a href="<?php echo $this->href; ?>" class="header_back" title="<?php echo $this->title; ?>"><?php echo $this->button; ?></a>
+</div>
+
+<form action="<?php echo $this->action; ?>" id="send_simple_mail" class="tl_form tl_edit_form" method="post" enctype="application/x-www-form-urlencoded">
+	<div class="tl_formbody_edit">
+		<input type="hidden" id="FORM_SUBMIT" name="FORM_SUBMIT" value="send_simple_mail" />
+		<input type="hidden" name="REQUEST_TOKEN" value="<?php echo REQUEST_TOKEN; ?>">
+
+		<fieldset class="tl_tbox nolegend">
+			<div class="w50 widget">
+<?php echo $this->recipients->parse(); ?>
+			</div>
+
+			<div class="w50 clr widget">
+<?php echo $this->carbonCopy->parse(); ?>
+			</div>
+
+			<div class="w50 widget">
+<?php echo $this->blindCarbonCopy->parse(); ?>
+			</div>
+
+			<div class="clr widget">
+<?php echo $this->subject->parse(); ?>
+			</div>
+
+			<div class="clr widget">
+<?php echo $this->emailText->parse(); ?>
+<?php echo $this->tinyNews->parse(); ?>
+			</div>
+		</fieldset>
+	</div>
+
+	<div class="tl_formbody_submit">
+		<div class="tl_submit_container">
+			<button type="submit" name="save" id="save" class="tl_submit" accesskey="s"<?php echo $this->disabled ? ' disabled' : ''; ?>>E-Mail versenden</button>
+		</div>
+	</div>
+</form>
