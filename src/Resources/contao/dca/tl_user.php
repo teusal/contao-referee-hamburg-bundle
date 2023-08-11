@@ -15,6 +15,7 @@ use Contao\Input;
 use Contao\Message;
 use Contao\System;
 use Contao\UserModel;
+use Teusal\ContaoRefereeHamburgBundle\Library\Mailer\AvailableTransports;
 
 /*
  * change onload
@@ -63,9 +64,10 @@ class tl_bsa_user extends tl_user
             return;
         }
 
+        /** @var AvailableTransports $availableTransports */
         $availableTransports = System::getContainer()->get('contao.mailer.available_transports');
 
-        if (!$availableTransports->existsTransportByEmail($user->email)) {
+        if (!$availableTransports->existsTransport($user->email)) {
             if ('login' === Input::get('do')) {
                 Message::addError('Es wurde keine Konfiguration zum Mailversand für Sie anhand Ihrer E-Mail-Adresse gefunden. Sie können so keine E-Mails versenden. Bitte wenden Sie sich an einen Administrator.');
             } else {

@@ -12,18 +12,17 @@ declare(strict_types=1);
 
 use Contao\Backend;
 use Contao\BackendUser;
-use Teusal\ContaoRefereeHamburgBundle\Model\BsaSchiedsrichterModel;
+use Teusal\ContaoRefereeHamburgBundle\Model\RefereeModel;
 
 /*
  * Change palette
  */
-$GLOBALS['TL_DCA']['tl_newsletter_recipients']['palettes']['default'] .= ';{bsa_schiedsrichter_legend},refereeId,firstname,lastname,groups';
+$GLOBALS['TL_DCA']['tl_newsletter_recipients']['palettes']['default'] .= ';{bsa_schiedsrichter_legend},refereeId,groups';
 
 /*
- * Change keys
+ * Change fields
  */
-$GLOBALS['TL_DCA']['tl_newsletter_recipients']['config']['sql']['keys']['pid,email'] = 'index';
-$GLOBALS['TL_DCA']['tl_newsletter_recipients']['config']['sql']['keys']['pid,email,refereeId'] = 'unique';
+$GLOBALS['TL_DCA']['tl_newsletter_recipients']['fields']['email']['eval']['rgxp'] = 'friendly';
 
 /*
  * Add fields
@@ -31,7 +30,7 @@ $GLOBALS['TL_DCA']['tl_newsletter_recipients']['config']['sql']['keys']['pid,ema
 $GLOBALS['TL_DCA']['tl_newsletter_recipients']['fields']['refereeId'] = [
     'inputType' => 'select',
     'eval' => ['disabled' => true, 'multiple' => false, 'includeBlankOption' => true, 'blankOptionLabel' => 'kein BSA-Schiedsrichter', 'tl_class' => 'clr'],
-    'foreignKey' => 'tl_bsa_schiedsrichter.name_rev',
+    'foreignKey' => 'tl_bsa_referee.nameReverse',
     'options_callback' => [tl_bsa_newsletter_recipients::class, 'getSchiedsrichterNotDeleted'],
     'sql' => 'int(10) unsigned NULL',
 ];
@@ -42,21 +41,6 @@ $GLOBALS['TL_DCA']['tl_newsletter_recipients']['fields']['groups'] = [
     'eval' => ['disabled' => true, 'multiple' => true, 'tl_class' => 'clr'],
     'sql' => 'blob NULL',
     'relation' => ['type' => 'hasMany', 'load' => 'lazy'],
-];
-$GLOBALS['TL_DCA']['tl_newsletter_recipients']['fields']['lastname'] = [
-    'inputType' => 'text',
-    'search' => true,
-    'eval' => ['disabled' => true, 'maxlength' => 50, 'tl_class' => 'w50'],
-    'sql' => "varchar(50) NOT NULL default ''",
-];
-$GLOBALS['TL_DCA']['tl_newsletter_recipients']['fields']['firstname'] = [
-    'inputType' => 'text',
-    'search' => true,
-    'eval' => ['disabled' => true, 'maxlength' => 50, 'tl_class' => 'w50'],
-    'sql' => "varchar(50) NOT NULL default ''",
-];
-$GLOBALS['TL_DCA']['tl_newsletter_recipients']['fields']['salutationPersonal'] = [
-    'sql' => "varchar(25) NOT NULL default ''",
 ];
 
 /**
@@ -84,10 +68,10 @@ class tl_bsa_newsletter_recipients extends Backend
      */
     public function getList($arrRow)
     {
-        $objSR = BsaSchiedsrichterModel::findSchiedsrichter($arrRow['refereeId']);
+        $objSR = RefereeModel::findReferee($arrRow['refereeId']);
 
         if (isset($objSR)) {
-            return $objSR->__get('name_rev');
+            return $objSR->__get('nameReverse');
         }
 
         return '???';
@@ -102,14 +86,14 @@ class tl_bsa_newsletter_recipients extends Backend
      */
     public function getSchiedsrichterNotDeleted(DataContainer $dc)
     {
-        $objSR = BsaSchiedsrichterModel::findBy('deleted', '', ['order' => 'name_rev']);
+        $objSR = RefereeModel::findBy('deleted', '', ['order' => 'nameReverse']);
 
         $options = [];
 
         if (null !== $objSR) {
             while ($objSR->next()) {
                 if (strlen($objSR->__get('email'))) {
-                    $options[$objSR->id] = $objSR->__get('name_rev');
+                    $options[$objSR->id] = $objSR->__get('nameReverse');
                 }
             }
         }

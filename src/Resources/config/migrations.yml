@@ -2,17 +2,42 @@ services:
     _defaults:
         autoconfigure: true
 
-    contao.migration.referee_100.config_update:
-        class: Teusal\ContaoRefereeHamburgBundle\Migration\ConfigMigration
-        arguments:
-            - '@contao.framework'
-
-    contao.migration.referee_100.newsletter_update:
-        class: Teusal\ContaoRefereeHamburgBundle\Migration\NewsletterMigration
+    contao.migration.reveree.version_100.club_update:
+        class: Teusal\ContaoRefereeHamburgBundle\Migration\Version100\ClubMigration
         arguments:
             - '@database_connection'
 
-    contao.migration.referee_100.season_update:
-        class: Teusal\ContaoRefereeHamburgBundle\Migration\BsaSeasonMigration
+    contao.migration.reveree.version_100.event_update:
+        class: Teusal\ContaoRefereeHamburgBundle\Migration\Version100\EventMigration
+        arguments:
+            - '@database_connection'
+
+    contao.migration.reveree.version_100.member_update:
+        class: Teusal\ContaoRefereeHamburgBundle\Migration\Version100\MemberMigration
+        arguments:
+            - '@database_connection'
+
+    contao.migration.reveree.version_100.newsletter_update:
+        class: Teusal\ContaoRefereeHamburgBundle\Migration\Version100\NewsletterMigration
+        arguments:
+            - '@database_connection'
+
+    contao.migration.reveree.version_100.referee_update:
+        class: Teusal\ContaoRefereeHamburgBundle\Migration\Version100\RefereeMigration
+        arguments:
+            - '@database_connection'
+
+    contao.migration.reveree.version_100.season_update:
+        class: Teusal\ContaoRefereeHamburgBundle\Migration\Version100\SeasonMigration
+        arguments:
+            - '@database_connection'
+
+    contao.migration.reveree.version_100.sports_facility_update:
+        class: Teusal\ContaoRefereeHamburgBundle\Migration\Version100\SportsFacilityMigration
+        arguments:
+            - '@database_connection'
+
+    contao_referee_hamburg_bundle.migration.reveree.version_100.website_data_release_update:
+        class: Teusal\ContaoRefereeHamburgBundle\Migration\Version100\WebsiteDataReleaseMigration
         arguments:
             - '@database_connection'

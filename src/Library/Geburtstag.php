@@ -20,8 +20,8 @@ use Contao\Message;
 use Contao\System;
 use Teusal\ContaoRefereeHamburgBundle\Library\Email\AbstractEmail;
 use Teusal\ContaoRefereeHamburgBundle\Library\Email\BSAEmail;
-use Teusal\ContaoRefereeHamburgBundle\Model\BsaSchiedsrichterModel;
-use Teusal\ContaoRefereeHamburgBundle\Model\BsaVereinModel;
+use Teusal\ContaoRefereeHamburgBundle\Model\RefereeModel;
+use Teusal\ContaoRefereeHamburgBundle\Model\ClubModel;
 
 /**
  * Class Geburtstag.
@@ -56,7 +56,7 @@ class Geburtstag extends System
         $strBcc = Config::get('geb_bcc');
 
         if (!$test) {
-            $arrSR = BsaSchiedsrichterModel::getPersonWithBirthdayToday('email<>""');
+            $arrSR = RefereeModel::getPersonWithBirthdayToday('email<>""');
         } else {
             $data = AbstractEmail::getRefereeForTestmail();
             $arrSR = [$data];
@@ -91,11 +91,11 @@ class Geburtstag extends System
                 if (TL_MODE === 'BE') {
                     Message::addInfo('BSA-Geburtstagsmail an '.$sr['email'].' gesendet');
                 } else {
-                    System::log('BSA-Geburtstagsmail an '.$sr['vorname'].' '.$sr['nachname'].' &lt;'.$sr['email'].'&gt; gesendet', 'BSA Geburtstag sendMail()', TL_CRON);
+                    System::log('BSA-Geburtstagsmail an '.$sr['firstname'].' '.$sr['lastname'].' &lt;'.$sr['email'].'&gt; gesendet', 'BSA Geburtstag sendMail()', TL_CRON);
                 }
             } catch (\Exception $e) {
                 if (TL_MODE === 'BE') {
-                    System::log('BSA-Geburtstagsmail an '.$sr['vorname'].' '.$sr['nachname'].' &lt;'.$sr['email'].'&gt; konnte nicht gesendet werden: '.$e->getMessage(), 'BSA Geburtstag sendMail()', TL_CRON);
+                    System::log('BSA-Geburtstagsmail an '.$sr['firstname'].' '.$sr['lastname'].' &lt;'.$sr['email'].'&gt; konnte nicht gesendet werden: '.$e->getMessage(), 'BSA Geburtstag sendMail()', TL_CRON);
                 }
             }
         }
@@ -103,6 +103,8 @@ class Geburtstag extends System
 
     /**
      * Kommende Geburtstage im Backend auflisten.
+     *
+     * @return string|null an info about upcomming birthdays
      */
     public function getSystemMessages()
     {
@@ -121,17 +123,17 @@ class Geburtstag extends System
 
         $strLastDate = '';
 
-        $arrSR = BsaSchiedsrichterModel::getPersonWithBirthdayToday();
+        $arrSR = RefereeModel::getPersonWithBirthdayToday();
 
         foreach ($arrSR as $sr) {
-            if ($strLastDate === Date::parse('d.m.', $sr['geburtsdatum'])) {
+            if ($strLastDate === Date::parse('d.m.', $sr['dateOfBirth'])) {
                 $arrDates[] = '&nbsp;';
             } else {
-                $strLastDate = Date::parse('d.m.', $sr['geburtsdatum']);
+                $strLastDate = Date::parse('d.m.', $sr['dateOfBirth']);
                 $arrDates[] = $strLastDate.':';
             }
 
-            $message = sprintf($strMessage, $sr['name_rev'], BsaVereinModel::findVerein($sr['verein'])->__get('name_kurz'), BsaSchiedsrichterModel::getAlter($sr));
+            $message = sprintf($strMessage, $sr['nameReverse'], ClubModel::findVerein($sr['clubId'])->__get('nameShort'), RefereeModel::getAge($sr));
 
             if (empty($sr['email'])) {
                 $message .= ' <span style="color:#CC3333;">!keine E-Mailadresse!</span>';
@@ -139,17 +141,17 @@ class Geburtstag extends System
             $arrBirthdays[] = $message;
         }
 
-        $arrSR = BsaSchiedsrichterModel::getPersonWithBirthdayNextDays(1, 7);
+        $arrSR = RefereeModel::getPersonWithBirthdayNextDays(1, 7);
 
         foreach ($arrSR as $sr) {
-            if ($strLastDate === Date::parse('d.m.', $sr['geburtsdatum'])) {
+            if ($strLastDate === Date::parse('d.m.', $sr['dateOfBirth'])) {
                 $arrDates[] = '&nbsp;';
             } else {
-                $strLastDate = Date::parse('d.m.', $sr['geburtsdatum']);
+                $strLastDate = Date::parse('d.m.', $sr['dateOfBirth']);
                 $arrDates[] = $strLastDate.':';
             }
 
-            $message = sprintf($strMessage, $sr['name_rev'], BsaVereinModel::findVerein($sr['verein'])->__get('name_kurz'), BsaSchiedsrichterModel::getAlter($sr) + 1);
+            $message = sprintf($strMessage, $sr['nameReverse'], ClubModel::findVerein($sr['clubId'])->__get('nameShort'), RefereeModel::getAge($sr) + 1);
 
             if (!\strlen($sr['email'])) {
                 $message .= ' <span style="color:#CC3333;">!keine E-Mailadresse!</span>';
@@ -181,7 +183,7 @@ class Geburtstag extends System
 
         $html = '';
 
-        $arrSR = BsaSchiedsrichterModel::getPersonWithBirthdayToday();
+        $arrSR = RefereeModel::getPersonWithBirthdayToday();
 
         if (!empty($arrSR)) {
             $html .= '<h2>Geburtstage heute:</h2>';
@@ -189,26 +191,26 @@ class Geburtstag extends System
 
         foreach ($arrSR as $sr) {
             $html .= '<p>';
-            $html .= '<strong>'.$sr['name_rev'].'</strong><br/>';
-            $html .= Date::parse(Config::get('dateFormat'), $sr['geburtsdatum']).' ('.BsaSchiedsrichterModel::getAlter($sr).'. Geburtstag)<br/>';
-            $html .= 'Verein: '.BsaVereinModel::findVerein($sr['verein'])->__get('name_kurz').'<br/>';
+            $html .= '<strong>'.$sr['nameReverse'].'</strong><br/>';
+            $html .= Date::parse(Config::get('dateFormat'), $sr['dateOfBirth']).' ('.RefereeModel::getAge($sr).'. Geburtstag)<br/>';
+            $html .= 'Verein: '.ClubModel::findVerein($sr['clubId'])->__get('nameShort').'<br/>';
             $html .= 'E-Mailadresse: '.(\strlen($sr['email']) ? $sr['email'] : '-').'<br/>';
 
-            if (\strlen($sr['telefon1'])) {
-                $html .= 'Tel privat: '.$sr['telefon1'].'<br/>';
+            if (\strlen($sr['phone1'])) {
+                $html .= 'Tel privat: '.$sr['phone1'].'<br/>';
             }
 
-            if (\strlen($sr['telefon2'])) {
-                $html .= 'Tel dienstl.: '.$sr['telefon2'].'<br/>';
+            if (\strlen($sr['phone2'])) {
+                $html .= 'Tel dienstl.: '.$sr['phone2'].'<br/>';
             }
 
-            if (\strlen($sr['telefon_mobil'])) {
-                $html .= 'Tel mobil: '.$sr['telefon_mobil'].'<br/>';
+            if (\strlen($sr['mobile'])) {
+                $html .= 'Tel mobil: '.$sr['mobile'].'<br/>';
             }
             $html .= '</p>';
         }
 
-        $arrSR = BsaSchiedsrichterModel::getPersonWithBirthdayNextDays(4, 4);
+        $arrSR = RefereeModel::getPersonWithBirthdayNextDays(4, 4);
 
         if (!empty($arrSR)) {
             $html .= '<h2>Geburtstage in 4 Tagen:</h2>';
@@ -216,23 +218,23 @@ class Geburtstag extends System
 
         foreach ($arrSR as $sr) {
             $html .= '<p>';
-            $html .= '<strong>'.$sr['name_rev'].'</strong><br/>';
-            $html .= Date::parse(Config::get('dateFormat'), $sr['geburtsdatum']).' ('.(BsaSchiedsrichterModel::getAlter($sr) + 1).'. Geburtstag)<br/>';
-            $html .= 'Verein: '.BsaVereinModel::findVerein($sr['verein'])->__get('name_kurz').'<br/>';
+            $html .= '<strong>'.$sr['nameReverse'].'</strong><br/>';
+            $html .= Date::parse(Config::get('dateFormat'), $sr['dateOfBirth']).' ('.(RefereeModel::getAge($sr) + 1).'. Geburtstag)<br/>';
+            $html .= 'Verein: '.ClubModel::findVerein($sr['clubId'])->__get('nameShort').'<br/>';
             $html .= 'E-Mailadresse: '.(\strlen($sr['email']) ? $sr['email'] : '-').'<br/>';
 
-            if (\strlen($sr['telefon1'])) {
-                $html .= 'Tel privat: '.$sr['telefon1'].'<br/>';
+            if (\strlen($sr['phone1'])) {
+                $html .= 'Tel privat: '.$sr['phone1'].'<br/>';
             }
 
-            if (\strlen($sr['telefon2'])) {
-                $html .= 'Tel dienstl.: '.$sr['telefon2'].'<br/>';
+            if (\strlen($sr['phone2'])) {
+                $html .= 'Tel dienstl.: '.$sr['phone2'].'<br/>';
             }
 
-            if (\strlen($sr['telefon_mobil'])) {
-                $html .= 'Tel mobil: '.$sr['telefon_mobil'].'<br/>';
+            if (\strlen($sr['mobile'])) {
+                $html .= 'Tel mobil: '.$sr['mobile'].'<br/>';
             }
-            $html .= 'Adresse: '.$sr['strasse'].'; '.$sr['plz'].' '.$sr['ort'].'<br/>';
+            $html .= 'Adresse: '.$sr['street'].'; '.$sr['postal'].' '.$sr['city'].'<br/>';
             $html .= '</p>';
         }
 

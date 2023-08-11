@@ -13,8 +13,8 @@ declare(strict_types=1);
 namespace Teusal\ContaoRefereeHamburgBundle\Module\Email;
 
 use Contao\StringUtil;
-use Teusal\ContaoRefereeHamburgBundle\Model\BsaSchiedsrichterModel;
-use Teusal\ContaoRefereeHamburgBundle\Model\BsaVereinObmannModel;
+use Teusal\ContaoRefereeHamburgBundle\Model\RefereeModel;
+use Teusal\ContaoRefereeHamburgBundle\Model\ClubChairmanModel;
 
 /**
  * Class ModuleRefereeEmail.
@@ -34,14 +34,14 @@ class ModuleRefereeEmail extends AbstractModuleEmail
         }
 
         // loading all referees and sort each to his club
-        $objReferee = BsaSchiedsrichterModel::findBy(['deleted=?', 'email<>?'], ['', ''], ['order' => 'name_rev']);
+        $objReferee = RefereeModel::findBy(['deleted=?', 'email<>?'], ['', ''], ['order' => 'nameReverse']);
 
         if (isset($objReferee)) {
             while ($objReferee->next()) {
-                if ($objReferee->__get('verein') || BsaVereinObmannModel::isVereinsobmann($objReferee->id)) {
-                    $arrRecipientOptions[$this->arrClubs[$objReferee->__get('verein')]['nameShort']][] = [
+                if ($objReferee->__get('clubId') || ClubChairmanModel::isChairman($objReferee->id)) {
+                    $arrRecipientOptions[$this->arrClubs[$objReferee->__get('clubId')]['nameShort']][] = [
                         'value' => $objReferee->id,
-                        'label' => StringUtil::specialchars($objReferee->__get('name_rev').' <'.$objReferee->__get('email').'>'),
+                        'label' => StringUtil::specialchars($objReferee->__get('nameReverse').' <'.$objReferee->__get('email').'>'),
                     ];
                 }
             }
@@ -59,11 +59,11 @@ class ModuleRefereeEmail extends AbstractModuleEmail
 
     protected function getRecipientData($refereeId): array
     {
-        $objReferee = BsaSchiedsrichterModel::findByPk($refereeId);
+        $objReferee = RefereeModel::findByPk($refereeId);
 
         return [
             'refereeId' => $objReferee->id,
-            'clubId' => $objReferee->verein,
+            'clubId' => $objReferee->clubId,
             'email_addresses' => [$objReferee->email],
         ];
     }

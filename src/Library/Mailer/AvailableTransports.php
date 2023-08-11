@@ -13,88 +13,32 @@ declare(strict_types=1);
 namespace Teusal\ContaoRefereeHamburgBundle\Library\Mailer;
 
 use Contao\BackendUser;
-use Contao\CoreBundle\Mailer\TransportConfig;
+use Symfony\Contracts\Translation\TranslatorInterface;
 
 /**
  * This class filters transports while adding by backend users emailaddress.
  */
 class AvailableTransports extends \Contao\CoreBundle\Mailer\AvailableTransports
 {
-    /**
-     * @var array<TransportConfig>
-     */
-    private array $userTransports = [];
-    /**
-     * @var array<TransportConfig>
-     */
-    private array $systemTransports = [];
+    private const USER_TRANSPORT = 'user_transport';
+    private const SYSTEM_TRANSPORT = 'system_transport';
 
-    public function addTransport(TransportConfig $transportConfig): void
+    public function __construct(TranslatorInterface $translator = null)
     {
-        // add to all known system transports
-        if (false === strpos($transportConfig->getName(), '@')) {
-            $this->systemTransports[$transportConfig->getName()] = $transportConfig;
-        } else {
-            $this->userTransports[$transportConfig->getName()] = $transportConfig;
-        }
-        // filter transport by user users email
-        if (!empty(BackendUser::getInstance()->email) && BackendUser::getInstance()->email === $transportConfig->getName()) {
-            parent::addTransport($transportConfig);
-        } else {
-            parent::addTransport($transportConfig);
-        }
+        // unset translator to prevent messages of missing translations
+        parent::__construct(null);
     }
 
     /**
-     * returns true, if there is a known configuration in the system for a specified name.
-     */
-    public function existsTransportByEmail(string $email): bool
-    {
-        return \array_key_exists($email, $this->userTransports) || \array_key_exists($email, $this->systemTransports);
-    }
-
-    /**
-     * Returns the available transports as options suitable for widgets.
+     * checks whether the tranport exists by name or not.
      *
-     * @return array<string, string>
-     */
-    public function getSystemTransportOptions(): array
-    {
-        $options = [];
-
-        foreach ($this->systemTransports as $name => $config) {
-            $label = null !== $this->translator ? $this->translator->trans($name, [], 'mailer_transports') : $name;
-
-            if (null !== ($from = $config->getFrom())) {
-                $label .= ' ('.$from.')';
-            }
-
-            $options[$name] = htmlentities($label);
-        }
-
-        return $options;
-    }
-
-    /**
-     * Returns the available transports as options suitable for widgets.
+     * @param string $name the name of the transport
      *
-     * @return array<string, string>
+     * @return bool true, if there is a known configuration in the system for a specified name
      */
-    public function getUserTransportOptions(): array
+    public function existsTransport(string $name): bool
     {
-        $options = [];
-
-        foreach ($this->userTransports as $name => $config) {
-            $label = null !== $this->translator ? $this->translator->trans($name, [], 'mailer_transports') : $name;
-
-            if (null !== ($from = $config->getFrom())) {
-                $label .= ' ('.$from.')';
-            }
-
-            $options[$name] = htmlentities($label);
-        }
-
-        return $options;
+        return \array_key_exists($name, $this->getTransports());
     }
 
     /**
@@ -102,11 +46,96 @@ class AvailableTransports extends \Contao\CoreBundle\Mailer\AvailableTransports
      *
      * @return array<string, array<string, string>>
      */
-    public function getAllTransportOptions(): array
+    public function getTransportOptions(): array
     {
-        return [
-            'system_transports' => $this->getSystemTransportOptions(),
-            'user_transports' => $this->getUserTransportOptions(),
+        $options = [
+            self::USER_TRANSPORT => [],
+            self::SYSTEM_TRANSPORT => [],
         ];
+
+        foreach (parent::getTransportOptions() as $name => $label) {
+            if (false === strpos($name, '@')) {
+                $key = self::SYSTEM_TRANSPORT;
+            } else {
+                $key = self::USER_TRANSPORT;
+            }
+            $options[$key][$name] = $label;
+        }
+
+        return $options;
+    }
+
+    /**
+     * Returns the available transports by system as options suitable for widgets.
+     *
+     * @return array<string, array<string, string>>
+     */
+    public function getSystemTransportOptions(): array
+    {
+        $options = $this->getTransportOptions();
+        unset($options[self::USER_TRANSPORT]);
+
+        return $options;
+    }
+
+    /**
+     * Returns the available transports by user as options suitable for widgets.
+     *
+     * @return array<string, array<string, string>>
+     */
+    public function getUserTransportOptions(): array
+    {
+        $options = $this->getTransportOptions();
+        unset($options[self::SYSTEM_TRANSPORT]);
+
+        return $options;
+    }
+
+    /**
+     * Returns the available transports by system and the cuttent logged in backend user as options suitable for widgets.
+     *
+     * @return array<string, array<string, string>>
+     */
+    public function getSystemAndBackendUserTransportOptions(): array
+    {
+        $user = BackendUser::getInstance();
+
+        if (TL_MODE !== 'BE' || !isset($user)) {
+            return $this->getSystemTransportOptions();
+        }
+
+        $options = $this->getTransportOptions();
+
+        foreach (array_keys($options[self::USER_TRANSPORT]) as $name) {
+            if ($name !== $user->email) {
+                unset($options[self::USER_TRANSPORT][$name]);
+            }
+        }
+
+        return $options;
+    }
+
+    /**
+     * checks whether the transport is a system transport or not.
+     *
+     * @param string $name The name of the transport
+     *
+     * @return bool true if it is a system transport
+     */
+    public function isSystemTransport(string $name): bool
+    {
+        return false === strpos($name, '@');
+    }
+
+    /**
+     * checks whether the transport is an user transport or not.
+     *
+     * @param string $name the name of the transport
+     *
+     * @return bool true if it is an user transport
+     */
+    public function isUserTransport(string $name): bool
+    {
+        return !$this->isSystemTransport($name);
     }
 }

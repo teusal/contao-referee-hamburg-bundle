@@ -20,7 +20,7 @@ if ('logins' === Input::get('do')) {
     $GLOBALS['TL_DCA']['tl_member']['config']['notCreatable'] = true;
     $GLOBALS['TL_DCA']['tl_member']['config']['notCopyable'] = true;
     $GLOBALS['TL_DCA']['tl_member']['config']['notDeletable'] = true;
-    $GLOBALS['TL_DCA']['tl_member']['edit']['buttons_callback'] = [[tl_bsa_member::class, 'unsetButtons']];
+    $GLOBALS['TL_DCA']['tl_member']['edit']['buttons_callback'] = [[tl_bsa_member::class, 'disableButtons']];
 
     /*
      * Change list
@@ -36,12 +36,12 @@ if ('logins' === Input::get('do')) {
             'attributes' => 'onclick="Backend.getScrollOffset()" style="padding:2px 0 3px 20px;background:url(\'/system/themes/default/images/modules.gif\') no-repeat left center;"',
         ],
     ];
-    $GLOBALS['TL_DCA']['tl_member']['list']['sorting']['filter'] = [['schiedsrichter!=?', '0']];
+    $GLOBALS['TL_DCA']['tl_member']['list']['sorting']['filter'] = [['refereeId!=?', '0']];
 
     /*
      * Change palette
      */
-    $GLOBALS['TL_DCA']['tl_member']['palettes']['default'] = '{personal_legend},firstname,lastname,email,schiedsrichter;{groups_legend:hide},groups;{newsletter_legend:hide},newsletter;{login_legend},login';
+    $GLOBALS['TL_DCA']['tl_member']['palettes']['default'] = '{personal_legend},firstname,lastname,email,refereeId;{groups_legend:hide},groups;{newsletter_legend:hide},newsletter;{login_legend},login';
 
     /*
      * Change fields
@@ -61,7 +61,7 @@ if ('logins' === Input::get('do')) {
     $GLOBALS['TL_DCA']['tl_member']['fields']['city']['filter'] = false;
     $GLOBALS['TL_DCA']['tl_member']['fields']['language']['filter'] = false;
     $GLOBALS['TL_DCA']['tl_member']['fields']['login']['filter'] = false;
-    $GLOBALS['TL_DCA']['tl_member']['fields']['newsletter']['filter'] = false;
+    $GLOBALS['TL_DCA']['tl_member']['fields']['newsletter']['filter'] = true;
     // change sortings
     $GLOBALS['TL_DCA']['tl_member']['fields']['company']['sorting'] = false;
     $GLOBALS['TL_DCA']['tl_member']['fields']['country']['sorting'] = false;
@@ -80,7 +80,7 @@ if ('logins' === Input::get('do')) {
     /*
      * Change list
      */
-    $GLOBALS['TL_DCA']['tl_member']['list']['sorting']['filter'] = [['schiedsrichter=?', '0']];
+    $GLOBALS['TL_DCA']['tl_member']['list']['sorting']['filter'] = [['refereeId IS NULL']];
 }
 
 /*
@@ -92,16 +92,17 @@ $GLOBALS['TL_DCA']['tl_member']['config']['enableVersioning'] = false;
  * Change fields
  */
 $GLOBALS['TL_DCA']['tl_member']['fields']['disable']['save_callback'][] = [SRHistory::class, 'insertByToggleMember'];
+$GLOBALS['TL_DCA']['tl_member']['fields']['email']['eval']['rgxp'] = 'friendly';
 
 /*
  * Add fields
  */
-$GLOBALS['TL_DCA']['tl_member']['fields']['schiedsrichter'] = [
+$GLOBALS['TL_DCA']['tl_member']['fields']['refereeId'] = [
     'inputType' => 'select',
     'eval' => ['multiple' => false, 'disabled' => true, 'includeBlankOption' => true, 'blankOptionLabel' => 'kein Schiedsrichter', 'unique' => true, 'tl_class' => 'w50 clr'],
-    'foreignKey' => 'tl_bsa_schiedsrichter.name_rev',
+    'foreignKey' => 'tl_bsa_referee.nameReverse',
     'relation' => ['type' => 'belongsTo', 'load' => 'eager'],
-    'sql' => "int(10) unsigned NOT NULL default '0'",
+    'sql' => 'int(10) unsigned NULL',
 ];
 
 /*
@@ -128,7 +129,7 @@ class tl_bsa_member extends Backend
      *
      * @return array
      */
-    public function unsetButtons($arrButtons, DataContainer $dc)
+    public function disableButtons($arrButtons, DataContainer $dc)
     {
         $arrButtons['save'] = preg_replace('/>/', ' disabled>', $arrButtons['save'], 1);
         $arrButtons['saveNclose'] = preg_replace('/>/', ' disabled>', $arrButtons['saveNclose'], 1);

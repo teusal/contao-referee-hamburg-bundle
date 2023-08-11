@@ -17,9 +17,10 @@ use Contao\DataContainer;
 use Contao\MemberGroupModel;
 use Contao\Message;
 use Contao\System;
-use Teusal\ContaoRefereeHamburgBundle\Model\BsaGruppenmitgliederModel;
-use Teusal\ContaoRefereeHamburgBundle\Model\BsaSchiedsrichterModel;
-use Teusal\ContaoRefereeHamburgBundle\Model\BsaVereinObmannModel;
+use Teusal\ContaoRefereeHamburgBundle\Library\SRHistory;
+use Teusal\ContaoRefereeHamburgBundle\Model\MemberGroupAssignmentMemberModel;
+use Teusal\ContaoRefereeHamburgBundle\Model\RefereeModel;
+use Teusal\ContaoRefereeHamburgBundle\Model\ClubChairmanModel;
 
 /**
  * Class BSAMemberGroup.
@@ -79,7 +80,7 @@ final class BSAMemberGroup extends System
             throw new \Exception('wrong datatype or zero given');
         }
 
-        $objSR = BsaSchiedsrichterModel::findSchiedsrichter($intSR);
+        $objSR = RefereeModel::findReferee($intSR);
 
         // zuerst für gelöschte SR alle automatischen Gruppen entfernen
         if (!isset($objSR) || $objSR->__get('deleted')) {
@@ -98,51 +99,51 @@ final class BSAMemberGroup extends System
             return;
         }
 
-        $isVereinsschiedsrichter = BsaSchiedsrichterModel::isVereinsschiedsrichter($intSR);
-        $isVereinsobmann = BsaVereinObmannModel::isVereinsobmann($intSR);
+        $isClubReferee = RefereeModel::isClubReferee($intSR);
+        $isChairman = ClubChairmanModel::isChairman($intSR);
 
         // Schiedsrichter zur Gruppe 'Alle Personen' hinzufügen
-        if ($isVereinsschiedsrichter || $isVereinsobmann) {
+        if ($isClubReferee || $isChairman) {
             self::addToGroup($intSR, 'alle');
         } else {
             self::deleteFromGroup($intSR, 'alle');
         }
 
         // Schiedsrichter zur Gruppe 'Alle Schiedsrichter' hinzufügen
-        if ($isVereinsschiedsrichter) {
+        if ($isClubReferee) {
             self::addToGroup($intSR, 'alle_sr');
         } else {
             self::deleteFromGroup($intSR, 'alle_sr');
         }
 
         // Schiedsrichter zur Gruppe 'Obleute' hinzufügen
-        if ($isVereinsobmann) {
+        if ($isChairman) {
             self::addToGroup($intSR, 'obleute');
         } else {
             self::deleteFromGroup($intSR, 'obleute');
         }
 
-        if (!$isVereinsschiedsrichter) {
+        if (!$isClubReferee) {
             self::deleteFromGroup($intSR, 'aktive');
             self::deleteFromGroup($intSR, 'passive');
             self::deleteFromGroup($intSR, 'U18');
             self::deleteFromGroup($intSR, 'Ü40');
             self::deleteFromGroup($intSR, 'm');
             self::deleteFromGroup($intSR, 'w');
-        } elseif ('passiv' === $objSR->__get('status')) {
+        } elseif ('passiv' === $objSR->__get('state')) {
             self::deleteFromGroup($intSR, 'aktive');
             self::addToGroup($intSR, 'passive');
             self::deleteFromGroup($intSR, 'U18');
             self::deleteFromGroup($intSR, 'Ü40');
             self::deleteFromGroup($intSR, 'm');
             self::deleteFromGroup($intSR, 'w');
-        } elseif ('aktiv' === $objSR->__get('status')) {
+        } elseif ('aktiv' === $objSR->__get('state')) {
             // Hinzufügen zu aktiven SR und entfernen aus den passiven
             self::addToGroup($intSR, 'aktive');
             self::deleteFromGroup($intSR, 'passive');
 
             // Ermittlung des Alters und Sortierung in die Gruppen U18 oder Ü40
-            $srAlter = BsaSchiedsrichterModel::getAlter($objSR);
+            $srAlter = RefereeModel::getAge($objSR);
 
             if ($srAlter < 18) {
                 self::addToGroup($intSR, 'U18');
@@ -156,10 +157,10 @@ final class BSAMemberGroup extends System
             }
 
             // Aufteilung in männlich/weiblich
-            if ('m' === $objSR->__get('geschlecht') && $isVereinsschiedsrichter) {
+            if ('m' === $objSR->__get('gender') && $isClubReferee) {
                 self::addToGroup($intSR, 'm');
                 self::deleteFromGroup($intSR, 'w');
-            } elseif ('w' === $objSR->__get('geschlecht') && $isVereinsschiedsrichter) {
+            } elseif ('w' === $objSR->__get('gender') && $isClubReferee) {
                 self::deleteFromGroup($intSR, 'm');
                 self::addToGroup($intSR, 'w');
             } else {
@@ -203,24 +204,24 @@ final class BSAMemberGroup extends System
             case '50_jahre':
             case '60_jahre':
             case '70_jahre':
-                $query = 'SELECT id FROM tl_bsa_schiedsrichter WHERE YEAR(CURDATE()) - YEAR(sr_seit_date) = ? AND deleted = ?';
+                $query = 'SELECT id FROM tl_bsa_referee WHERE YEAR(CURDATE()) - YEAR(dateOfRefereeExaminationAsDate) = ? AND deleted = ?';
                 $arrParams[] = (int) (substr($group->__get('automatik'), 0, 2));
                 $arrParams[] = false;
                 break;
 
             case 'ohne_sitzung':
-                $query = 'SELECT id FROM tl_bsa_schiedsrichter ';
+                $query = 'SELECT id FROM tl_bsa_referee ';
                 $query .= 'WHERE id NOT IN (';
-                $query .= '    SELECT t.sr_id FROM tl_bsa_veranstaltung AS v, tl_bsa_teilnehmer AS t, tl_bsa_saison AS s ';
-                $query .= '    WHERE v.id = t.pid AND v.saison = s.id ';
-                $query .= '    AND v.veranstaltungsgruppe = ? AND s.aktiv = ? ';
+                $query .= '    SELECT participiant.refereeId FROM tl_bsa_event AS event, tl_bsa_event_participiant AS participiant, tl_bsa_season AS season ';
+                $query .= '    WHERE event.id = participiant.pid AND event.seasonId = season.id ';
+                $query .= '    AND event.eventGroup = ? AND season.aktiv = ? ';
                 $query .= ') ';
                 $query .= 'AND id IN (';
-                $query .= '    SELECT t.sr_id FROM tl_bsa_veranstaltung AS v, tl_bsa_teilnehmer AS t, tl_bsa_saison AS s ';
-                $query .= '    WHERE v.id = t.pid AND v.saison = s.id ';
-                $query .= '    AND v.veranstaltungsgruppe = ? AND s.aktiv = ? ';
+                $query .= '    SELECT participiant.refereeId FROM tl_bsa_event AS event, tl_bsa_event_participiant AS participiant, tl_bsa_season AS season ';
+                $query .= '    WHERE event.id = participiant.pid AND event.seasonId = season.id ';
+                $query .= '    AND event.eventGroup = ? AND season.aktiv = ? ';
                 $query .= ') ';
-                $query .= 'AND status = ? AND deleted = ? ';
+                $query .= 'AND state = ? AND deleted = ? ';
                 $arrParams[] = 'sitzung';
                 $arrParams[] = true;
                 $arrParams[] = 'regelarbeit';
@@ -230,18 +231,18 @@ final class BSAMemberGroup extends System
                 break;
 
             case 'ohne_regelarbeit':
-                $query = 'SELECT id FROM tl_bsa_schiedsrichter ';
+                $query = 'SELECT id FROM tl_bsa_referee ';
                 $query .= 'WHERE id IN (';
-                $query .= '    SELECT t.sr_id FROM tl_bsa_veranstaltung AS v, tl_bsa_teilnehmer AS t, tl_bsa_saison AS s ';
-                $query .= '    WHERE v.id = t.pid AND v.saison = s.id ';
-                $query .= '    AND v.veranstaltungsgruppe = ? AND s.aktiv = ? ';
+                $query .= '    SELECT participiant.refereeId FROM tl_bsa_event AS event, tl_bsa_event_participiant AS participiant, tl_bsa_season AS season ';
+                $query .= '    WHERE event.id = participiant.pid AND event.seasonId = season.id ';
+                $query .= '    AND event.eventGroup = ? AND season.aktiv = ? ';
                 $query .= ') ';
                 $query .= 'AND id NOT IN (';
-                $query .= '    SELECT t.sr_id FROM tl_bsa_veranstaltung AS v, tl_bsa_teilnehmer AS t, tl_bsa_saison AS s ';
-                $query .= '    WHERE v.id = t.pid AND v.saison = s.id ';
-                $query .= '    AND v.veranstaltungsgruppe = ? AND s.aktiv = ? ';
+                $query .= '    SELECT participiant.refereeId FROM tl_bsa_event AS event, tl_bsa_event_participiant AS participiant, tl_bsa_season AS season ';
+                $query .= '    WHERE event.id = participiant.pid AND event.seasonId = season.id ';
+                $query .= '    AND event.eventGroup = ? AND season.aktiv = ? ';
                 $query .= ') ';
-                $query .= 'AND status = ? AND deleted = ? ';
+                $query .= 'AND state = ? AND deleted = ? ';
                 $arrParams[] = 'sitzung';
                 $arrParams[] = true;
                 $arrParams[] = 'regelarbeit';
@@ -251,18 +252,18 @@ final class BSAMemberGroup extends System
                 break;
 
             case 'ohne_sitzung_regelarbeit':
-                $query = 'SELECT id FROM tl_bsa_schiedsrichter ';
+                $query = 'SELECT id FROM tl_bsa_referee ';
                 $query .= 'WHERE id NOT IN (';
-                $query .= '    SELECT t.sr_id FROM tl_bsa_veranstaltung AS v, tl_bsa_teilnehmer AS t, tl_bsa_saison AS s ';
-                $query .= '    WHERE v.id = t.pid AND v.saison = s.id ';
-                $query .= '    AND v.veranstaltungsgruppe = ? AND s.aktiv = ? ';
+                $query .= '    SELECT participiant.refereeId FROM tl_bsa_event AS event, tl_bsa_event_participiant AS participiant, tl_bsa_season AS season ';
+                $query .= '    WHERE event.id = participiant.pid AND event.seasonId = season.id ';
+                $query .= '    AND event.eventGroup = ? AND season.aktiv = ? ';
                 $query .= ') ';
                 $query .= 'AND id NOT IN (';
-                $query .= '    SELECT t.sr_id FROM tl_bsa_veranstaltung AS v, tl_bsa_teilnehmer AS t, tl_bsa_saison AS s ';
-                $query .= '    WHERE v.id = t.pid AND v.saison = s.id ';
-                $query .= '    AND v.veranstaltungsgruppe = ? AND s.aktiv = ? ';
+                $query .= '    SELECT participiant.refereeId FROM tl_bsa_event AS event, tl_bsa_event_participiant AS participiant, tl_bsa_season AS season ';
+                $query .= '    WHERE event.id = participiant.pid AND event.seasonId = season.id ';
+                $query .= '    AND event.eventGroup = ? AND season.aktiv = ? ';
                 $query .= ') ';
-                $query .= 'AND status = ? AND deleted = ? ';
+                $query .= 'AND state = ? AND deleted = ? ';
                 $arrParams[] = 'sitzung';
                 $arrParams[] = true;
                 $arrParams[] = 'regelarbeit';
@@ -280,9 +281,9 @@ final class BSAMemberGroup extends System
             ->fetchEach('id')
         ;
 
-        $arrExistingSR = Database::getInstance()->prepare('SELECT schiedsrichter FROM tl_bsa_gruppenmitglieder WHERE pid=?')
+        $arrExistingSR = Database::getInstance()->prepare('SELECT refereeId FROM tl_bsa_member_group_member_assignment WHERE pid=?')
             ->execute($group->id)
-            ->fetchEach('schiedsrichter')
+            ->fetchEach('refereeId')
         ;
 
         $toDel = array_diff($arrExistingSR, $arrFutureSR);
@@ -297,7 +298,7 @@ final class BSAMemberGroup extends System
 
         if (!empty($toDel)) {
             foreach ($toDel as $intSR) {
-                Database::getInstance()->prepare('DELETE FROM tl_bsa_gruppenmitglieder WHERE pid=? AND schiedsrichter=?')
+                Database::getInstance()->prepare('DELETE FROM tl_bsa_member_group_member_assignment WHERE pid=? AND refereeId=?')
                     ->execute($group->id, $intSR)
                 ;
 
@@ -314,7 +315,7 @@ final class BSAMemberGroup extends System
 
         if (!empty($toAdd)) {
             foreach ($toAdd as $intSR) {
-                Database::getInstance()->prepare('INSERT INTO tl_bsa_gruppenmitglieder (pid, tstamp, schiedsrichter) VALUES (?,?,?)')
+                Database::getInstance()->prepare('INSERT INTO tl_bsa_member_group_member_assignment (pid, tstamp, refereeId) VALUES (?,?,?)')
                     ->execute($group->id, time(), $intSR)
                 ;
 
@@ -339,11 +340,11 @@ final class BSAMemberGroup extends System
             throw new \Exception('wrong datatype or zero given');
         }
 
-        $arrGroupIds = Database::getInstance()->prepare('SELECT pid FROM tl_bsa_gruppenmitglieder WHERE schiedsrichter=?')
+        $arrGroupIds = Database::getInstance()->prepare('SELECT pid FROM tl_bsa_member_group_member_assignment WHERE refereeId=?')
             ->execute($intSR)
             ->fetchEach('pid')
         ;
-        $res = Database::getInstance()->prepare('DELETE FROM tl_bsa_gruppenmitglieder WHERE schiedsrichter=?')
+        $res = Database::getInstance()->prepare('DELETE FROM tl_bsa_member_group_member_assignment WHERE refereeId=?')
             ->execute($intSR)
         ;
 
@@ -368,7 +369,7 @@ final class BSAMemberGroup extends System
             return;
         }
 
-        $query = 'SELECT DISTINCT tl_member_group.id FROM tl_member_group JOIN tl_bsa_gruppenmitglieder ON tl_member_group.id=tl_bsa_gruppenmitglieder.pid WHERE tl_bsa_gruppenmitglieder.schiedsrichter=?';
+        $query = 'SELECT DISTINCT tl_member_group.id FROM tl_member_group JOIN tl_bsa_member_group_member_assignment ON tl_member_group.id=tl_bsa_member_group_member_assignment.pid WHERE tl_bsa_member_group_member_assignment.refereeId=?';
 
         if ($idToRemove) {
             $query .= ' AND tl_member_group.id!='.$idToRemove;
@@ -382,7 +383,7 @@ final class BSAMemberGroup extends System
             ->fetchEach('id')
         ;
 
-        Database::getInstance()->prepare('UPDATE tl_member SET groups=? WHERE schiedsrichter=?')
+        Database::getInstance()->prepare('UPDATE tl_member SET groups=? WHERE refereeId=?')
             ->execute(serialize($arrGroupIds), $intSR)
         ;
     }
@@ -414,7 +415,7 @@ final class BSAMemberGroup extends System
      */
     public static function updateOnBirthday(): void
     {
-        $arrSR = BsaSchiedsrichterModel::getPersonWithBirthdayToday();
+        $arrSR = RefereeModel::getPersonWithBirthdayToday();
 
         if (empty($arrSR)) {
             System::log('BSA-Gruppenverwaltung wurde ausgeführt, es sind keine Gruppen an Geburtstagen zu aktualisieren.', 'BSA Gruppenverwaltung updateOnBirthday()', TL_CRON);
@@ -484,8 +485,8 @@ final class BSAMemberGroup extends System
         $intGroup = self::getAutomatikGroupId($automaticKey);
 
         if ($intGroup) {
-            if (!BsaGruppenmitgliederModel::exists($intGroup, $intSR)) {
-                Database::getInstance()->prepare('INSERT INTO tl_bsa_gruppenmitglieder (pid, tstamp, schiedsrichter) VALUES (?,?,?)')
+            if (!MemberGroupAssignmentMemberModel::exists($intGroup, $intSR)) {
+                Database::getInstance()->prepare('INSERT INTO tl_bsa_member_group_member_assignment (pid, tstamp, refereeId) VALUES (?,?,?)')
                     ->execute($intGroup, time(), $intSR)
                 ;
 
@@ -506,7 +507,7 @@ final class BSAMemberGroup extends System
         $intGroup = self::getAutomatikGroupId($automaticKey);
 
         if ($intGroup) {
-            $res = Database::getInstance()->prepare('DELETE FROM tl_bsa_gruppenmitglieder WHERE pid=? AND schiedsrichter=?')
+            $res = Database::getInstance()->prepare('DELETE FROM tl_bsa_member_group_member_assignment WHERE pid=? AND refereeId=?')
                 ->execute($intGroup, $intSR)
             ;
 

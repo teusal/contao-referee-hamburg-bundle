@@ -23,8 +23,10 @@ $GLOBALS['TL_DCA']['tl_newsletter_channel']['subpalettes']['sendInfomail'] = 'in
 $GLOBALS['TL_DCA']['tl_newsletter_channel']['subpalettes']['prependChannelInformation'] = 'channelInformationText';
 
 /* field changes */
-$GLOBALS['TL_DCA']['tl_newsletter_channel']['fields']['mailerTransport']['options_callback'] = ['contao.mailer.available_transports', 'getAllTransportOptions'];
+$GLOBALS['TL_DCA']['tl_newsletter_channel']['fields']['mailerTransport']['options_callback'] = ['contao.mailer.available_transports', 'getSystemTransportOptions'];
+$GLOBALS['TL_DCA']['tl_newsletter_channel']['fields']['mailerTransport']['exclude'] = false;
 $GLOBALS['TL_DCA']['tl_newsletter_channel']['fields']['sender']['default'] = 'bsa-'.Config::get('bsa_name').'@hfv.de';
+$GLOBALS['TL_DCA']['tl_newsletter_channel']['fields']['senderName']['default'] = $GLOBALS['BSA_NAMES'][Config::get('bsa_name')];
 
 /* field definition */
 $GLOBALS['TL_DCA']['tl_newsletter_channel']['fields']['writeRefereeHistory'] = [

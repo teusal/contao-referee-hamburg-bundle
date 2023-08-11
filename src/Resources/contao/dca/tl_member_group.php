@@ -18,8 +18,8 @@ use Contao\StringUtil;
 use Teusal\ContaoRefereeHamburgBundle\Library\Addressbook\AddressbookSynchronizer;
 use Teusal\ContaoRefereeHamburgBundle\Library\Member\BSAMemberGroup;
 use Teusal\ContaoRefereeHamburgBundle\Library\Newsletter\BSANewsletter;
-use Teusal\ContaoRefereeHamburgBundle\Model\BsaGruppenmitgliederModel;
-use Teusal\ContaoRefereeHamburgBundle\Model\BsaSchiedsrichterModel;
+use Teusal\ContaoRefereeHamburgBundle\Model\MemberGroupAssignmentMemberModel;
+use Teusal\ContaoRefereeHamburgBundle\Model\RefereeModel;
 
 /*
  * Add fields
@@ -88,7 +88,7 @@ $GLOBALS['TL_DCA']['tl_member_group']['fields']['image_print_verlinken'] = [
     'eval' => ['submitOnChange' => true],
     'sql' => "char(1) NOT NULL default ''",
 ];
-$GLOBALS['TL_DCA']['tl_member_group']['fields']['image_print'] = [
+$GLOBALS['TL_DCA']['tl_member_group']['fields']['imagePrint'] = [
     'inputType' => 'fileTree',
     'eval' => ['mandatory' => true, 'fieldType' => 'radio', 'files' => true, 'filesOnly' => true, 'extensions' => 'jpg,gif,jpeg,png', 'path' => 'files/Bilder/Schiedsrichter/druck/Gruppenfotos'],
     'sql' => 'binary(16) NULL',
@@ -113,7 +113,7 @@ $GLOBALS['TL_DCA']['tl_member_group']['fields']['veranstaltung_include_as_filter
 /*
  * Change config
  */
-$GLOBALS['TL_DCA']['tl_member_group']['config']['ctable'] = ['tl_bsa_gruppenmitglieder', 'tl_bsa_newsletterzuordnung'];
+$GLOBALS['TL_DCA']['tl_member_group']['config']['ctable'] = ['tl_bsa_member_group_member_assignment', 'tl_bsa_member_group_newsletter_assignment'];
 $GLOBALS['TL_DCA']['tl_member_group']['config']['switchToEdit'] = true;
 $GLOBALS['TL_DCA']['tl_member_group']['config']['notCopyable'] = true;
 $GLOBALS['TL_DCA']['tl_member_group']['config']['enableVersioning'] = false;
@@ -130,14 +130,14 @@ $GLOBALS['TL_DCA']['tl_member_group']['config']['enableVersioning'] = false;
 $GLOBALS['TL_DCA']['tl_member_group']['list']['sorting']['panelLayout'] = 'filter;search,limit';
 ArrayUtil::arrayInsert($GLOBALS['TL_DCA']['tl_member_group']['list']['operations'], 0, [
     'edit_gruppenmitglieder' => [
-        'href' => 'table=tl_bsa_gruppenmitglieder',
+        'href' => 'table=tl_bsa_member_group_member_assignment',
         'icon' => 'member.gif',
         'button_callback' => [tl_bsa_member_group::class, 'memberIcon'],
     ],
 ]);
 ArrayUtil::arrayInsert($GLOBALS['TL_DCA']['tl_member_group']['list']['operations'], 1, [
     'edit_newsletterzuordnung' => [
-        'href' => 'table=tl_bsa_newsletterzuordnung',
+        'href' => 'table=tl_bsa_member_group_newsletter_assignment',
         'icon' => 'bundles/contaonewsletter/send.svg',
     ],
 ]);
@@ -164,7 +164,7 @@ $GLOBALS['TL_DCA']['tl_member_group']['palettes']['default'] = str_replace('{red
 $GLOBALS['TL_DCA']['tl_member_group']['subpalettes']['beobachtung_aktivieren'] = 'beobachtung_ordner_name,beobachtung_gruppen_name,beobachtung_gruppen_name_kurz';
 $GLOBALS['TL_DCA']['tl_member_group']['subpalettes']['email_aktivieren'] = 'email';
 $GLOBALS['TL_DCA']['tl_member_group']['subpalettes']['image_anzeigen'] = 'image,image_print_verlinken';
-$GLOBALS['TL_DCA']['tl_member_group']['subpalettes']['image_print_verlinken'] = 'image_print';
+$GLOBALS['TL_DCA']['tl_member_group']['subpalettes']['image_print_verlinken'] = 'imagePrint';
 $GLOBALS['TL_DCA']['tl_member_group']['subpalettes']['sync_addressbook'] = 'addressbook_token_id';
 /*
  * Change fields
@@ -234,7 +234,7 @@ class tl_bsa_member_group extends tl_member_group
             BSAMemberGroup::clearCachedGroups($dc->__get('activeRecord')->automatik);
 
             if (BSAMemberGroup::isVollautomatic($varValue) || BSAMemberGroup::isVollautomatic($dc->__get('activeRecord')->automatik)) {
-                $objSR = BsaSchiedsrichterModel::findAll();
+                $objSR = RefereeModel::findAll();
 
                 if (isset($objSR)) {
                     while ($objSR->next()) {
@@ -255,11 +255,11 @@ class tl_bsa_member_group extends tl_member_group
      */
     public function executeDelete(DataContainer $dc, $undoId): void
     {
-        $objMembers = BsaGruppenmitgliederModel::findBy('pid', $dc->id);
+        $objMembers = MemberGroupAssignmentMemberModel::findBy('pid', $dc->id);
 
         if (isset($objMembers)) {
             while ($objMembers->next()) {
-                AddressbookSynchronizer::executeSubmitSchiedsrichter($objMembers->schiedsrichter, $dc->id);
+                AddressbookSynchronizer::executeSubmitSchiedsrichter($objMembers->refereeId, $dc->id);
             }
         }
     }
@@ -271,11 +271,11 @@ class tl_bsa_member_group extends tl_member_group
      */
     public function executeSubmit(DataContainer $dc): void
     {
-        $objMembers = BsaGruppenmitgliederModel::findBy('pid', $dc->id);
+        $objMembers = MemberGroupAssignmentMemberModel::findBy('pid', $dc->id);
 
         if (isset($objMembers)) {
             while ($objMembers->next()) {
-                AddressbookSynchronizer::executeSubmitSchiedsrichter($objMembers->schiedsrichter);
+                AddressbookSynchronizer::executeSubmitSchiedsrichter($objMembers->refereeId);
             }
         }
     }

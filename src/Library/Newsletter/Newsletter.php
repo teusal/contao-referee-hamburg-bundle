@@ -13,34 +13,25 @@ declare(strict_types=1);
 namespace Teusal\ContaoRefereeHamburgBundle\Library\Newsletter;
 
 use Contao\BackendUser;
-use Contao\CoreBundle\Mailer\TransportConfig;
 use Contao\Database\Result;
 use Contao\DataContainer;
 use Contao\Email;
-use Contao\FilesModel;
 use Contao\FrontendUser;
 use Contao\Message;
 use Contao\NewsletterChannelModel;
 use Contao\NewsletterModel;
-use Contao\NewsletterRecipientsModel;
 use Contao\StringUtil;
 use Contao\System;
-use Contao\Validator;
+use Teusal\ContaoRefereeHamburgBundle\Library\Email\AbstractEmail;
+use Teusal\ContaoRefereeHamburgBundle\Library\Mailer\AvailableTransports;
 use Teusal\ContaoRefereeHamburgBundle\Library\SRHistory;
-use Teusal\ContaoRefereeHamburgBundle\Model\BsaSchiedsrichterModel;
+use Teusal\ContaoRefereeHamburgBundle\Model\RefereeModel;
 
 /**
  * Class Newsletter.
- *
- * @property TransportConfig|null $transport
  */
 class Newsletter extends \Contao\Newsletter
 {
-    /**
-     * @var TransportConfig|null
-     */
-    private $transport;
-
     /**
      * @var array
      */
@@ -60,14 +51,6 @@ class Newsletter extends \Contao\Newsletter
 
         if (TL_MODE === 'BE') {
             $this->import(BackendUser::class, 'User');
-
-            $availableTransports = System::getContainer()->get('contao.mailer.available_transports');
-            $this->transport = $availableTransports->getTransport($this->User->email);
-
-            if (null === $this->transport) {
-                Message::addError('Es wurde keine Konfiguration zum Mailversand für Sie anhand Ihrer E-Mail-Adresse gefunden. Sie können so keine E-Mails versenden. Bitte wenden Sie sich an einen Administrator.');
-                $this->redirect($this->getReferer(true));
-            }
         }
     }
 
@@ -86,8 +69,21 @@ class Newsletter extends \Contao\Newsletter
             throw new \Exception('missing newsletter object while sending.');
         }
 
-        if ($this->transport->getName() !== $objNewsletter->mailerTransport) {
-            Message::addError('Sie sind nicht berechtigt, den Mailer-Transport "'.$objNewsletter->mailerTransport.'" zu verwenden. Bitte ändern Sie gegebenenfalls den Mailer-Transport in der E-Mail, um diese selbst zu versenden.');
+        /** @var AvailableTransports $availableTransports */
+        $availableTransports = System::getContainer()->get('contao.mailer.available_transports');
+
+        if (empty($objNewsletter->mailerTransport)) {
+            Message::addError('Es wurde kein Mailer-Transport in der E-Mail angegeben. Bitte überprüfen Sie die Einstellungen.');
+            $this->redirect($this->getReferer(true));
+        }
+
+        if (!$availableTransports->existsTransport($objNewsletter->mailerTransport)) {
+            Message::addError('Der Mailer-Transport "'.$objNewsletter->mailerTransport.'" ist im System nicht definiert. Bitte wenden Sie sich an einen Administrator.');
+            $this->redirect($this->getReferer(true));
+        }
+
+        if ($availableTransports->isUserTransport($objNewsletter->mailerTransport) && (TL_MODE !== 'BE' || null === $this->User || $this->User->email !== $objNewsletter->mailerTransport)) {
+            Message::addError('Sie sind nicht berechtigt, den Mailer-Transport '.$this->User->email.' "'.$objNewsletter->mailerTransport.'" zu verwenden.<br />Bitte ändern Sie gegebenenfalls den Mailer-Transport in der E-Mail, um diese selbst zu versenden.');
             $this->redirect($this->getReferer(true));
         }
 
@@ -103,128 +99,23 @@ class Newsletter extends \Contao\Newsletter
             ->execute('', $dc->id)
         ;
 
+        $returnValue = str_replace('<tr class="row_2">', '<tr class="row_2" style="display: none;">', $returnValue);
+        $returnValue = str_replace('<tr class="row_1">', '<tr class="row_2">', $returnValue);
+        $returnValue = str_replace('<div class="preview_text">', '<div class="preview_text" style="display: none;">', $returnValue);
+        $returnValue = str_replace('<div class="preview_html">', '<div class="preview_html preview_text">', $returnValue);
+
+        if (null !== $availableTransports->getTransport($objNewsletter->mailerTransport)->getFrom()) {
+            $indexOpen = strpos($returnValue, '<tr class="row_0">');
+            $indexClose = strpos($returnValue, '</tr>', $indexOpen);
+            $replace = '<tr class="row_0">
+    <td class="col_0">'.$GLOBALS['TL_LANG']['tl_newsletter']['from'].'</td>
+    <td class="col_1">'.StringUtil::specialchars($availableTransports->getTransport($objNewsletter->mailerTransport)->getFrom()).'</td>
+  </tr>';
+
+            $returnValue = substr_replace($returnValue, $replace, $indexOpen, $indexClose - $indexOpen + 5);
+        }
+
         return $returnValue;
-    }
-
-    /**
-     * sending the email.
-     *
-     * @param int $newsletterId
-     */
-    public function frontendSend($newsletterId)
-    {
-        $objNewsletter = $this->Database->prepare("SELECT n.*, c.useSMTP, c.smtpHost, c.smtpPort, c.smtpUser, c.smtpPass FROM tl_newsletter n LEFT JOIN tl_newsletter_channel c ON n.pid=c.id WHERE n.id=? AND n.sent=''")
-            ->limit(1)
-            ->execute($newsletterId)
-        ;
-
-        // Return if there is no newsletter
-        if ($objNewsletter->numRows < 1) {
-            return 0;
-        }
-
-        // Overwrite the SMTP configuration
-        if ($objNewsletter->__get('useSMTP')) {
-            $GLOBALS['TL_CONFIG']['useSMTP'] = true;
-
-            $GLOBALS['TL_CONFIG']['smtpHost'] = $objNewsletter->__get('smtpHost');
-            $GLOBALS['TL_CONFIG']['smtpUser'] = $objNewsletter->__get('smtpUser');
-            $GLOBALS['TL_CONFIG']['smtpPass'] = $objNewsletter->__get('smtpPass');
-            $GLOBALS['TL_CONFIG']['smtpEnc'] = $objNewsletter->__get('smtpEnc');
-            $GLOBALS['TL_CONFIG']['smtpPort'] = $objNewsletter->__get('smtpPort');
-        }
-
-        // Add default sender address
-        if ('' === $objNewsletter->__get('sender')) {
-            $arrEmail = StringUtil::splitFriendlyEmail($GLOBALS['TL_CONFIG']['adminEmail']);
-            $objNewsletter->__set('senderName', $arrEmail[0]);
-            $objNewsletter->__set('$objNewsletter->sender', $arrEmail[1]);
-        }
-
-        $arrAttachments = [];
-        // $blnAttachmentsFormatError = false;
-
-        // Add attachments
-        if ($objNewsletter->__get('addFile')) {
-            $files = deserialize($objNewsletter->__get('files'));
-
-            if (!empty($files) && \is_array($files)) {
-                $objFiles = FilesModel::findMultipleByUuids($files);
-
-                if (null === $objFiles) {
-                    if (!Validator::isUuid($files[0])) {
-                        // $blnAttachmentsFormatError = true;
-                        \Message::addError($GLOBALS['TL_LANG']['ERR']['version2format']);
-                    }
-                } else {
-                    while ($objFiles->next()) {
-                        if (is_file(TL_ROOT.'/'.$objFiles->path)) {
-                            $arrAttachments[] = $objFiles->path;
-                        }
-                    }
-                }
-            }
-        }
-
-        // Replace insert tags
-        $html = $this->replaceInsertTags($objNewsletter->__get('content'));
-        $text = $this->replaceInsertTags($objNewsletter->__get('text'));
-
-        // Convert relative URLs
-        if ($objNewsletter->__get('externalImages')) {
-            $html = $this->convertRelativeUrls($html);
-        }
-
-        // Send newsletter
-        // $referer = preg_replace('/&(amp;)?(start|mpc|token|recipient|preview)=[^&]*/', '', Environment::get('request'));
-
-        // Get recipients
-        $objRecipients = $this->Database->prepare('SELECT *, r.email FROM tl_newsletter_recipients r LEFT JOIN tl_member m ON(r.email=m.email) WHERE r.pid=? AND r.active=1 GROUP BY r.email ORDER BY r.email')
-            ->execute($objNewsletter->__get('pid'))
-        ;
-
-        $intTotal = $objRecipients->numRows;
-
-        // Send newsletter
-        if ($objRecipients->numRows > 0) {
-            // Update status
-            $this->Database->prepare('UPDATE tl_newsletter SET sent=1, date=? WHERE id=?')
-                ->execute(time(), $objNewsletter->__get('id'))
-            ;
-
-            $_SESSION['REJECTED_RECIPIENTS'] = [];
-
-            $counted = 0;
-
-            while ($objRecipients->next()) {
-                if ($counted > 9) {
-                    //sleep(1);
-                    $counted = 0;
-                }
-
-                $objEmail = $this->generateEmailObject($objNewsletter, $arrAttachments);
-                $this->sendNewsletter($objEmail, $objNewsletter, $objRecipients->row(), $text, $html);
-                ++$counted;
-            }
-        }
-
-        // Deactivate rejected addresses
-        if (!empty($_SESSION['REJECTED_RECIPIENTS'])) {
-            $intRejected = \count($_SESSION['REJECTED_RECIPIENTS']);
-            $intTotal -= $intRejected;
-
-            foreach ($_SESSION['REJECTED_RECIPIENTS'] as $strRecipient) {
-                $this->Database->prepare("UPDATE tl_newsletter_recipients SET active='' WHERE email=?")
-                    ->execute($strRecipient)
-                ;
-
-                $this->log('Recipient address "'.$strRecipient.'" was rejected and has been deactivated', __METHOD__, TL_ERROR);
-            }
-        }
-
-        Message::addConfirmation(sprintf($GLOBALS['TL_LANG']['tl_newsletter']['confirm'], $intTotal));
-
-        return $intTotal;
     }
 
     /**
@@ -265,29 +156,55 @@ class Newsletter extends \Contao\Newsletter
             throw new \Exception('missing newsletter channel object while sending.');
         }
 
-        // there is a left join to member. since we did not re-created the unique at email, we need to skip records
-        // TODO https://github.com/teusal/contao-referee-hamburg-bundle/issues/6
-        if (\in_array($arrRecipient['recipient'], $this->arrAlreadySent, true)) {
-            return true;
-        }
-
-        // reload the recipient because of the member left join. there could be wrong names in firstname/lastname
-        $arrRecipient = NewsletterRecipientsModel::findById($arrRecipient['recipient'])->row();
-
         // send infomails if the option is activated
-        if (!$_GET['preview'] && $objNewsletterChannel->__get('sendInfomail') && !$objNewsletter->__get('infomailSent')) {
+        if ($objNewsletterChannel->__get('sendInfomail') && !$objNewsletter->__get('infomailSent') && !isset($_GET['preview'])) {
             $this->sendInfomails($objNewsletterChannel, $objNewsletter, $html, $css);
         }
+
+        // setting testdata for any testmail
+        if (TL_MODE === 'BE' && isset($_GET['preview'])) {
+            $email = $arrRecipient['email'];
+            $arrRecipient = AbstractEmail::getRefereeForTestmail();
+            $arrRecipient['email'] = $email;
+        }
+
+        // remove friendly part from the email address
+        $arrRecipient['email'] = StringUtil::splitFriendlyEmail($arrRecipient['email'])[0];
 
         // replace email in dev environment
         if ('dev' === System::getContainer()->getParameter('kernel.environment')) {
             $arrRecipient['email'] = 'mail@alexteuscher.de';
         }
 
-        // extend recipient array, translate keys firstname, lastname and salutationPersonal
-        $arrRecipient['vorname'] = $arrRecipient['firstname'];
-        $arrRecipient['nachname'] = $arrRecipient['lastname'];
+        // Determine personal salutation based on gender
+        switch ($arrRecipient['gender']) {
+            case 'male':
+                $arrRecipient['$salutationPersonnel'] = 'Lieber';
+                break;
+
+            case 'female':
+                $arrRecipient['$salutationPersonnel'] = 'Liebe';
+                break;
+
+            default:
+                $arrRecipient['$salutationPersonnel'] = 'Liebe/Lieber';
+                break;
+        }
+
+        // extend recipient array, translate keys
+        $arrRecipient['salutation'] = $arrRecipient['salutationPersonal'];
+        $arrRecipient['anrede'] = $arrRecipient['salutationPersonal'];
         $arrRecipient['anrede_persoenlich'] = $arrRecipient['salutationPersonal'];
+        $arrRecipient['firstname'] = $arrRecipient['firstname'] ?: $arrRecipient['firstname'];
+        $arrRecipient['lastname'] = $arrRecipient['lastname'] ?: $arrRecipient['lastname'];
+        $arrRecipient['street'] = $arrRecipient['street'] ?: $arrRecipient['street'];
+        $arrRecipient['straße'] = $arrRecipient['street'] ?: $arrRecipient['straße'];
+        $arrRecipient['postal'] = $arrRecipient['postal'] ?: $arrRecipient['postal'];
+        $arrRecipient['city'] = $arrRecipient['city'] ?: $arrRecipient['city'];
+        $arrRecipient['telefon'] = $arrRecipient['phone'] ?: $arrRecipient['telefon'];
+        $arrRecipient['phone1'] = $arrRecipient['phone'] ?: $arrRecipient['phone1'];
+        $arrRecipient['handy'] = $arrRecipient['mobile'] ?: $arrRecipient['handy'];
+        $arrRecipient['mobile'] = $arrRecipient['mobile'] ?: $arrRecipient['mobile'];
 
         // Add optional reply to
         if (\strlen($objNewsletter->__get('replyToAddress'))) {
@@ -347,14 +264,14 @@ class Newsletter extends \Contao\Newsletter
             return null;
         }
 
-        $objSR = BsaSchiedsrichterModel::findByPk($arrRecipient['refereeId']);
+        $objSR = RefereeModel::findByPk($arrRecipient['refereeId']);
 
         if (!isset($objSR)) {
             return null;
         }
 
-        return $this->Database->prepare('SELECT tl_bsa_schiedsrichter.email FROM tl_bsa_schiedsrichter JOIN tl_bsa_verein_obmann ON (tl_bsa_schiedsrichter.id = tl_bsa_verein_obmann.obmann OR tl_bsa_schiedsrichter.id = tl_bsa_verein_obmann.stellv_obmann_1 OR tl_bsa_schiedsrichter.id = tl_bsa_verein_obmann.stellv_obmann_2) WHERE tl_bsa_verein_obmann.verein = ? AND tl_bsa_schiedsrichter.email <> ? AND tl_bsa_schiedsrichter.email <> ?')
-            ->execute($objSR->__get('verein'), $objSR->__get('email'), '')
+        return $this->Database->prepare('SELECT tl_bsa_referee.email FROM tl_bsa_referee JOIN tl_bsa_club_chairman ON (tl_bsa_referee.id = tl_bsa_club_chairman.chairman OR tl_bsa_referee.id = tl_bsa_club_chairman.viceChairman1 OR tl_bsa_referee.id = tl_bsa_club_chairman.viceChairman2) WHERE tl_bsa_club_chairman.clubId = ? AND tl_bsa_referee.email <> ? AND tl_bsa_referee.email <> ?')
+            ->execute($objSR->__get('clubId'), $objSR->__get('email'), '')
             ->fetchEach('email')
         ;
     }
@@ -399,9 +316,9 @@ class Newsletter extends \Contao\Newsletter
             $arrInfoRecipient = [
                 'email' => $infomailRecipient,
                 'firstname' => 'VORNAME',
-                'vorname' => 'VORNAME',
+                'firstname' => 'VORNAME',
                 'lastname' => 'NACHNAME',
-                'nachname' => 'NACHNAME',
+                'lastname' => 'NACHNAME',
                 'salutationPersonal' => 'LIEBE/LIEBER',
                 'anrede_persoenlich' => 'LIEBE/LIEBER',
             ];

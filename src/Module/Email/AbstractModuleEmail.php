@@ -16,6 +16,7 @@ use Contao\BackendModule;
 use Contao\BackendTemplate;
 use Contao\BackendUser;
 use Contao\CheckBox;
+use Contao\Config;
 use Contao\CoreBundle\Mailer\TransportConfig;
 use Contao\DataContainer;
 use Contao\Input;
@@ -27,8 +28,8 @@ use Contao\TextArea;
 use Contao\TextField;
 use Teusal\ContaoRefereeHamburgBundle\Library\Email\BSAEmail;
 use Teusal\ContaoRefereeHamburgBundle\Library\Mailer\AvailableTransports;
-use Teusal\ContaoRefereeHamburgBundle\Model\BsaVereinModel;
-use Teusal\ContaoRefereeHamburgBundle\Model\BsaVereinObmannModel;
+use Teusal\ContaoRefereeHamburgBundle\Model\ClubModel;
+use Teusal\ContaoRefereeHamburgBundle\Model\ClubChairmanModel;
 
 /**
  * Class SimpleMail.
@@ -81,15 +82,15 @@ abstract class AbstractModuleEmail extends BackendModule
             $this->disabled = true;
         }
 
-        // load the clubs in an array. the key is set by the id, the value is by name_kurz.
-        $objClub = BsaVereinModel::findAll(['order' => 'name_kurz']);
+        // load the clubs in an array. the key is set by the id, the value is by nameShort.
+        $objClub = ClubModel::findAll(['order' => 'nameShort']);
 
         if (isset($objClub)) {
             while ($objClub->next()) {
                 $this->arrClubs[$objClub->id] = [
-                    'number' => $objClub->nummer,
-                    'nameShort' => StringUtil::specialchars($objClub->name_kurz),
-                    'visible' => $objClub->anzeigen,
+                    'number' => $objClub->number,
+                    'nameShort' => StringUtil::specialchars($objClub->nameShort),
+                    'visible' => $objClub->published,
                 ];
             }
         }
@@ -301,7 +302,7 @@ abstract class AbstractModuleEmail extends BackendModule
         foreach ($objCheckBoxWidget->value as $cc) {
             switch ($cc) {
                 case 'chairmans':
-                    $arrChairman = BsaVereinObmannModel::getEmailAddressesOfChairmans((int) $recipientClubId);
+                    $arrChairman = ClubChairmanModel::getEmailAddressesOfChairmans((int) $recipientClubId);
 
                     foreach ($arrChairman as $chairman) {
                         $arrCC[] = $chairman;
@@ -309,7 +310,7 @@ abstract class AbstractModuleEmail extends BackendModule
                     break;
 
                 case 'board':
-                    $arrCC[] = 'vorstand@'.$GLOBALS['TL_CONFIG']['bsa_domain'];
+                    $arrCC[] = 'bsa-'.Config::get('bsa_name').'@hfv.de';
                     break;
 
                 case 'hfv.evpost':

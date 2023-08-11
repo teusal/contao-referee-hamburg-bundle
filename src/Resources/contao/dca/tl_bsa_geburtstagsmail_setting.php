@@ -12,6 +12,7 @@ declare(strict_types=1);
 
 use Contao\Backend;
 use Contao\BackendUser;
+use Contao\DC_File;
 use Contao\Input;
 use Contao\Message;
 use Teusal\ContaoRefereeHamburgBundle\Library\Email\BSAEmail;
@@ -25,13 +26,13 @@ $objEmail = new BSAEmail();
 $GLOBALS['TL_DCA']['tl_bsa_geburtstagsmail_setting'] = [
     // Config
     'config' => [
-        'dataContainer' => 'File',
+        'dataContainer' => DC_File::class,
         'closed' => true,
-        'onload_callback' => [['tl_bsa_geburtstagsmail_setting', 'onLoad']],
+        'onload_callback' => [[tl_bsa_geburtstagsmail_setting::class, 'onLoad']],
     ],
 
     'edit' => [
-        'buttons_callback' => [['tl_bsa_geburtstagsmail_setting', 'addSendButton']],
+        'buttons_callback' => [[tl_bsa_geburtstagsmail_setting::class, 'addSendButton']],
     ],
 
     // Palettes

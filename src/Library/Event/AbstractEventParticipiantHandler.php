@@ -20,17 +20,14 @@ use Contao\Environment;
 use Contao\Input;
 use Contao\StringUtil;
 use Contao\System;
-use Teusal\ContaoRefereeHamburgBundle\Model\BsaVeranstaltungModel;
+use Teusal\ContaoRefereeHamburgBundle\Model\EventModel;
 
 /**
  * Class AbstractEventParticipiantHandler.
  */
 abstract class AbstractEventParticipiantHandler extends Backend
 {
-    /**
-     * @var BsaVeranstaltungModel
-     */
-    protected $objEvent;
+    protected EventModel $objEvent;
 
     /**
      * @var array<int>
@@ -45,19 +42,19 @@ abstract class AbstractEventParticipiantHandler extends Backend
         parent::__construct();
 
         $this->import(BackendUser::class, 'User');
-        System::loadLanguageFile('tl_bsa_veranstaltung');
+        System::loadLanguageFile('tl_bsa_event');
 
         if ('spiele' === Input::get('key') || 'besucher' === Input::get('key') || 'import' === Input::get('key')) {
             // Load and cache the event.
-            $this->objEvent = BsaVeranstaltungModel::findByPk(Input::get('id'));
+            $this->objEvent = EventModel::findByPk(Input::get('id'));
 
             if (!isset($this->objEvent)) {
                 throw new \Exception('Die Veranstaltung konnte nicht ermittelt werden.');
             }
 
             // Load and cache the participiants
-            $this->arrAlreadyRegisteredParticipiants = $this->Database->execute('SELECT sr_id FROM tl_bsa_teilnehmer WHERE pid='.$this->objEvent->__get('id'))
-                ->fetchEach('sr_id')
+            $this->arrAlreadyRegisteredParticipiants = $this->Database->execute('SELECT refereeId FROM tl_bsa_event_participiant WHERE pid='.$this->objEvent->id)
+                ->fetchEach('refereeId')
             ;
         }
     }
@@ -103,12 +100,12 @@ abstract class AbstractEventParticipiantHandler extends Backend
         return '<div class="tl_header" style="padding-left: 15px; border-bottom-style: none;">
     <table class="tl_header_table">
     <tr>
-        <td><span class="tl_label">'.$GLOBALS['TL_LANG']['tl_bsa_veranstaltung']['datum'][0].':</span> </td>
-        <td>'.Date::parse(Config::get('dateFormat'), $this->objEvent->datum).'</td>
+        <td><span class="tl_label">'.$GLOBALS['TL_LANG']['tl_bsa_event']['date'][0].':</span> </td>
+        <td>'.Date::parse(Config::get('dateFormat'), $this->objEvent->date).'</td>
     </tr>
     <tr>
-        <td><span class="tl_label">'.$GLOBALS['TL_LANG']['tl_bsa_veranstaltung']['typ'][0].':</span> </td>
-        <td>'.($GLOBALS['TL_LANG']['tl_bsa_veranstaltung']['typen'][$this->objEvent->typ] ?: $this->objEvent->typ).'</td>
+        <td><span class="tl_label">'.$GLOBALS['TL_LANG']['tl_bsa_event']['type'][0].':</span> </td>
+        <td>'.($GLOBALS['TL_LANG']['tl_bsa_event']['typen'][$this->objEvent->type] ?: $this->objEvent->type).'</td>
     </tr>
     </table>
 </div>';

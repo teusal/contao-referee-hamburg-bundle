@@ -21,7 +21,7 @@ use Contao\Environment;
 use Contao\Image;
 use Contao\Input;
 use Contao\StringUtil;
-use Teusal\ContaoRefereeHamburgBundle\Model\BsaSeasonModel;
+use Teusal\ContaoRefereeHamburgBundle\Model\SeasonModel;
 
 $GLOBALS['TL_DCA']['tl_bsa_season'] = [
     // Config
@@ -155,7 +155,7 @@ class tl_bsa_season extends Backend
      */
     public function validateDate($varValue, DataContainer $dc)
     {
-        $objSaison = BsaSeasonModel::findOneBy(['id != ? AND startDate <= ? AND endDate > ?'], [(int) ($dc->id), $varValue, $varValue], []);
+        $objSaison = SeasonModel::findOneBy(['id != ? AND startDate <= ? AND endDate > ?'], [(int) ($dc->id), $varValue, $varValue], []);
 
         if (isset($objSaison)) {
             $name = $objSaison->name;

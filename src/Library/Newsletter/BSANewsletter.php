@@ -17,7 +17,7 @@ use Contao\Database;
 use Contao\DataContainer;
 use Contao\System;
 use Teusal\ContaoRefereeHamburgBundle\Library\SRHistory;
-use Teusal\ContaoRefereeHamburgBundle\Model\BsaSchiedsrichterModel;
+use Teusal\ContaoRefereeHamburgBundle\Model\RefereeModel;
 
 /**
  * Class BSANewsletter.
@@ -47,7 +47,7 @@ class BSANewsletter extends System
     /**
      * Synchronisiert die Einträge der Newsletterempfänger für einen Schiedsrichter.
      */
-    public function synchronizeNewsletterBySchiedsrichter($intSR, $overwriteEmail = null, $idsToRemove = null, $idsToAdd = null): void
+    public function synchronizeNewsletterBySchiedsrichter($intSR, $idsToRemove = null, $idsToAdd = null): void
     {
         $intSR = (int) $intSR;
 
@@ -55,43 +55,25 @@ class BSANewsletter extends System
             throw new \Exception('wrong datatype or zero given :'.$intSR);
         }
 
-        $objSR = BsaSchiedsrichterModel::findSchiedsrichter($intSR);
+        $objSR = RefereeModel::findReferee($intSR);
 
         if (!isset($objSR)) {
             throw new \Exception('Der Schiedsrichter zu ID '.$intSR.' wurde nicht in der Datenbank gefunden.');
         }
 
-        // Persönliche Anrede anhand des Geschlechts ermitteln
-        switch ($objSR->geschlecht) {
-            case 'm':
-                $anrede = 'Lieber';
-                break;
-            case 'w':
-                $anrede = 'Liebe';
-                break;
-
-            default:
-                $anrede = 'Liebe/Lieber';
-                break;
-        }
-
         // Die akutell benötigten Newsletter ermitteln
         $arrChannelsAndGroups = $this->getChannelsAndGroups($objSR->id, $idsToRemove, $idsToAdd);
 
-        $email = $objSR->__get('email');
+        $email = $objSR->getFriendlyEmail();
 
-        if (isset($overwriteEmail)) {
-            $email = $overwriteEmail;
-        }
-
-        if ($objSR->__get('deleted') || !\strlen($email) || !\is_array($arrChannelsAndGroups) || empty($arrChannelsAndGroups)) {
+        if ($objSR->deleted || !\strlen($email) || !\is_array($arrChannelsAndGroups) || empty($arrChannelsAndGroups)) {
             // Der Schiedsrichter hat keine E-Mailadresse oder bekommt über Gruppen keine Newsletter.
             // Also entfernen wir die Einträge aus allen Newslettern
-            $arrDeletePids = $this->Database->prepare('SELECT pid FROM tl_newsletter_recipients WHERE schiedsrichter=?')
+            $arrDeletePids = $this->Database->prepare('SELECT pid FROM tl_newsletter_recipients WHERE refereeId=?')
                 ->execute($objSR->id)
                 ->fetchEach('pid')
             ;
-            $res = $this->Database->prepare('DELETE FROM tl_newsletter_recipients WHERE schiedsrichter=?')
+            $res = $this->Database->prepare('DELETE FROM tl_newsletter_recipients WHERE refereeId=?')
                 ->execute($objSR->id)
             ;
 
@@ -133,8 +115,8 @@ class BSANewsletter extends System
 
             if (0 === $objRecipients->numRows) {
                 // bisher kein Eintrag... Also einen neuen Datensatz anlegen
-                $res = $this->Database->prepare('INSERT INTO tl_newsletter_recipients (pid,tstamp,email,active,addedOn,refereeId,groups,lastname,firstname,salutationPersonal) VALUES (?,?,?,?,?,?,?,?,?,?)')
-                    ->execute($channelId, time(), $email, '1', time(), $objSR->id, serialize($arrGroupIds), $objSR->nachname, $objSR->vorname, $anrede)
+                $res = $this->Database->prepare('INSERT INTO tl_newsletter_recipients (pid,tstamp,email,active,addedOn,refereeId,groups) VALUES (?,?,?,?,?,?,?)')
+                    ->execute($channelId, time(), $email, '1', time(), $objSR->id, serialize($arrGroupIds))
                 ;
                 SRHistory::insert($objSR->id, $channelId, ['E-Mail-Verteiler', 'ADD'], 'Der Schiedsrichter %s wurde zum Verteiler "%s" hinzugefügt.', __METHOD__);
             } else {
@@ -150,8 +132,8 @@ class BSANewsletter extends System
                 }
 
                 // bestehenden Datensatz aktualisieren...
-                $res = $this->Database->prepare('UPDATE tl_newsletter_recipients SET refereeId=?, groups=?, lastname=?, firstname=?, salutationPersonal=? WHERE id=?')
-                    ->execute($objSR->id, serialize($arrGroupIds), $objSR->nachname, $objSR->vorname, $anrede, $objRecipients->__get('id'))
+                $res = $this->Database->prepare('UPDATE tl_newsletter_recipients SET refereeId=?, groups=? WHERE id=?')
+                    ->execute($objSR->id, serialize($arrGroupIds), $objRecipients->__get('id'))
                 ;
 
                 if ($res->__get('affectedRows') > 0) {
@@ -179,7 +161,7 @@ class BSANewsletter extends System
         $arrSR = $this->getSchiedsrichterByGroup($dc->id);
 
         foreach ($arrSR as $intSR) {
-            $this->synchronizeNewsletterBySchiedsrichter($intSR, null, $dc->id, null);
+            $this->synchronizeNewsletterBySchiedsrichter($intSR, $dc->id, null);
         }
     }
 
@@ -190,8 +172,8 @@ class BSANewsletter extends System
      */
     public function deleteGruppenmitglied(DataContainer $dc, $undoId): void
     {
-        if ((int) ($dc->__get('activeRecord')->schiedsrichter)) {
-            $this->synchronizeNewsletterBySchiedsrichter($dc->__get('activeRecord')->schiedsrichter, null, $dc->__get('activeRecord')->pid, null);
+        if ((int) ($dc->__get('activeRecord')->refereeId)) {
+            $this->synchronizeNewsletterBySchiedsrichter($dc->__get('activeRecord')->refereeId, $dc->__get('activeRecord')->pid, null);
         }
     }
 
@@ -204,13 +186,13 @@ class BSANewsletter extends System
     public function deleteNewsletterzuordnung(DataContainer $dc, $undoId): void
     {
         $toDelete = [
-            'newsletter_channel_id' => $dc->__get('activeRecord')->newsletter_channel,
+            'newsletter_channel_id' => $dc->__get('activeRecord')->newsletterChannelId,
             'member_group_id' => $dc->__get('activeRecord')->pid,
         ];
         $arrSR = $this->getSchiedsrichterByGroup($dc->__get('activeRecord')->pid);
 
         foreach ($arrSR as $intSR) {
-            $this->synchronizeNewsletterBySchiedsrichter($intSR, null, $toDelete, null);
+            $this->synchronizeNewsletterBySchiedsrichter($intSR, $toDelete, null);
         }
     }
 
@@ -224,13 +206,13 @@ class BSANewsletter extends System
      */
     public function saveSchiedsrichterWhileUpdateGruppenmitglied($varValue, DataContainer $dc)
     {
-        if ($varValue !== $dc->__get('activeRecord')->schiedsrichter) {
+        if ($varValue !== $dc->__get('activeRecord')->refereeId) {
             if ((int) $varValue) {
-                $this->synchronizeNewsletterBySchiedsrichter($varValue, null, null, $dc->__get('activeRecord')->pid);
+                $this->synchronizeNewsletterBySchiedsrichter($varValue, null, $dc->__get('activeRecord')->pid);
             }
 
-            if ((int) ($dc->__get('activeRecord')->schiedsrichter)) {
-                $this->synchronizeNewsletterBySchiedsrichter($dc->__get('activeRecord')->schiedsrichter, null, $dc->__get('activeRecord')->pid, null);
+            if ((int) ($dc->__get('activeRecord')->refereeId)) {
+                $this->synchronizeNewsletterBySchiedsrichter($dc->__get('activeRecord')->refereeId, $dc->__get('activeRecord')->pid, null);
             }
         }
 
@@ -246,9 +228,9 @@ class BSANewsletter extends System
      */
     public function saveNewsletterzuordnung($varValue, DataContainer $dc)
     {
-        if ($varValue !== $dc->__get('activeRecord')->newsletter_channel) {
+        if ($varValue !== $dc->__get('activeRecord')->newsletterChannelId) {
             $toDelete = [
-                'newsletter_channel_id' => $dc->__get('activeRecord')->newsletter_channel,
+                'newsletter_channel_id' => $dc->__get('activeRecord')->newsletterChannelId,
                 'member_group_id' => $dc->__get('activeRecord')->pid,
             ];
             $toAdd = [
@@ -259,7 +241,7 @@ class BSANewsletter extends System
             $arrSR = $this->getSchiedsrichterByGroup($dc->__get('activeRecord')->pid);
 
             foreach ($arrSR as $intSR) {
-                $this->synchronizeNewsletterBySchiedsrichter($intSR, null, $toDelete, $toAdd);
+                $this->synchronizeNewsletterBySchiedsrichter($intSR, $toDelete, $toAdd);
             }
         }
 
@@ -275,7 +257,7 @@ class BSANewsletter extends System
      */
     private function getChannelsAndGroups($intSR, $idsToRemove, $idsToAdd)
     {
-        $arrGroupIds = $this->Database->prepare('SELECT pid FROM tl_bsa_gruppenmitglieder WHERE schiedsrichter=?')
+        $arrGroupIds = $this->Database->prepare('SELECT pid FROM tl_bsa_member_group_member_assignment WHERE refereeId=?')
             ->execute($intSR)
             ->fetchEach('pid')
         ;
@@ -295,12 +277,12 @@ class BSANewsletter extends System
         $arrChannelsAndGroups = [];
 
         if (!empty($arrGroupIds)) {
-            $arrChannelIds = $this->Database->execute('SELECT tl_bsa_newsletterzuordnung.newsletter_channel, tl_bsa_newsletterzuordnung.pid AS member_group FROM tl_bsa_newsletterzuordnung, tl_newsletter_channel WHERE tl_bsa_newsletterzuordnung.newsletter_channel=tl_newsletter_channel.id AND tl_bsa_newsletterzuordnung.pid IN ('.implode(',', $arrGroupIds).')')
+            $arrChannelIds = $this->Database->execute('SELECT tl_bsa_member_group_newsletter_assignment.newsletterChannelId, tl_bsa_member_group_newsletter_assignment.pid AS member_group FROM tl_bsa_member_group_newsletter_assignment, tl_newsletter_channel WHERE tl_bsa_member_group_newsletter_assignment.newsletterChannelId=tl_newsletter_channel.id AND tl_bsa_member_group_newsletter_assignment.pid IN ('.implode(',', $arrGroupIds).')')
                 ->fetchAllAssoc()
             ;
 
             foreach ($arrChannelIds as $row) {
-                $arrChannelsAndGroups[$row['newsletter_channel']][] = $row['member_group'];
+                $arrChannelsAndGroups[$row['newsletterChannelId']][] = $row['member_group'];
             }
         }
 
@@ -324,9 +306,9 @@ class BSANewsletter extends System
      */
     private function getSchiedsrichterByGroup($intGroup)
     {
-        return $this->Database->prepare('SELECT schiedsrichter FROM tl_bsa_gruppenmitglieder WHERE pid=?')
+        return $this->Database->prepare('SELECT refereeId FROM tl_bsa_member_group_member_assignment WHERE pid=?')
             ->execute($intGroup)
-            ->fetchEach('schiedsrichter')
+            ->fetchEach('refereeId')
         ;
     }
 }

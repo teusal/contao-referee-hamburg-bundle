@@ -1,0 +1,44 @@
+<?php
+
+declare(strict_types=1);
+
+/*
+ * This file is part of Contao Referee Hamburg Bundle.
+ *
+ * (c) Alexander Teuscher
+ *
+ * @license LGPL-3.0-or-later
+ */
+
+namespace Teusal\ContaoRefereeHamburgBundle\Model;
+
+use Contao\Model;
+
+/**
+ * Reads and writes clubs.
+ *
+ * @property string $number
+ * @property string $nameShort
+ * @property bool   $published
+ */
+class ClubModel extends Model
+{
+    /**
+     * Table name.
+     *
+     * @var string
+     */
+    protected static $strTable = 'tl_bsa_club';
+
+    /**
+     * Verein anhand der ID finden.
+     *
+     * @param mixed $vereinId Die numerische ID aus tl_bsa_club
+     *
+     * @return ClubModel|null Das Model oder null wenn es keinen Verein gibt
+     */
+    public static function findVerein($vereinId)
+    {
+        return static::findByPk($vereinId, []);
+    }
+}

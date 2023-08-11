@@ -22,6 +22,8 @@ use Contao\System;
 use Symfony\Component\Mailer\Exception\TransportException;
 use Teusal\ContaoRefereeHamburgBundle\Library\Email\AbstractEmail;
 use Teusal\ContaoRefereeHamburgBundle\Library\Email\LoginEmail;
+use Teusal\ContaoRefereeHamburgBundle\Library\SRHistory;
+use Teusal\ContaoRefereeHamburgBundle\Model\RefereeModel;
 
 /**
  * Class MemberCreator.
@@ -52,32 +54,37 @@ class MemberCreator extends System
         if (!$srID) {
             return false;
         }
-        $sr = $this->Database->prepare('SELECT tl_bsa_schiedsrichter.* FROM tl_bsa_schiedsrichter LEFT JOIN tl_member ON tl_bsa_schiedsrichter.id = tl_member.schiedsrichter WHERE tl_bsa_schiedsrichter.id=? AND tl_bsa_schiedsrichter.email!=? AND tl_bsa_schiedsrichter.deleted=? AND tl_member.id IS NULL')
-            ->execute($srID, '', '')
-            ->fetchAssoc()
-        ;
 
-        if (!\is_array($sr)) {
+        $objMember = MemberModel::findOneBy('refereeId', $srID);
+
+        if (isset($objMember)) {
+            return false;
+        }
+
+        $objSR = RefereeModel::findOneBy(['id = ?', 'email != ?', 'deleted = ?'], [$srID, '', '']);
+
+        if (!isset($objSR)) {
             return false;
         }
 
         $jetzt = new Date();
-        $username = $sr['vorname'].'.'.$sr['nachname'];
-        $suchen = ['ä', 'ö', 'ü', 'ß', ' ', '\\', '/'];
-        $ersetzen = ['ae', 'oe', 'ue', 'ss', '', '-', '-'];
-        $username = str_replace($suchen, $ersetzen, strtolower($username));
+        $username = str_replace(
+            ['ä', 'ö', 'ü', 'ß', ' ', '\\', '/'],
+            ['ae', 'oe', 'ue', 'ss', '', '-', '-'],
+            strtolower($objSR->firstname.'.'.$objSR->lastname)
+        );
 
         if (!$this->checkUsername($username)) {
-            $usernameAppended = $username.'.'.Date::parse('Y', $sr['geburtsdatum']);
+            $usernameAppended = $username.'.'.Date::parse('Y', $objSR->dateOfBirth);
 
             if (!$this->checkUsername($usernameAppended)) {
-                $usernameAppended = $username.'.'.Date::parse(Config::get('dateFormat'), $sr['geburtsdatum']);
+                $usernameAppended = $username.'.'.Date::parse(Config::get('dateFormat'), $objSR->dateOfBirth);
 
                 if (!$this->checkUsername($usernameAppended)) {
-                    $usernameAppended = $username.'.'.$sr['ausweisnummer'];
+                    $usernameAppended = $username.'.'.$objSR->cardNumber;
 
                     if (!$this->checkUsername($usernameAppended)) {
-                        Message::addError('Es konnte kein Login für SR '.$sr['vorname'].' '.$sr['nachname'].' ID='.$sr['id'].' angelegt werden. Der Benutzername '.$username.' existiert bereits.');
+                        Message::addError('Es konnte kein Login für SR '.$objSR->firstname.' '.$objSR->lastname.' ID='.$objSR->id.' angelegt werden. Der Benutzername '.$username.' existiert bereits.');
 
                         return false;
                     }
@@ -92,14 +99,14 @@ class MemberCreator extends System
 
         $gender = 'misc';
 
-        if ('m' === $sr['geschlecht']) {
+        if ('m' === $objSR->gender) {
             $gender = 'male';
-        } elseif ('w' === $sr['geschlecht']) {
+        } elseif ('w' === $objSR->gender) {
             $gender = 'female';
         }
 
-        $res = $this->Database->prepare('INSERT INTO tl_member (tstamp, firstname, lastname, dateOfBirth, gender, street, postal, city, phone, mobile, fax, email, groups, login, username, password, schiedsrichter, dateAdded) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)')
-            ->execute($jetzt->__get('tstamp'), $sr['vorname'], $sr['nachname'], $sr['geburtsdatum'], $gender, $sr['strasse'], $sr['plz'], $sr['ort'], $sr['telefon1'], $sr['telefon_mobil'], $sr['fax'], $sr['email'], serialize([]), true, $username, $pwd, $sr['id'], $jetzt->__get('tstamp'))
+        $res = $this->Database->prepare('INSERT INTO tl_member (tstamp, firstname, lastname, dateOfBirth, gender, street, postal, city, phone, mobile, fax, email, groups, login, username, password, refereeId, dateAdded) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)')
+            ->execute($jetzt->__get('tstamp'), $objSR->firstname, $objSR->lastname, $objSR->dateOfBirth, $gender, $objSR->street, $objSR->postal, $objSR->city, $objSR->phone1, $objSR->mobile, $objSR->fax, $objSR->getFriendlyEmail(), serialize([]), true, $username, $pwd, $objSR->id, $jetzt->__get('tstamp'))
         ;
 
         if (0 === $res->__get('affectedRows')) {
@@ -108,7 +115,7 @@ class MemberCreator extends System
 
         SRHistory::insert($srID, $res->__get('insertId'), ['Login', 'ADD'], 'Der Login des Schiedsrichters %s wurde mit dem Benutzernamen "%s" erstellt.', __METHOD__);
 
-        $this->createdLogins[$srID] = ['sr' => $sr, 'username' => $username, 'password' => $password, 'notificationMailSent' => false];
+        $this->createdLogins[$srID] = ['sr' => $objSR->row(), 'username' => $username, 'password' => $password, 'notificationMailSent' => false];
 
         return true;
     }

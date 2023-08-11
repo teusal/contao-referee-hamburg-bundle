@@ -36,7 +36,7 @@ class SRHistory extends System
      */
     public static function insert($intSR, $referenceId, $arrAction, $strText, $strFunction): void
     {
-        Database::getInstance()->prepare('INSERT INTO tl_bsa_schiedsrichter_historie (tstamp, schiedsrichter, reference_id, action_group, action, text, username, func) VALUES(?, ?, ?, ?, ?, ?, ?, ?)')
+        Database::getInstance()->prepare('INSERT INTO tl_bsa_referee_history (tstamp, refereeId, referenceId, actionGroup, action, text, username, func) VALUES(?, ?, ?, ?, ?, ?, ?, ?)')
             ->execute(
                 time(),
                 $intSR,
@@ -78,8 +78,8 @@ class SRHistory extends System
      */
     public function insertByDeleteMember(DataContainer $dc, $undoId): void
     {
-        if ($dc->__get('activeRecord')->schiedsrichter) {
-            static::insert($dc->__get('activeRecord')->schiedsrichter, $dc->id, ['Login', 'REMOVE'], 'Der Login des Schiedsrichter %s mit dem Benutzernamen "%s" wurde gelöscht.', __METHOD__);
+        if ($dc->__get('activeRecord')->refereeId) {
+            static::insert($dc->__get('activeRecord')->refereeId, $dc->id, ['Login', 'REMOVE'], 'Der Login des Schiedsrichter %s mit dem Benutzernamen "%s" wurde gelöscht.', __METHOD__);
         }
     }
 
@@ -91,8 +91,8 @@ class SRHistory extends System
         $intSR = 0;
         $intMember = 0;
 
-        if (isset($dc->__get('activeRecord')->schiedsrichter)) {
-            $intSR = $dc->__get('activeRecord')->schiedsrichter;
+        if (isset($dc->__get('activeRecord')->refereeId)) {
+            $intSR = $dc->__get('activeRecord')->refereeId;
             $intMember = $dc->id;
         } elseif ('schiedsrichter' === Input::get('do')) {
             if (Input::get('did')) {
@@ -102,7 +102,7 @@ class SRHistory extends System
             }
 
             if ($intSR) {
-                $member = Database::getInstance()->prepare('SELECT id FROM tl_member WHERE schiedsrichter=?')->execute($intSR);
+                $member = Database::getInstance()->prepare('SELECT id FROM tl_member WHERE refereeId=?')->execute($intSR);
 
                 if ($member->next()) {
                     $intMember = $member->__get('id');
@@ -123,9 +123,9 @@ class SRHistory extends System
     public function unsubscribeNewsletterToSRHistory($varInput, $arrRemove): void
     {
         foreach ($arrRemove as $channel) {
-            $arrSR = Database::getInstance()->prepare('SELECT r.schiedsrichter FROM tl_newsletter_recipients AS r, tl_bsa_schiedsrichter AS sr WHERE r.schiedsrichter=sr.id AND r.pid=? AND r.email=?')
+            $arrSR = Database::getInstance()->prepare('SELECT r.refereeId FROM tl_newsletter_recipients AS r, tl_bsa_referee AS sr WHERE r.refereeId=sr.id AND r.pid=? AND r.email=?')
                 ->execute($channel, $varInput)
-                ->fetchEach('schiedsrichter')
+                ->fetchEach('refereeId')
             ;
 
             foreach ($arrSR as $sr) {

@@ -22,8 +22,8 @@ use Contao\Input;
 use Contao\MemberModel;
 use Contao\Message;
 use Contao\System;
-use Teusal\ContaoRefereeHamburgBundle\Model\BsaSchiedsrichterModel;
-use Teusal\ContaoRefereeHamburgBundle\Model\BsaVereinObmannModel;
+use Teusal\ContaoRefereeHamburgBundle\Model\RefereeModel;
+use Teusal\ContaoRefereeHamburgBundle\Model\ClubChairmanModel;
 
 /**
  * Class BSAMember.
@@ -59,7 +59,7 @@ class BSAMember extends System
         }
 
         // Den Schiedsrichter laden
-        $objSR = BsaSchiedsrichterModel::findSchiedsrichter($intId);
+        $objSR = RefereeModel::findReferee($intId);
 
         if (!isset($objSR)) {
             throw new \Exception('Schiedsrichter zu ID '.$intId.' nicht gefunden!');
@@ -72,9 +72,9 @@ class BSAMember extends System
         $needsLogin = $this->needsLogin($objSR->id);
 
         // existierenden Login tl_member laden
-        $objMember = MemberModel::findOneBy('schiedsrichter', $objSR->id);
+        $objMember = MemberModel::findOneBy('refereeId', $objSR->id);
 
-        if ($objSR->__get('deleted') || !$needsLogin) {
+        if ($objSR->deleted || !$needsLogin) {
             // Mitglied deaktivieren
             if (isset($objMember) && !$objMember->disable) {
                 // Login deaktivieren
@@ -93,7 +93,7 @@ class BSAMember extends System
                 }
 
                 // Den neuen Login laden
-                $objMember = MemberModel::findOneBy('schiedsrichter', $objSR->id);
+                $objMember = MemberModel::findOneBy('refereeId', $objSR->id);
             }
 
             if (isset($objMember) && $objMember->__get('disable')) {
@@ -131,7 +131,7 @@ class BSAMember extends System
             Controller::redirect($redirectUrl);
         }
 
-        $arrSR = $this->Database->prepare('SELECT tl_bsa_schiedsrichter.id, tl_bsa_schiedsrichter.name_rev FROM tl_bsa_schiedsrichter LEFT JOIN tl_member ON tl_bsa_schiedsrichter.id = tl_member.schiedsrichter WHERE tl_bsa_schiedsrichter.email!=? AND tl_bsa_schiedsrichter.deleted=? AND tl_member.id IS NULL ORDER BY name_rev')
+        $arrSR = $this->Database->prepare('SELECT tl_bsa_referee.id, tl_bsa_referee.nameReverse FROM tl_bsa_referee LEFT JOIN tl_member ON tl_bsa_referee.id = tl_member.refereeId WHERE tl_bsa_referee.email!=? AND tl_bsa_referee.deleted=? AND tl_member.id IS NULL ORDER BY nameReverse')
             ->execute('', '')
             ->fetchAllAssoc()
         ;
@@ -155,13 +155,13 @@ class BSAMember extends System
             $this->executeSubmitSchiedsrichter($sr['id']);
 
             if (\is_array($this->MemberCreator->getCreatedLogins()) && \array_key_exists($sr['id'], $this->MemberCreator->getCreatedLogins())) {
-                $arrLoginNames[] = $sr['name_rev'];
+                $arrLoginNames[] = $sr['nameReverse'];
 
                 if (Config::get('bsa_import_login_send_mail')) {
                     $this->MemberCreator->sendNotificationMails($sr['id']);
                 }
             } else {
-                Message::addError(sprintf($GLOBALS['TL_LANG']['ERROR']['login_create_error'], $sr['name_rev']));
+                Message::addError(sprintf($GLOBALS['TL_LANG']['ERROR']['login_create_error'], $sr['nameReverse']));
             }
         }
 
@@ -170,11 +170,13 @@ class BSAMember extends System
     }
 
     /**
-     * Setzt Vor-, Nachname und E-Mail am Login tl_member.
+     * checks whether a login is needed or not.
+     *
+     * @return bool
      */
     private function needsLogin($intID)
     {
-        return BsaSchiedsrichterModel::isVereinsschiedsrichter($intID) || BsaVereinObmannModel::isVereinsobmann($intID);
+        return RefereeModel::isClubReferee($intID) || ClubChairmanModel::isChairman($intID);
     }
 
     /**
@@ -182,31 +184,28 @@ class BSAMember extends System
      */
     private function setPersonalData($objSR): void
     {
-        $objMember = MemberModel::findOneBy('schiedsrichter', $objSR->id);
+        $objMember = MemberModel::findOneBy('refereeId', $objSR->id);
 
         if (isset($objMember)) {
             $gender = 'misc';
 
-            if ('m' === $objSR->__get('geschlecht')) {
+            if ('m' === $objSR->gender) {
                 $gender = 'male';
-            } elseif ('w' === $objSR->__get('geschlecht')) {
+            } elseif ('w' === $objSR->gender) {
                 $gender = 'female';
             }
 
-            $objMember->__set('firstname', $objSR->__get('vorname'));
-            $objMember->__set('lastname', $objSR->__get('nachname'));
-            $objMember->__set('dateOfBirth', $objSR->__get('geburtsdatum'));
+            $objMember->__set('firstname', $objSR->firstname);
+            $objMember->__set('lastname', $objSR->lastname);
+            $objMember->__set('dateOfBirth', $objSR->dateOfBirth);
             $objMember->__set('gender', $gender);
-            $objMember->__set('street', $objSR->__get('strasse'));
-            $objMember->__set('postal', $objSR->__get('plz'));
-            $objMember->__set('city', $objSR->__get('ort'));
-            $objMember->__set('phone', $objSR->__get('telefon1'));
-            $objMember->__set('mobile', $objSR->__get('telefon_mobil'));
-            $objMember->__set('fax', $objSR->__get('fax'));
-
-            if (!empty($objSR->__get('email'))) {
-                $objMember->__set('email', $objSR->__get('email'));
-            }
+            $objMember->__set('street', $objSR->street);
+            $objMember->__set('postal', $objSR->postal);
+            $objMember->__set('city', $objSR->city);
+            $objMember->__set('phone', $objSR->phone1);
+            $objMember->__set('mobile', $objSR->mobile);
+            $objMember->__set('fax', $objSR->fax);
+            $objMember->__set('email', $objSR->getFriendlyEmail());
 
             $objMember->save();
         }

@@ -22,8 +22,8 @@ use Contao\Message;
 use Contao\System;
 use Teusal\ContaoRefereeHamburgBundle\Library\Mailer\AvailableTransports;
 use Teusal\ContaoRefereeHamburgBundle\Library\SRHistory;
-use Teusal\ContaoRefereeHamburgBundle\Model\BsaSchiedsrichterModel;
-use Teusal\ContaoRefereeHamburgBundle\Model\BsaVereinModel;
+use Teusal\ContaoRefereeHamburgBundle\Model\RefereeModel;
+use Teusal\ContaoRefereeHamburgBundle\Model\ClubModel;
 
 /**
  * Class AbstractEmail.
@@ -63,7 +63,7 @@ abstract class AbstractEmail extends Email
         ['#SR_ALTER#', 'Das Alter des Schiedsrichters'],
     ];
 
-    protected static $verein = [
+    protected static $club = [
         ['colspan', '<h1 style="margin-top: 15px; font-weight: bold;">Ersetzungen durch Daten des Vereins des angeschriebenen Schiedsrichters</h1>'],
         ['#VEREIN_NAME#', 'Langer Name des Vereins'],
         ['#VEREIN_NAME_KURZ#', 'Kurzer Name des Vereins'],
@@ -153,7 +153,7 @@ abstract class AbstractEmail extends Email
             'exclude' => true,
             'inputType' => 'select',
             'eval' => ['tl_class' => 'w50', 'includeBlankOption' => false, 'mandatory' => true, 'includeBlankOption' => true],
-            'options_callback' => ['contao.mailer.available_transports', 'getAllTransportOptions'],
+            'options_callback' => ['contao.mailer.available_transports', 'getTransportOptions'],
         ];
     }
 
@@ -175,7 +175,7 @@ abstract class AbstractEmail extends Email
         return [
             'label' => &$GLOBALS['TL_LANG']['mail_config']['text'],
             'inputType' => 'textarea',
-            'reference' => array_merge(static::$beUser, static::$beUserSignatur, static::$webmaster, static::$currentDate, static::$sr, static::$verein, $this->getTextReferenceAddons()),
+            'reference' => array_merge(static::$beUser, static::$beUserSignatur, static::$webmaster, static::$currentDate, static::$sr, static::$club, $this->getTextReferenceAddons()),
             'eval' => ['helpwizard' => true, 'rte' => 'tinyNews', 'mandatory' => true],
             'save_callback' => [
                 [static::class, 'validateText'],
@@ -229,12 +229,12 @@ abstract class AbstractEmail extends Email
     final public function setBackendUser(BackendUser $user): void
     {
         $arrName = explode(' ', $user->name);
-        $nachname = $arrName[\count($arrName) - 1];
+        $lastname = $arrName[\count($arrName) - 1];
         unset($arrName[\count($arrName) - 1]);
         $this->replacementValues['BE-USER'] = [
             'NAME' => $user->name,
             'VORNAME' => implode(' ', $arrName),
-            'NACHNAME' => $nachname,
+            'NACHNAME' => $lastname,
             'EMAIL' => $user->email,
             'SIGNATUR' => $user->signatur_html,
         ];
@@ -242,7 +242,7 @@ abstract class AbstractEmail extends Email
 
     final public function setSchiedsrichter($intSR): void
     {
-        $objSR = BsaSchiedsrichterModel::findSchiedsrichter($intSR);
+        $objSR = RefereeModel::findReferee($intSR);
 
         if (!isset($objSR)) {
             $this->srID = null;
@@ -253,7 +253,7 @@ abstract class AbstractEmail extends Email
 
         $this->srID = $objSR->id;
 
-        switch ($objSR->__get('geschlecht')) {
+        switch ($objSR->__get('gender')) {
                 case 'm':
                 case 'male':
                     $this->replacementValues['SR']['ANREDE'] = 'Lieber';
@@ -267,19 +267,19 @@ abstract class AbstractEmail extends Email
                     $this->replacementValues['SR']['ANREDE'] = 'Liebe/Lieber';
                     break;
             }
-        $this->replacementValues['SR']['VORNAME'] = $objSR->__get('vorname');
-        $this->replacementValues['SR']['NACHNAME'] = $objSR->__get('nachname');
-        $this->replacementValues['SR']['NAME'] = $objSR->__get('vorname').' '.$objSR->__get('nachname');
-        $this->replacementValues['SR']['NAME_REV'] = $objSR->__get('name_rev');
+        $this->replacementValues['SR']['VORNAME'] = $objSR->__get('firstname');
+        $this->replacementValues['SR']['NACHNAME'] = $objSR->__get('lastname');
+        $this->replacementValues['SR']['NAME'] = $objSR->__get('firstname').' '.$objSR->__get('lastname');
+        $this->replacementValues['SR']['NAME_REV'] = $objSR->__get('nameReverse');
         $this->replacementValues['SR']['EMAIL'] = $objSR->__get('email');
-        $this->replacementValues['SR']['ALTER'] = BsaSchiedsrichterModel::getAlter($objSR);
+        $this->replacementValues['SR']['ALTER'] = RefereeModel::getAge($objSR);
 
-        $this->setVerein($objSR->__get('verein'));
+        $this->setVerein($objSR->__get('clubId'));
     }
 
     final public function setVerein($intVerein): void
     {
-        $objVerein = BsaVereinModel::findByPk($intVerein);
+        $objVerein = ClubModel::findByPk($intVerein);
 
         if (!isset($objVerein)) {
             unset($this->replacementValues['VEREIN']);
@@ -288,7 +288,7 @@ abstract class AbstractEmail extends Email
         }
 
         $this->replacementValues['VEREIN']['NAME'] = (isset($objVerein) ? $objVerein->__get('name') : '-');
-        $this->replacementValues['VEREIN']['NAME_KURZ'] = (isset($objVerein) ? $objVerein->__get('name_kurz') : '-');
+        $this->replacementValues['VEREIN']['NAME_KURZ'] = (isset($objVerein) ? $objVerein->__get('nameShort') : '-');
     }
 
     public function addReplacements($key, $arrReplacements): void
@@ -353,7 +353,7 @@ abstract class AbstractEmail extends Email
         }
 
         // den SR zum Backend-Login anhand der E-Mailadresse laden...
-        $data = Database::getInstance()->prepare('SELECT id FROM tl_bsa_schiedsrichter WHERE email = ?')
+        $data = Database::getInstance()->prepare('SELECT * FROM tl_bsa_referee WHERE email = ?')
             ->limit(1)
             ->execute(BackendUser::getInstance()->email)
             ->fetchAssoc()
@@ -361,7 +361,7 @@ abstract class AbstractEmail extends Email
 
         // den SR zum Backend-Login anhand des Namens laden...
         if (!isset($data) || !\is_array($data) || empty($data)) {
-            $data = Database::getInstance()->prepare('SELECT id FROM tl_bsa_schiedsrichter WHERE CONCAT(vorname," ",nachname) = ?')
+            $data = Database::getInstance()->prepare('SELECT * FROM tl_bsa_referee WHERE CONCAT(firstname," ",lastname) = ?')
                 ->limit(1)
                 ->execute(BackendUser::getInstance()->name)
                 ->fetchAssoc()
@@ -371,10 +371,10 @@ abstract class AbstractEmail extends Email
         if (!isset($data) || !\is_array($data) || empty($data)) {
             $data = [
                 'id' => -1,
-                'geschlecht' => 'm',
-                'vorname' => 'Max',
-                'nachname' => 'Mustermann',
-                'name_rev' => 'Mustermann, Max',
+                'gender' => 'm',
+                'firstname' => 'Max',
+                'lastname' => 'Mustermann',
+                'nameReverse' => 'Mustermann, Max',
             ];
         }
 

@@ -39,14 +39,14 @@ class EventMatchOfficialsRegistration extends AbstractEventParticipiantHandler
                 Message::addInfo('Es wurden keine neuen Spieloffiziellen eingetragen.');
             } else {
                 foreach ($arrToSave as $toSave) {
-                    $exist = $this->Database->prepare('SELECT * FROM tl_bsa_teilnehmer WHERE pid=? AND sr_id=?')
+                    $exist = $this->Database->prepare('SELECT * FROM tl_bsa_event_participiant WHERE pid=? AND refereeId=?')
                         ->execute($this->objEvent->id, $toSave)
                     ;
 
                     if ($exist->next()) {
-                        Message::addError('Ein Eintrag für "'.$exist->__get('sr').'" existiert bereits. Es wurde daher kein neuer Eintrag angelegt.');
+                        Message::addError('Ein Eintrag für "'.$exist->__get('refereeNameReverse').'" existiert bereits. Es wurde daher kein neuer Eintrag angelegt.');
                     } else {
-                        $this->Database->prepare("INSERT INTO tl_bsa_teilnehmer (pid, tstamp, sr_id, sr, typ) SELECT ?, ?, id, name_rev, 's' FROM tl_bsa_schiedsrichter WHERE id = ?")
+                        $this->Database->prepare("INSERT INTO tl_bsa_event_participiant (pid, tstamp, refereeId, refereeNameReverse, type) SELECT ?, ?, id, nameReverse, 's' FROM tl_bsa_referee WHERE id = ?")
                             ->execute($this->objEvent->id, time(), $toSave)
                         ;
                     }
@@ -57,10 +57,10 @@ class EventMatchOfficialsRegistration extends AbstractEventParticipiantHandler
             $this->reload();
         }
 
-        $startDate = $this->objEvent->datum;
+        $startDate = $this->objEvent->date;
         $endDate = strtotime('+1 DAY', (int) $startDate);
 
-        $arrMatches = $this->Database->prepare("SELECT * FROM tl_bsa_spiel WHERE datum>? AND datum<? AND abgesetzt='' AND (sr_id<>0 OR sra1_id<>0 OR sra2_id<>0 OR 4off_id<>0 OR pate_id<>0)")
+        $arrMatches = $this->Database->prepare("SELECT * FROM tl_bsa_spiel WHERE datum>? AND datum<? AND abgesetzt='' AND (refereeId<>0 OR sra1_id<>0 OR sra2_id<>0 OR 4off_id<>0 OR pate_id<>0)")
             ->execute($startDate, $endDate)
             ->fetchAllAssoc()
         ;

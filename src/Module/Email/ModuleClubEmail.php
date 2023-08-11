@@ -12,7 +12,7 @@ declare(strict_types=1);
 
 namespace Teusal\ContaoRefereeHamburgBundle\Module\Email;
 
-use Teusal\ContaoRefereeHamburgBundle\Model\BsaVereinObmannModel;
+use Teusal\ContaoRefereeHamburgBundle\Model\ClubChairmanModel;
 
 /**
  * Class ModuleClubEmail.
@@ -50,7 +50,7 @@ class ModuleClubEmail extends AbstractModuleEmail
         return [
             'refereeId' => null,
             'clubId' => $clubId,
-            'email_addresses' => BsaVereinObmannModel::getEmailAddressesOfChairmans((int) $clubId),
+            'email_addresses' => ClubChairmanModel::getEmailAddressesOfChairmans((int) $clubId),
         ];
     }
 }

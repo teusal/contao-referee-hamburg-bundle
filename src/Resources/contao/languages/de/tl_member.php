@@ -10,7 +10,7 @@ declare(strict_types=1);
  * @license LGPL-3.0-or-later
  */
 
-$GLOBALS['TL_LANG']['tl_member']['schiedsrichter'] = ['verknüpfter Schiedsrichter', 'Wählen Sie den Schiedsrichter aus, dem dieser Login gehört.'];
+$GLOBALS['TL_LANG']['tl_member']['refereeId'] = ['verknüpfter Schiedsrichter', 'Wählen Sie den Schiedsrichter aus, dem dieser Login gehört.'];
 
 /*
  * Buttons

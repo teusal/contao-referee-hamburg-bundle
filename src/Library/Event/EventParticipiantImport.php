@@ -37,7 +37,7 @@ class EventParticipiantImport extends AbstractEventParticipiantHandler
         /** @var FileUpload $objUploader */
         $objUploader = new FileUpload();
 
-        $isRulesTest = 'regelarbeit' === $this->objEvent->__get('veranstaltungsgruppe');
+        $isRulesTest = 'regelarbeit' === $this->objEvent->eventGroup;
 
         // Datei einlesen und Daten importieren
         if ('participiant_import' === Input::post('FORM_SUBMIT')) {
@@ -102,12 +102,12 @@ class EventParticipiantImport extends AbstractEventParticipiantHandler
                 foreach ($arrParticipants as $arrParticipant) {
                     if ($isRulesTest) {
                         $nameRev = $arrParticipant['Teilnehmer'];
-                        $query = 'SELECT * FROM tl_bsa_schiedsrichter WHERE name_rev=? AND deleted=?';
-                        $params = ['name_rev' => $arrParticipant['Teilnehmer'], 'deleted' => false];
+                        $query = 'SELECT * FROM tl_bsa_referee WHERE nameReverse=? AND deleted=?';
+                        $params = ['nameReverse' => $arrParticipant['Teilnehmer'], 'deleted' => false];
                     } else {
                         $nameRev = $arrParticipant['Name'].', '.$arrParticipant['Vorname'];
-                        $query = 'SELECT * FROM tl_bsa_schiedsrichter WHERE nachname=? AND vorname=? AND deleted=?';
-                        $params = ['nachname' => $arrParticipant['Name'], 'vorname' => $arrParticipant['Vorname'], 'deleted' => false];
+                        $query = 'SELECT * FROM tl_bsa_referee WHERE lastname=? AND firstname=? AND deleted=?';
+                        $params = ['lastname' => $arrParticipant['Name'], 'firstname' => $arrParticipant['Vorname'], 'deleted' => false];
                     }
 
                     $arrReferee = $this->Database->prepare($query)
@@ -137,16 +137,16 @@ class EventParticipiantImport extends AbstractEventParticipiantHandler
             }
 
             if ($isRulesTest) {
-                $maxPoints = (float) ($this->objEvent->__get('typ'));
+                $maxPoints = (float) ($this->objEvent->type);
 
                 foreach ($arrRefereeIds as $refereeId => $referee) {
                     $reachedPoints = (float) ($referee['csv_import_data']['Summe']);
 
                     if (0.0 === $reachedPoints) {
-                        Message::addError('Teilnehmer '.$referee['name_rev'].' wird ausgelassen, da 0 Punkte erreicht wurden, wie eine Nicht-Bearbeitung aussieht.');
+                        Message::addError('Teilnehmer '.$referee['nameReverse'].' wird ausgelassen, da 0 Punkte erreicht wurden, wie eine Nicht-Bearbeitung aussieht.');
                         unset($arrRefereeIds[$refereeId]);
                     } elseif ($reachedPoints > $maxPoints) {
-                        Message::addError('Teilnehmer '.$referee['name_rev'].' wird ausgelassen, da mit '.$reachedPoints.' Punkten mehr Punkte erreicht wären, als möglich sind.');
+                        Message::addError('Teilnehmer '.$referee['nameReverse'].' wird ausgelassen, da mit '.$reachedPoints.' Punkten mehr Punkte erreicht wären, als möglich sind.');
                         unset($arrRefereeIds[$refereeId]);
                     }
                 }
@@ -172,7 +172,7 @@ class EventParticipiantImport extends AbstractEventParticipiantHandler
 
             if (!empty($arrNewReferee)) {
                 foreach ($arrNewReferee as $refereeId => $referee) {
-                    $this->Database->prepare('INSERT INTO tl_bsa_teilnehmer (pid, tstamp, sr_id, sr, typ) SELECT ?, ?, id, name_rev, ? FROM tl_bsa_schiedsrichter WHERE id = ?')
+                    $this->Database->prepare('INSERT INTO tl_bsa_event_participiant (pid, tstamp, refereeId, refereeNameReverse, type) SELECT ?, ?, id, nameReverse, ? FROM tl_bsa_referee WHERE id = ?')
                         ->execute($this->objEvent->id, time(), ($isRulesTest ? (float) ($referee['csv_import_data']['Summe']) : 'a'), $refereeId)
                     ;
                 }
@@ -184,13 +184,13 @@ class EventParticipiantImport extends AbstractEventParticipiantHandler
 
                 if ($isRulesTest && 'overwrite' === Input::post('update_existing')) {
                     foreach ($arrExistingReferee as $refereeId => $referee) {
-                        $update = $this->Database->prepare('UPDATE tl_bsa_teilnehmer SET typ = ? WHERE pid = ? AND sr_id = ?')
+                        $update = $this->Database->prepare('UPDATE tl_bsa_event_participiant SET type = ? WHERE pid = ? AND refereeId = ?')
                             ->execute((float) ($referee['csv_import_data']['Summe']), $this->objEvent->id, $refereeId)
                         ;
 
                         if ($update->__get('affectedRows') > 0) {
                             $updates += $update->__get('affectedRows');
-                            $this->Database->prepare('UPDATE tl_bsa_teilnehmer SET tstamp = ? WHERE pid = ? AND sr_id = ?')
+                            $this->Database->prepare('UPDATE tl_bsa_event_participiant SET tstamp = ? WHERE pid = ? AND refereeId = ?')
                                 ->execute(time(), $this->objEvent->id, $refereeId)
                             ;
                         }
@@ -209,7 +209,7 @@ class EventParticipiantImport extends AbstractEventParticipiantHandler
             if (!empty($arrRemovedReferee)) {
                 if ('delete' === Input::post('delete_not_in_list')) {
                     foreach ($arrRemovedReferee as $refereeId) {
-                        $this->Database->prepare('DELETE FROM tl_bsa_teilnehmer WHERE pid = ? AND sr_id = ?')
+                        $this->Database->prepare('DELETE FROM tl_bsa_event_participiant WHERE pid = ? AND refereeId = ?')
                             ->execute($this->objEvent->id, $refereeId)
                         ;
                     }
@@ -237,7 +237,7 @@ class EventParticipiantImport extends AbstractEventParticipiantHandler
             <div class="widget">
                 <h3>'.($isRulesTest ? 'DFB Online Lernen' : 'DFBnet Lehrgang').'-Export (csv-Datei) auswählen</h3>
                 '.$objUploader->generateMarkup().'
-                <p class="tl_help tl_tip">Wählen Sie die Datei aus, die zuvor aus '.('regelarbeit' === $this->objEvent->__get('veranstaltungsgruppe') ? 'den Ergebnissen einer Schulung im DFB Online Lernen' : 'einem einzelnen Lehrgang im DFBnet').' exportiert wurde.</p>
+                <p class="tl_help tl_tip">Wählen Sie die Datei aus, die zuvor aus '.('regelarbeit' === $this->objEvent->eventGroup ? 'den Ergebnissen einer Schulung im DFB Online Lernen' : 'einem einzelnen Lehrgang im DFBnet').' exportiert wurde.</p>
             </div>
         </fieldset>
 
@@ -246,21 +246,21 @@ class EventParticipiantImport extends AbstractEventParticipiantHandler
                 <h3>Aktualisierung?</h3>
                 <input type="checkbox" name="update_existing" id="update_existing" value="overwrite"'.(null === Input::post('update_existing') || 'overwrite' === Input::post('update_existing') ? ' checked="checked"' : '').' class="tl_checkbox" />
                 <label for="update_existing">Ergebnisse aktualisieren?</label>
-                <p class="tl_help">Ergebnisse der Teilnehmer, die bereits in dieser '.$GLOBALS['TL_LANG']['MOD'][$this->objEvent->__get('veranstaltungsgruppe')][0].' erfasst sind, werden mit den Daten aus der csv-Datei überschrieben.</p>
+                <p class="tl_help">Ergebnisse der Teilnehmer, die bereits in dieser '.$GLOBALS['TL_LANG']['MOD'][$this->objEvent->eventGroup][0].' erfasst sind, werden mit den Daten aus der csv-Datei überschrieben.</p>
             </div>
 ' : '').'
             <div class="widget">
                 <h3>Löschen?</h3>
                 <input type="checkbox" name="delete_not_in_list" id="delete_not_in_list" value="delete"'.('delete' === Input::post('delete_not_in_list') ? ' checked="checked"' : '').' class="tl_checkbox" />
                 <label for="delete_not_in_list">Teilnehmer löschen?</label>
-                <p class="tl_help">Alle Teilnehmer, die bereits in dieser '.$GLOBALS['TL_LANG']['MOD'][$this->objEvent->__get('veranstaltungsgruppe')][0].' erfasst aber nicht in der csv-Liste enthalten sind, werden gelöscht.</p>
+                <p class="tl_help">Alle Teilnehmer, die bereits in dieser '.$GLOBALS['TL_LANG']['MOD'][$this->objEvent->eventGroup][0].' erfasst aber nicht in der csv-Liste enthalten sind, werden gelöscht.</p>
             </div>
         </fieldset>
     </div>
 
     <div class="tl_formbody_submit">
         <div class="tl_submit_container">
-            <button type="submit" name="save" id="save" class="tl_submit" accesskey="s">Teilnahme(n) an der '.$GLOBALS['TL_LANG']['MOD'][$this->objEvent->__get('veranstaltungsgruppe')][0].' importieren</button>
+            <button type="submit" name="save" id="save" class="tl_submit" accesskey="s">Teilnahme(n) an der '.$GLOBALS['TL_LANG']['MOD'][$this->objEvent->eventGroup][0].' importieren</button>
         </div>
     </div>
 
