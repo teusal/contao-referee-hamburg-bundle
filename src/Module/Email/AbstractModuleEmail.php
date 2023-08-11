@@ -28,8 +28,8 @@ use Contao\TextArea;
 use Contao\TextField;
 use Teusal\ContaoRefereeHamburgBundle\Library\Email\BSAEmail;
 use Teusal\ContaoRefereeHamburgBundle\Library\Mailer\AvailableTransports;
-use Teusal\ContaoRefereeHamburgBundle\Model\ClubModel;
 use Teusal\ContaoRefereeHamburgBundle\Model\ClubChairmanModel;
+use Teusal\ContaoRefereeHamburgBundle\Model\ClubModel;
 
 /**
  * Class SimpleMail.

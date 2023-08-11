@@ -12,7 +12,6 @@ declare(strict_types=1);
 
 namespace Teusal\ContaoRefereeHamburgBundle\Model;
 
-use Contao\Database;
 use Contao\Model;
 
 /**
@@ -28,5 +27,4 @@ class MemberGroupNewsletterAssignmentModel extends Model
      * @var string
      */
     protected static $strTable = 'tl_bsa_member_group_newsletter_assignment';
-
 }

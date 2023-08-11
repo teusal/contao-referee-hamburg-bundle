@@ -18,8 +18,8 @@ use Contao\Message;
 use Contao\StringUtil;
 use Contao\System;
 use Teusal\ContaoPhoneNumberNormalizerBundle\Library\Addressbook\CarddavBackend;
-use Teusal\ContaoRefereeHamburgBundle\Model\RefereeModel;
 use Teusal\ContaoRefereeHamburgBundle\Model\ClubChairmanModel;
+use Teusal\ContaoRefereeHamburgBundle\Model\RefereeModel;
 
 /**
  * Class AddressbookSynchronizer.

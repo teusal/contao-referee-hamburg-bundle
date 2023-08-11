@@ -13,8 +13,8 @@ declare(strict_types=1);
 namespace Teusal\ContaoRefereeHamburgBundle\Module\Email;
 
 use Contao\StringUtil;
-use Teusal\ContaoRefereeHamburgBundle\Model\RefereeModel;
 use Teusal\ContaoRefereeHamburgBundle\Model\ClubChairmanModel;
+use Teusal\ContaoRefereeHamburgBundle\Model\RefereeModel;
 
 /**
  * Class ModuleRefereeEmail.

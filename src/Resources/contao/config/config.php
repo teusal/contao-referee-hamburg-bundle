@@ -18,20 +18,20 @@ use Teusal\ContaoRefereeHamburgBundle\Library\Geburtstag;
 use Teusal\ContaoRefereeHamburgBundle\Library\Mailer\UserTransportValidator;
 use Teusal\ContaoRefereeHamburgBundle\Library\Member\BSAMember;
 use Teusal\ContaoRefereeHamburgBundle\Library\Newsletter\Newsletter;
-use Teusal\ContaoRefereeHamburgBundle\Model\MemberGroupAssignmentMemberModel;
-use Teusal\ContaoRefereeHamburgBundle\Model\RefereeModel;
-use Teusal\ContaoRefereeHamburgBundle\Model\SportsFacilityModel;
-use Teusal\ContaoRefereeHamburgBundle\Model\SportsFacilityNumberModel;
-use Teusal\ContaoRefereeHamburgBundle\Model\ClubModel;
 use Teusal\ContaoRefereeHamburgBundle\Model\ClubChairmanModel;
+use Teusal\ContaoRefereeHamburgBundle\Model\ClubModel;
 use Teusal\ContaoRefereeHamburgBundle\Model\EventModel;
 use Teusal\ContaoRefereeHamburgBundle\Model\EventParticipiantModel;
+use Teusal\ContaoRefereeHamburgBundle\Model\MemberGroupAssignmentMemberModel;
+use Teusal\ContaoRefereeHamburgBundle\Model\MemberGroupNewsletterAssignmentModel;
+use Teusal\ContaoRefereeHamburgBundle\Model\RefereeModel;
 use Teusal\ContaoRefereeHamburgBundle\Model\SeasonModel;
+use Teusal\ContaoRefereeHamburgBundle\Model\SportsFacilityClubAssignmentModel;
+use Teusal\ContaoRefereeHamburgBundle\Model\SportsFacilityModel;
+use Teusal\ContaoRefereeHamburgBundle\Model\SportsFacilityNumberModel;
 use Teusal\ContaoRefereeHamburgBundle\Model\WebsiteDataReleaseModel;
 use Teusal\ContaoRefereeHamburgBundle\Module\Email\ModuleClubEmail;
 use Teusal\ContaoRefereeHamburgBundle\Module\Email\ModuleRefereeEmail;
-use Teusal\ContaoRefereeHamburgBundle\Model\MemberGroupNewsletterAssignmentModel;
-use Teusal\ContaoRefereeHamburgBundle\Model\SportsFacilityClubAssignmentModel;
 
 /*
  * BACK END MENU STRUKTUR

@@ -20,8 +20,8 @@ use Contao\Message;
 use Contao\System;
 use Teusal\ContaoRefereeHamburgBundle\Library\Email\AbstractEmail;
 use Teusal\ContaoRefereeHamburgBundle\Library\Email\BSAEmail;
-use Teusal\ContaoRefereeHamburgBundle\Model\RefereeModel;
 use Teusal\ContaoRefereeHamburgBundle\Model\ClubModel;
+use Teusal\ContaoRefereeHamburgBundle\Model\RefereeModel;
 
 /**
  * Class Geburtstag.

@@ -22,8 +22,8 @@ use Contao\Input;
 use Contao\MemberModel;
 use Contao\Message;
 use Contao\System;
-use Teusal\ContaoRefereeHamburgBundle\Model\RefereeModel;
 use Teusal\ContaoRefereeHamburgBundle\Model\ClubChairmanModel;
+use Teusal\ContaoRefereeHamburgBundle\Model\RefereeModel;
 
 /**
  * Class BSAMember.

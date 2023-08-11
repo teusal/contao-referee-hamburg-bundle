@@ -16,8 +16,8 @@ use Contao\Environment;
 use Contao\Input;
 use Contao\Message;
 use Contao\StringUtil;
-use Teusal\ContaoRefereeHamburgBundle\Model\ClubModel;
 use Teusal\ContaoRefereeHamburgBundle\Model\ClubChairmanModel;
+use Teusal\ContaoRefereeHamburgBundle\Model\ClubModel;
 
 /**
  * Class EventParticipiantRegistration.

@@ -22,8 +22,8 @@ use Contao\Message;
 use Contao\System;
 use Teusal\ContaoRefereeHamburgBundle\Library\Mailer\AvailableTransports;
 use Teusal\ContaoRefereeHamburgBundle\Library\SRHistory;
-use Teusal\ContaoRefereeHamburgBundle\Model\RefereeModel;
 use Teusal\ContaoRefereeHamburgBundle\Model\ClubModel;
+use Teusal\ContaoRefereeHamburgBundle\Model\RefereeModel;
 
 /**
  * Class AbstractEmail.

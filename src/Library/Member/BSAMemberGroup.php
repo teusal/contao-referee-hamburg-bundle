@@ -18,9 +18,9 @@ use Contao\MemberGroupModel;
 use Contao\Message;
 use Contao\System;
 use Teusal\ContaoRefereeHamburgBundle\Library\SRHistory;
+use Teusal\ContaoRefereeHamburgBundle\Model\ClubChairmanModel;
 use Teusal\ContaoRefereeHamburgBundle\Model\MemberGroupAssignmentMemberModel;
 use Teusal\ContaoRefereeHamburgBundle\Model\RefereeModel;
-use Teusal\ContaoRefereeHamburgBundle\Model\ClubChairmanModel;
 
 /**
  * Class BSAMemberGroup.
