@@ -22,8 +22,8 @@ use Teusal\ContaoRefereeHamburgBundle\Model\ClubChairmanModel;
 use Teusal\ContaoRefereeHamburgBundle\Model\ClubModel;
 use Teusal\ContaoRefereeHamburgBundle\Model\EventModel;
 use Teusal\ContaoRefereeHamburgBundle\Model\EventParticipiantModel;
-use Teusal\ContaoRefereeHamburgBundle\Model\MemberGroupMemberAssignmentModel;
 use Teusal\ContaoRefereeHamburgBundle\Model\MemberGroupNewsletterAssignmentModel;
+use Teusal\ContaoRefereeHamburgBundle\Model\MemberGroupRefereeAssignmentModel;
 use Teusal\ContaoRefereeHamburgBundle\Model\RefereeModel;
 use Teusal\ContaoRefereeHamburgBundle\Model\SeasonModel;
 use Teusal\ContaoRefereeHamburgBundle\Model\SportsFacilityClubAssignmentModel;
@@ -40,9 +40,6 @@ ArrayUtil::arrayInsert($GLOBALS['BE_MOD'], 0, [
     'bsa' => [
         'global_settings' => [
             'tables' => ['tl_bsa_global_settings'],
-        ],
-        'email_settings' => [
-            'tables' => ['tl_settings'],
         ],
         'season' => [
             'tables' => ['tl_bsa_season'],
@@ -84,7 +81,7 @@ ArrayUtil::arrayInsert($GLOBALS['BE_MOD'], 0, [
             'tables' => ['tl_bsa_member_settings'],
         ],
         'groups' => [
-            'tables' => ['tl_member_group', 'tl_bsa_member_group_member_assignment', 'tl_bsa_member_group_newsletter_assignment'],
+            'tables' => ['tl_member_group', 'tl_bsa_member_group_referee_assignment', 'tl_bsa_member_group_newsletter_assignment'],
         ],
         'logins' => [
             'tables' => ['tl_member'],
@@ -301,7 +298,7 @@ $GLOBALS['TL_MODELS'] = [
     // 'tl_bsa_beobachtung' => BSABeobachtungModel::class,
     // 'tl_bsa_beobachtung_ausgang' => BSABeobachtungAusgangModel::class,
     'tl_bsa_website_data_release' => WebsiteDataReleaseModel::class,
-    'tl_bsa_member_group_member_assignment' => MemberGroupMemberAssignmentModel::class,
+    'tl_bsa_member_group_referee_assignment' => MemberGroupRefereeAssignmentModel::class,
     'tl_bsa_member_group_newsletter_assignment' => MemberGroupNewsletterAssignmentModel::class,
     // 'tl_bsa_lehrgang' => BSALehrgangModel::class,
     // 'tl_bsa_member_group_newsletter_assignment' => BSANewsletterzuordnungModel::class,

@@ -15,8 +15,7 @@ declare(strict_types=1);
  */
 // group bsa
 $GLOBALS['TL_LANG']['MOD']['bsa'] = 'BSA Einstellungen';
-$GLOBALS['TL_LANG']['MOD']['global_settings'] = ['globale Einstellungen', 'Konfigurieren Sie hier die globalen Einstellungen.'];
-$GLOBALS['TL_LANG']['MOD']['email_settings'] = ['E-Mail Einstellungen', 'Konfigurieren Sie hier die E-Mail Einstellungen.'];
+$GLOBALS['TL_LANG']['MOD']['global_settings'] = ['Globale Einstellungen', 'Konfigurieren Sie hier die globalen Einstellungen.'];
 $GLOBALS['TL_LANG']['MOD']['season'] = ['Konfiguration Saisons', 'Konfigurieren Sie hier die aktuelle Saison oder erstellen Sie eine neue.'];
 // group bsa_sportplatz
 $GLOBALS['TL_LANG']['MOD']['bsa_sportplatz'] = 'Sportanlagen';

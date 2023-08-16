@@ -178,7 +178,7 @@ class tl_bsa_season extends Backend
      */
     public function validateEndDate($varValue, DataContainer $dc)
     {
-        if ($varValue <= $dc->activeRecord->startDate) {
+        if ($varValue <= $dc->__get('activeRecord')->startDate) {
             throw new Exception('Enddatum muss nach dem Startdatum sein');
         }
 

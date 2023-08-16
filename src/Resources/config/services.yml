@@ -7,3 +7,15 @@ services:
         public: true
         arguments:
             - '@?translator'
+
+    teusal.referee.available_referees:
+        class: Teusal\ContaoRefereeHamburgBundle\Library\Options\RefereeOptions
+        public: true
+        arguments:
+            - false
+
+    teusal.referee.available_referees.include_deleted:
+        class: Teusal\ContaoRefereeHamburgBundle\Library\Options\RefereeOptions
+        public: true
+        arguments:
+            - true

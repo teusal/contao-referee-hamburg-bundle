@@ -241,7 +241,7 @@ class tl_bsa_sports_facility extends Backend
     public function deleteIcon($row, $href, $label, $title, $icon, $attributes, $table, $rootRecordIds, $childRecordIds, $circularReference, $previous, $next, DataContainer $dc): string
     {
         if (in_array($row['id'], $this->arrUsedIds, true)) {
-            return Image::getHtml(preg_replace('/\.gif$/i', '_.gif', $icon)).' ';
+            return Image::getHtml(preg_replace('/\.gif$/i', '_.gif', $icon), '', ' title="'.$GLOBALS['TL_LANG']['tl_bsa_sports_facility']['sports_facitily_is_used'].'"').' ';
         }
 
         $href .= '&amp;id='.$row['id'];

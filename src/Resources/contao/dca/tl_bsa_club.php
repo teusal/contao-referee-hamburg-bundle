@@ -36,14 +36,14 @@ $GLOBALS['TL_DCA']['tl_bsa_club'] = [
     // List
     'list' => [
         'sorting' => [
-            'mode' => DataContainer::MODE_SORTED,
+            'mode' => DataContainer::MODE_SORTABLE,
             'fields' => ['nameShort'],
             'flag' => DataContainer::SORT_INITIAL_LETTER_ASC,
-            'panelLayout' => 'filter;search,limit',
+            'panelLayout' => 'filter;sort,search,limit',
         ],
         'label' => [
-            'fields' => ['name', 'number', 'refereesActiveQuantity', 'refereesPassiveQuantity'],
-            'format' => '<div style="float:left;">%s (DFBnet: %s)</div><div style="text-align:right;">Anzahl SR: %s aktiv, %s passiv</div>',
+            'fields' => ['nameShort', 'name', 'number', 'refereesActiveQuantity', 'refereesPassiveQuantity'],
+            'showColumns' => true,
         ],
         'global_operations' => [
         ],
@@ -62,7 +62,7 @@ $GLOBALS['TL_DCA']['tl_bsa_club'] = [
     // Palettes
     'palettes' => [
         '__selector__' => [''],
-        'default' => 'number,name,nameShort;street,nameAddition,postal,city,phone1,phone2,fax,email;image;homepage1,homepage2;published',
+        'default' => '{club_data_legend},number,name,nameShort;{address_legend},street,nameAddition,postal,city;{contact_legend},phone1,phone2,fax,email;{image_legend},image;{web_legend},homepage1,homepage2;{publishing_legend},published',
     ],
 
     // Subpalettes
@@ -79,17 +79,20 @@ $GLOBALS['TL_DCA']['tl_bsa_club'] = [
         ],
         'name' => [
             'inputType' => 'text',
+            'sorting' => true,
             'eval' => ['mandatory' => true, 'maxlength' => 100, 'tl_class' => 'w50', 'unique' => true],
             'sql' => "varchar(50) NOT NULL default ''",
         ],
         'nameShort' => [
             'inputType' => 'text',
+            'sorting' => true,
             'search' => true,
             'eval' => ['mandatory' => true, 'maxlength' => 20, 'tl_class' => 'w50'],
             'sql' => "varchar(20) NOT NULL default ''",
         ],
         'number' => [
             'inputType' => 'text',
+            'sorting' => true,
             'search' => true,
             'eval' => ['mandatory' => true, 'maxlength' => 6, 'minlength' => 6, 'unique' => true, 'rgxp' => 'digit'],
             'sql' => "varchar(6) NOT NULL default ''",
@@ -140,7 +143,7 @@ $GLOBALS['TL_DCA']['tl_bsa_club'] = [
         ],
         'email' => [
             'inputType' => 'text',
-            'eval' => ['maxlength' => 100, 'tl_class' => 'clr long'],
+            'eval' => ['maxlength' => 100, 'tl_class' => 'w50', 'rgxp' => 'email'],
             'sql' => 'varchar(100) NULL',
         ],
         'image' => [
@@ -159,9 +162,11 @@ $GLOBALS['TL_DCA']['tl_bsa_club'] = [
             'sql' => 'varchar(100) NULL',
         ],
         'refereesActiveQuantity' => [
+            'sorting' => true,
             'sql' => "int(4) NOT NULL default '0'",
         ],
         'refereesPassiveQuantity' => [
+            'sorting' => true,
             'sql' => "int(4) NOT NULL default '0'",
         ],
         'published' => [

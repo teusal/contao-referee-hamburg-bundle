@@ -11,6 +11,16 @@ declare(strict_types=1);
  */
 
 /*
+ * Legends
+ */
+$GLOBALS['TL_LANG']['tl_bsa_club']['club_data_legend'] = 'Veröffentlichung';
+$GLOBALS['TL_LANG']['tl_bsa_club']['address_legend'] = 'Adressdaten';
+$GLOBALS['TL_LANG']['tl_bsa_club']['contact_legend'] = 'Kontaktdaten';
+$GLOBALS['TL_LANG']['tl_bsa_club']['image_legend'] = 'Bilder';
+$GLOBALS['TL_LANG']['tl_bsa_club']['web_legend'] = 'Web-Auftritt';
+$GLOBALS['TL_LANG']['tl_bsa_club']['publishing_legend'] = 'Veröffentlichung';
+
+/*
  * Fields
  */
 $GLOBALS['TL_LANG']['tl_bsa_club']['name'] = ['Vereinsname (lang)', 'Bitte den vollständigen Vereinsnamen eingeben.'];
@@ -21,14 +31,16 @@ $GLOBALS['TL_LANG']['tl_bsa_club']['nameAddition'] = ['Namenszusatz zur Adresse'
 $GLOBALS['TL_LANG']['tl_bsa_club']['street'] = ['Straße', 'Straße oder Postfach.'];
 $GLOBALS['TL_LANG']['tl_bsa_club']['postal'] = ['Postleitzahl', ''];
 $GLOBALS['TL_LANG']['tl_bsa_club']['city'] = ['Ort', ''];
-$GLOBALS['TL_LANG']['tl_bsa_club']['phone1'] = ['Telefonnummer', ''];
-$GLOBALS['TL_LANG']['tl_bsa_club']['phone2'] = ['Telefonnummer', ''];
+$GLOBALS['TL_LANG']['tl_bsa_club']['phone1'] = ['Telefonnummer 1', ''];
+$GLOBALS['TL_LANG']['tl_bsa_club']['phone2'] = ['Telefonnummer 2', ''];
 $GLOBALS['TL_LANG']['tl_bsa_club']['fax'] = ['Faxnummer', ''];
 $GLOBALS['TL_LANG']['tl_bsa_club']['email'] = ['E-Mail Adresse', ''];
 $GLOBALS['TL_LANG']['tl_bsa_club']['image'] = ['Vereinslogo', 'Bitte wählen sie ein Vereinslogo aus dem Dateisystem aus.'];
 $GLOBALS['TL_LANG']['tl_bsa_club']['homepage1'] = ['Homepage 1', 'Geben Sie den Pfad zu einer Homepage des Vereins oder der Schiedsrichterabteilung an.'];
 $GLOBALS['TL_LANG']['tl_bsa_club']['homepage2'] = ['Homepage 2', 'Geben Sie den Pfad zu einer Homepage des Vereins oder der Schiedsrichterabteilung an.'];
 $GLOBALS['TL_LANG']['tl_bsa_club']['published'] = ['Im Web anzeigen?', 'Deaktivieren Sie diese Option, damit der Verein im Frontend ausgeblendet wird.'];
+$GLOBALS['TL_LANG']['tl_bsa_club']['refereesActiveQuantity'] = ['Aktive', 'Anzahl aktiver Schiedsrichter*innen'];
+$GLOBALS['TL_LANG']['tl_bsa_club']['refereesPassiveQuantity'] = ['Passive', 'Anzahl passiver Schiedsrichter*innen'];
 
 /*
  * Buttons

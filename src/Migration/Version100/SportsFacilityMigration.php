@@ -75,6 +75,30 @@ class SportsFacilityMigration extends AbstractMigration
             $query .= 'RENAME COLUMN anzeigen TO published';
             $this->connection->executeStatement($query);
             $this->resultMessages[] = 'Columns of table tl_bsa_sports_facility successfully renamed.';
+
+            $query = 'DROP TRIGGER `sportplatz_insert_set_anschrift`';
+            $this->connection->executeStatement($query);
+            $this->resultMessages[] = 'Trigger sportplatz_insert_set_anschrift successfully dropped.';
+
+            $query =
+'CREATE TRIGGER `sports_facility_insert_set_address` BEFORE INSERT ON `tl_bsa_sports_facility` FOR EACH ROW
+BEGIN
+    SET NEW.address = CONCAT(NEW.street,\', \', NEW.postal, \' \', NEW.city);
+END';
+            $this->connection->executeStatement($query);
+            $this->resultMessages[] = 'Trigger sports_facility_insert_set_address successfully created.';
+
+            $query = 'DROP TRIGGER `sportplatz_update_set_anschrift`';
+            $this->connection->executeStatement($query);
+            $this->resultMessages[] = 'Trigger sportplatz_update_set_anschrift successfully dropped.';
+
+            $query =
+'CREATE TRIGGER `sports_facility_update_set_address` BEFORE UPDATE ON `tl_bsa_sports_facility` FOR EACH ROW
+BEGIN
+    SET NEW.address = CONCAT(NEW.street, \', \', NEW.postal, \' \', NEW.city);
+END';
+            $this->connection->executeStatement($query);
+            $this->resultMessages[] = 'Trigger sports_facility_update_set_address successfully created.';
         }
 
         if ($this->shouldRenameSportsFacilityNumberTable()) {

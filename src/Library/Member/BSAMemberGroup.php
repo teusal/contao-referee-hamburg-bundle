@@ -19,7 +19,7 @@ use Contao\Message;
 use Contao\System;
 use Teusal\ContaoRefereeHamburgBundle\Library\SRHistory;
 use Teusal\ContaoRefereeHamburgBundle\Model\ClubChairmanModel;
-use Teusal\ContaoRefereeHamburgBundle\Model\MemberGroupMemberAssignmentModel;
+use Teusal\ContaoRefereeHamburgBundle\Model\MemberGroupRefereeAssignmentModel;
 use Teusal\ContaoRefereeHamburgBundle\Model\RefereeModel;
 
 /**
@@ -281,7 +281,7 @@ final class BSAMemberGroup extends System
             ->fetchEach('id')
         ;
 
-        $arrExistingSR = Database::getInstance()->prepare('SELECT refereeId FROM tl_bsa_member_group_member_assignment WHERE pid=?')
+        $arrExistingSR = Database::getInstance()->prepare('SELECT refereeId FROM tl_bsa_member_group_referee_assignment WHERE pid=?')
             ->execute($group->id)
             ->fetchEach('refereeId')
         ;
@@ -298,7 +298,7 @@ final class BSAMemberGroup extends System
 
         if (!empty($toDel)) {
             foreach ($toDel as $intSR) {
-                Database::getInstance()->prepare('DELETE FROM tl_bsa_member_group_member_assignment WHERE pid=? AND refereeId=?')
+                Database::getInstance()->prepare('DELETE FROM tl_bsa_member_group_referee_assignment WHERE pid=? AND refereeId=?')
                     ->execute($group->id, $intSR)
                 ;
 
@@ -315,7 +315,7 @@ final class BSAMemberGroup extends System
 
         if (!empty($toAdd)) {
             foreach ($toAdd as $intSR) {
-                Database::getInstance()->prepare('INSERT INTO tl_bsa_member_group_member_assignment (pid, tstamp, refereeId) VALUES (?,?,?)')
+                Database::getInstance()->prepare('INSERT INTO tl_bsa_member_group_referee_assignment (pid, tstamp, refereeId) VALUES (?,?,?)')
                     ->execute($group->id, time(), $intSR)
                 ;
 
@@ -340,11 +340,11 @@ final class BSAMemberGroup extends System
             throw new \Exception('wrong datatype or zero given');
         }
 
-        $arrGroupIds = Database::getInstance()->prepare('SELECT pid FROM tl_bsa_member_group_member_assignment WHERE refereeId=?')
+        $arrGroupIds = Database::getInstance()->prepare('SELECT pid FROM tl_bsa_member_group_referee_assignment WHERE refereeId=?')
             ->execute($intSR)
             ->fetchEach('pid')
         ;
-        $res = Database::getInstance()->prepare('DELETE FROM tl_bsa_member_group_member_assignment WHERE refereeId=?')
+        $res = Database::getInstance()->prepare('DELETE FROM tl_bsa_member_group_referee_assignment WHERE refereeId=?')
             ->execute($intSR)
         ;
 
@@ -373,7 +373,7 @@ final class BSAMemberGroup extends System
             return;
         }
 
-        $query = 'SELECT DISTINCT tl_member_group.id FROM tl_member_group JOIN tl_bsa_member_group_member_assignment ON tl_member_group.id=tl_bsa_member_group_member_assignment.pid WHERE tl_bsa_member_group_member_assignment.refereeId=?';
+        $query = 'SELECT DISTINCT tl_member_group.id FROM tl_member_group JOIN tl_bsa_member_group_referee_assignment ON tl_member_group.id=tl_bsa_member_group_referee_assignment.pid WHERE tl_bsa_member_group_referee_assignment.refereeId=?';
 
         if ($idToRemove) {
             $query .= ' AND tl_member_group.id!='.$idToRemove;
@@ -496,8 +496,8 @@ final class BSAMemberGroup extends System
         $intGroup = self::getAutomatikGroupId($automaticKey);
 
         if ($intGroup) {
-            if (!MemberGroupMemberAssignmentModel::exists($intGroup, $intSR)) {
-                Database::getInstance()->prepare('INSERT INTO tl_bsa_member_group_member_assignment (pid, tstamp, refereeId) VALUES (?,?,?)')
+            if (!MemberGroupRefereeAssignmentModel::exists($intGroup, $intSR)) {
+                Database::getInstance()->prepare('INSERT INTO tl_bsa_member_group_referee_assignment (pid, tstamp, refereeId) VALUES (?,?,?)')
                     ->execute($intGroup, time(), $intSR)
                 ;
 
@@ -521,7 +521,7 @@ final class BSAMemberGroup extends System
         $intGroup = self::getAutomatikGroupId($automaticKey);
 
         if ($intGroup) {
-            $res = Database::getInstance()->prepare('DELETE FROM tl_bsa_member_group_member_assignment WHERE pid=? AND refereeId=?')
+            $res = Database::getInstance()->prepare('DELETE FROM tl_bsa_member_group_referee_assignment WHERE pid=? AND refereeId=?')
                 ->execute($intGroup, $intSR)
             ;
 

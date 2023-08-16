@@ -16,6 +16,10 @@ use Contao\DataContainer;
 use Contao\DC_Table;
 use Teusal\ContaoRefereeHamburgBundle\Library\Member\BSAMemberGroup;
 use Teusal\ContaoRefereeHamburgBundle\Library\Newsletter\BSANewsletter;
+use Teusal\ContaoRefereeHamburgBundle\Model\ClubModel;
+use Contao\StringUtil;
+use Teusal\ContaoRefereeHamburgBundle\Model\RefereeModel;
+use Teusal\ContaoRefereeHamburgBundle\Model\ClubChairmanModel;
 
 /*
  * This file is part of Contao Referee Hamburg Bundle.
@@ -29,7 +33,7 @@ $GLOBALS['TL_DCA']['tl_bsa_club_chairman'] = [
     // Config
     'config' => [
         'dataContainer' => DC_Table::class,
-        'enableVersioning' => true,
+        'enableVersioning' => false,
         'ondelete_callback' => [
             [tl_bsa_club_chairman::class, 'doDelete'],
         ],
@@ -44,10 +48,10 @@ $GLOBALS['TL_DCA']['tl_bsa_club_chairman'] = [
     // List
     'list' => [
         'sorting' => [
-            'mode' => DataContainer::MODE_SORTED,
+            'mode' => DataContainer::MODE_SORTABLE,
             'flag' => DataContainer::SORT_INITIAL_LETTER_ASC,
             'fields' => ['clubId'],
-            'panelLayout' => 'limit',
+            'panelLayout' => 'sort,search,limit',
             'disableGrouping' => true,
         ],
         'label' => [
@@ -89,13 +93,18 @@ $GLOBALS['TL_DCA']['tl_bsa_club_chairman'] = [
         ],
         'clubId' => [
             'inputType' => 'select',
-            'eval' => ['multiple' => false, 'includeBlankOption' => true, 'blankOptionLabel' => 'Verein wählen', 'mandatory' => true, 'unique' => true, 'tl_class' => 'w50'],
+            'sorting' => true,
+            'search' => true,
+            'eval' => ['multiple' => false, 'chosen' => true, 'includeBlankOption' => true, 'blankOptionLabel' => 'Verein wählen', 'mandatory' => true, 'unique' => true, 'tl_class' => 'w50'],
             'foreignKey' => 'tl_bsa_club.nameShort',
             'sql' => "int(10) unsigned NOT NULL default '0'",
         ],
         'chairman' => [
             'inputType' => 'select',
-            'eval' => ['multiple' => false, 'includeBlankOption' => true, 'blankOptionLabel' => 'kein Obmann', 'tl_class' => 'w50'],
+            'sorting' => true,
+            'search' => true,
+            'eval' => ['multiple' => false, 'chosen' => true, 'includeBlankOption' => true, 'blankOptionLabel' => 'kein Obmann', 'tl_class' => 'w50'],
+            'options_callback' => [tl_bsa_club_chairman::class, 'getRefereeOptions'],
             'foreignKey' => 'tl_bsa_referee.nameReverse',
             'save_callback' => [
                 [tl_bsa_club_chairman::class, 'saveObmann'],
@@ -104,7 +113,10 @@ $GLOBALS['TL_DCA']['tl_bsa_club_chairman'] = [
         ],
         'viceChairman1' => [
             'inputType' => 'select',
-            'eval' => ['multiple' => false, 'includeBlankOption' => true, 'blankOptionLabel' => 'kein stellv. Obmann', 'tl_class' => 'w50 clr'],
+            'sorting' => true,
+            'search' => true,
+            'eval' => ['multiple' => false, 'chosen' => true, 'includeBlankOption' => true, 'blankOptionLabel' => 'kein stellv. Obmann', 'tl_class' => 'w50 clr'],
+           'options_callback' => ['teusal.referee.available_referees.include_deleted', 'getRefereeOptions'],
             'foreignKey' => 'tl_bsa_referee.nameReverse',
             'save_callback' => [
                 [tl_bsa_club_chairman::class, 'saveStellv1'],
@@ -113,7 +125,10 @@ $GLOBALS['TL_DCA']['tl_bsa_club_chairman'] = [
         ],
         'viceChairman2' => [
             'inputType' => 'select',
+            'sorting' => true,
+            'search' => true,
             'eval' => ['multiple' => false, 'includeBlankOption' => true, 'blankOptionLabel' => 'kein stellv. Obmann', 'tl_class' => 'w50'],
+            'options_callback' => ['teusal.referee.available_referees', 'getRefereeOptions'],
             'foreignKey' => 'tl_bsa_referee.nameReverse',
             'save_callback' => [
                 [tl_bsa_club_chairman::class, 'saveStellv2'],
@@ -133,6 +148,13 @@ $GLOBALS['TL_DCA']['tl_bsa_club_chairman'] = [
 class tl_bsa_club_chairman extends Backend
 {
     /**
+     * clubs.
+     *
+     * @var array<int, array<string, mixed>>
+     */
+    protected $arrClubs = [];
+
+    /**
      * Import the back end user object.
      */
     public function __construct()
@@ -140,6 +162,63 @@ class tl_bsa_club_chairman extends Backend
         parent::__construct();
         $this->import(BackendUser::class, 'User');
         $this->import(BSANewsletter::class, 'BSANewsletter');
+
+        // load the clubs in an array. the key is set by the id, the value is by nameShort.
+        $objClub = ClubModel::findAll(['order' => 'nameShort']);
+
+        if (isset($objClub)) {
+            while ($objClub->next()) {
+                $this->arrClubs[$objClub->id] = [
+                    'number' => $objClub->number,
+                    'nameShort' => StringUtil::specialchars($objClub->nameShort),
+                    'visible' => $objClub->published,
+                ];
+            }
+        }
+        $this->arrClubs[0] = ['number' => '', 'nameShort' => 'vereinslos', 'visible' => false];
+    }
+
+    /**
+     * returns all possible recipient options.
+     *
+     * @param DataContainer|null $dc Data Container object
+     * @return array<int, array<string, string>> the list of selectable options
+     */
+    public function getRefereeOptions(DataContainer $dc): array
+    {
+        $arrRecipientOptions = [];
+
+        if(isset($dc)) {
+            $strField = $dc->field;
+            // as first add an option, if the selected referee is deleted
+            $objReferee = RefereeModel::findByPk($dc->activeRecord->$strField);
+            if(isset($objReferee) && $objReferee->deleted) {
+                $arrRecipientOptions['gelöscht'][$objReferee->id] = StringUtil::specialchars($objReferee->nameReverse);
+            }
+        }
+
+        // add empty containers for all clubs
+        foreach ($this->arrClubs as $club) {
+            $arrRecipientOptions[$club['nameShort']] = [];
+        }
+
+        // loading all referees and sort each to his club
+        $objReferee = RefereeModel::findByDeleted('', ['order' => 'nameReverse']);
+
+        if (isset($objReferee)) {
+            while ($objReferee->next()) {
+                $arrRecipientOptions[$this->arrClubs[$objReferee->clubId]['nameShort']][$objReferee->id] = StringUtil::specialchars($objReferee->nameReverse);
+            }
+        }
+
+        // remove empty clubs
+        foreach ($arrRecipientOptions as $clubName => $arrReferees) {
+            if (empty($arrReferees)) {
+                unset($arrRecipientOptions[$clubName]);
+            }
+        }
+
+        return $arrRecipientOptions;
     }
 
     /**
@@ -152,7 +231,7 @@ class tl_bsa_club_chairman extends Backend
      */
     public function saveObmann($varValue, DataContainer $dc)
     {
-        return $this->updateObleuteGroup($varValue, $dc, 'chairman');
+        return $this->updateChairmansGroup($varValue, $dc, 'chairman');
     }
 
     /**
@@ -165,7 +244,7 @@ class tl_bsa_club_chairman extends Backend
      */
     public function saveStellv1($varValue, DataContainer $dc)
     {
-        return $this->updateObleuteGroup($varValue, $dc, 'viceChairman1');
+        return $this->updateChairmansGroup($varValue, $dc, 'viceChairman1');
     }
 
     /**
@@ -178,7 +257,7 @@ class tl_bsa_club_chairman extends Backend
      */
     public function saveStellv2($varValue, DataContainer $dc)
     {
-        return $this->updateObleuteGroup($varValue, $dc, 'viceChairman2');
+        return $this->updateChairmansGroup($varValue, $dc, 'viceChairman2');
     }
 
     /**
@@ -189,18 +268,18 @@ class tl_bsa_club_chairman extends Backend
      */
     public function doDelete(DataContainer $dc, $undoId): void
     {
-        if (0 !== $dc->__get('activeRecord')->chairman) {
-            BSAMemberGroup::removeFromChairmansGroup($dc->__get('activeRecord')->chairman);
+        if (0 !== (int) $dc->__get('activeRecord')->chairman) {
+            BSAMemberGroup::removeFromChairmansGroup((int) $dc->__get('activeRecord')->chairman);
             $this->BSANewsletter->synchronizeNewsletterBySchiedsrichter((int) $dc->__get('activeRecord')->chairman);
         }
 
-        if (0 !== $dc->__get('activeRecord')->viceChairman1) {
-            BSAMemberGroup::removeFromChairmansGroup($dc->__get('activeRecord')->viceChairman1);
+        if (0 !== (int) $dc->__get('activeRecord')->viceChairman1) {
+            BSAMemberGroup::removeFromChairmansGroup((int) $dc->__get('activeRecord')->viceChairman1);
             $this->BSANewsletter->synchronizeNewsletterBySchiedsrichter((int) $dc->__get('activeRecord')->viceChairman1);
         }
 
-        if (0 !== $dc->__get('activeRecord')->viceChairman2) {
-            BSAMemberGroup::removeFromChairmansGroup($dc->__get('activeRecord')->viceChairman2);
+        if (0 !== (int) $dc->__get('activeRecord')->viceChairman2) {
+            BSAMemberGroup::removeFromChairmansGroup((int) $dc->__get('activeRecord')->viceChairman2);
             $this->BSANewsletter->synchronizeNewsletterBySchiedsrichter((int) $dc->__get('activeRecord')->viceChairman2);
         }
     }
@@ -213,16 +292,16 @@ class tl_bsa_club_chairman extends Backend
      *
      * @return mixed
      */
-    private function updateObleuteGroup($varValue, DataContainer $dc, $field)
+    private function updateChairmansGroup($varValue, DataContainer $dc, $field)
     {
         if ($varValue !== $dc->__get('activeRecord')->$field) {
-            if (0 !== $varValue) {
-                BSAMemberGroup::addToChairmansGroup($varValue);
+            if (0 !== (int) $varValue) {
+                BSAMemberGroup::addToChairmansGroup((int) $varValue);
                 $this->BSANewsletter->synchronizeNewsletterBySchiedsrichter((int) $varValue);
             }
 
-            if (0 !== $dc->__get('activeRecord')->$field) {
-                BSAMemberGroup::removeFromChairmansGroup($dc->__get('activeRecord')->$field);
+            if (0 !== (int) $dc->__get('activeRecord')->$field) {
+                BSAMemberGroup::removeFromChairmansGroup((int) $dc->__get('activeRecord')->$field);
                 $this->BSANewsletter->synchronizeNewsletterBySchiedsrichter((int) $dc->__get('activeRecord')->$field);
             }
         }

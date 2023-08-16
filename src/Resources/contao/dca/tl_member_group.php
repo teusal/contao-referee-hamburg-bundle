@@ -18,7 +18,7 @@ use Contao\StringUtil;
 use Teusal\ContaoRefereeHamburgBundle\Library\Addressbook\AddressbookSynchronizer;
 use Teusal\ContaoRefereeHamburgBundle\Library\Member\BSAMemberGroup;
 use Teusal\ContaoRefereeHamburgBundle\Library\Newsletter\BSANewsletter;
-use Teusal\ContaoRefereeHamburgBundle\Model\MemberGroupMemberAssignmentModel;
+use Teusal\ContaoRefereeHamburgBundle\Model\MemberGroupRefereeAssignmentModel;
 use Teusal\ContaoRefereeHamburgBundle\Model\RefereeModel;
 
 /*
@@ -113,7 +113,7 @@ $GLOBALS['TL_DCA']['tl_member_group']['fields']['veranstaltung_include_as_filter
 /*
  * Change config
  */
-$GLOBALS['TL_DCA']['tl_member_group']['config']['ctable'] = ['tl_bsa_member_group_member_assignment', 'tl_bsa_member_group_newsletter_assignment'];
+$GLOBALS['TL_DCA']['tl_member_group']['config']['ctable'] = ['tl_bsa_member_group_referee_assignment', 'tl_bsa_member_group_newsletter_assignment'];
 $GLOBALS['TL_DCA']['tl_member_group']['config']['switchToEdit'] = true;
 $GLOBALS['TL_DCA']['tl_member_group']['config']['notCopyable'] = true;
 $GLOBALS['TL_DCA']['tl_member_group']['config']['enableVersioning'] = false;
@@ -130,7 +130,7 @@ $GLOBALS['TL_DCA']['tl_member_group']['config']['enableVersioning'] = false;
 $GLOBALS['TL_DCA']['tl_member_group']['list']['sorting']['panelLayout'] = 'filter;search,limit';
 ArrayUtil::arrayInsert($GLOBALS['TL_DCA']['tl_member_group']['list']['operations'], 0, [
     'edit_gruppenmitglieder' => [
-        'href' => 'table=tl_bsa_member_group_member_assignment',
+        'href' => 'table=tl_bsa_member_group_referee_assignment',
         'icon' => 'member.gif',
         'button_callback' => [tl_bsa_member_group::class, 'memberIcon'],
     ],
@@ -255,7 +255,7 @@ class tl_bsa_member_group extends tl_member_group
      */
     public function executeDelete(DataContainer $dc, $undoId): void
     {
-        $objMembers = MemberGroupMemberAssignmentModel::findBy('pid', $dc->id);
+        $objMembers = MemberGroupRefereeAssignmentModel::findBy('pid', $dc->id);
 
         if (isset($objMembers)) {
             while ($objMembers->next()) {
@@ -271,7 +271,7 @@ class tl_bsa_member_group extends tl_member_group
      */
     public function executeSubmit(DataContainer $dc): void
     {
-        $objMembers = MemberGroupMemberAssignmentModel::findBy('pid', $dc->id);
+        $objMembers = MemberGroupRefereeAssignmentModel::findBy('pid', $dc->id);
 
         if (isset($objMembers)) {
             while ($objMembers->next()) {

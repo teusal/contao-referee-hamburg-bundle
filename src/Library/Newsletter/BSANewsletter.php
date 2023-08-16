@@ -53,8 +53,6 @@ class BSANewsletter extends System
      */
     public function synchronizeNewsletterBySchiedsrichter($intSR, $idsToRemove = null, $idsToAdd = null): void
     {
-        $intSR = (int) $intSR;
-
         if (!\is_int($intSR) || 0 === $intSR) {
             throw new \Exception('wrong datatype or zero given :'.$intSR);
         }
@@ -265,7 +263,7 @@ class BSANewsletter extends System
      */
     private function getChannelsAndGroups($intSR, $idsToRemove, $idsToAdd)
     {
-        $arrGroupIds = $this->Database->prepare('SELECT pid FROM tl_bsa_member_group_member_assignment WHERE refereeId=?')
+        $arrGroupIds = $this->Database->prepare('SELECT pid FROM tl_bsa_member_group_referee_assignment WHERE refereeId=?')
             ->execute($intSR)
             ->fetchEach('pid')
         ;
@@ -318,7 +316,7 @@ class BSANewsletter extends System
      */
     private function getRefereesOfGroup($groupId): array
     {
-        return $this->Database->prepare('SELECT refereeId FROM tl_bsa_member_group_member_assignment WHERE pid=?')
+        return $this->Database->prepare('SELECT refereeId FROM tl_bsa_member_group_referee_assignment WHERE pid=?')
             ->execute($groupId)
             ->fetchEach('refereeId')
         ;

@@ -25,21 +25,21 @@ use Teusal\ContaoRefereeHamburgBundle\Library\Newsletter\BSANewsletter;
 use Teusal\ContaoRefereeHamburgBundle\Library\SRHistory;
 use Teusal\ContaoRefereeHamburgBundle\Model\RefereeModel;
 
-$GLOBALS['TL_DCA']['tl_bsa_member_group_member_assignment'] = [
+$GLOBALS['TL_DCA']['tl_bsa_member_group_referee_assignment'] = [
     // Config
     'config' => [
         'dataContainer' => DC_Table::class,
         'enableVersioning' => false,
         'ptable' => 'tl_member_group',
         'onload_callback' => [
-            [tl_bsa_member_group_member_assignment::class, 'onLoad'],
+            [tl_bsa_member_group_referee_assignment::class, 'onLoad'],
         ],
         'ondelete_callback' => [
-            [tl_bsa_member_group_member_assignment::class, 'deleteGruppenmitglied'],
+            [tl_bsa_member_group_referee_assignment::class, 'deleteGruppenmitglied'],
             [BSANewsletter::class, 'deleteGruppenmitglied'],
         ],
         'onsubmit_callback' => [
-            [tl_bsa_member_group_member_assignment::class, 'submitGruppenmitglied'],
+            [tl_bsa_member_group_referee_assignment::class, 'submitGruppenmitglied'],
         ],
         'sql' => [
             'keys' => [
@@ -65,7 +65,7 @@ $GLOBALS['TL_DCA']['tl_bsa_member_group_member_assignment'] = [
                 'href' => 'key=halbautomatik',
                 'icon' => 'system/themes/default/images/reload.gif',
                 'attributes' => 'onclick="if (!confirm(\'Sollen die Gruppenmitglieder anhand der Halbautomatik synchronisiert?\')) return false; Backend.getScrollOffset();"',
-                'button_callback' => [tl_bsa_member_group_member_assignment::class, 'halbautomaticButton'],
+                'button_callback' => [tl_bsa_member_group_referee_assignment::class, 'halbautomaticButton'],
             ],
             'sortAsc' => [
                 'href' => 'key=sortAsc',
@@ -121,10 +121,10 @@ $GLOBALS['TL_DCA']['tl_bsa_member_group_member_assignment'] = [
             'eval' => ['mandatory' => true, 'multiple' => false, 'includeBlankOption' => true, 'blankOptionLabel' => 'bitte wählen', 'tl_class' => 'w50 clr'],
             'foreignKey' => 'tl_bsa_referee.nameReverse',
             'relation' => ['type' => 'belongsTo', 'load' => 'eager'],
-            'options_callback' => [tl_bsa_member_group_member_assignment::class, 'getSchiedsrichterNotDeleted'],
+            'options_callback' => [tl_bsa_member_group_referee_assignment::class, 'getSchiedsrichterNotDeleted'],
             'save_callback' => [
-                [tl_bsa_member_group_member_assignment::class, 'validateDuplicate'],
-                [tl_bsa_member_group_member_assignment::class, 'saveSchiedsrichter'],
+                [tl_bsa_member_group_referee_assignment::class, 'validateDuplicate'],
+                [tl_bsa_member_group_referee_assignment::class, 'saveSchiedsrichter'],
                 [BSANewsletter::class, 'saveSchiedsrichterWhileUpdateGruppenmitglied'],
             ],
             'sql' => "int(10) unsigned NOT NULL default '0'",
@@ -133,11 +133,11 @@ $GLOBALS['TL_DCA']['tl_bsa_member_group_member_assignment'] = [
 ];
 
 /**
- * Class tl_bsa_member_group_member_assignment.
+ * Class tl_bsa_member_group_referee_assignment.
  *
  * Provide miscellaneous methods that are used by the data configuration array.
  */
-class tl_bsa_member_group_member_assignment extends Backend
+class tl_bsa_member_group_referee_assignment extends Backend
 {
     private $objMemberGroup;
     private $addressbookSync;
@@ -268,7 +268,7 @@ class tl_bsa_member_group_member_assignment extends Backend
                 throw new Exception('Gelöschte Schiedsrichter dürfen nicht aufgenommen werden.');
             }
 
-            $ids = $this->Database->prepare('SELECT id FROM tl_bsa_member_group_member_assignment WHERE id!=? AND pid=? AND refereeId=?')
+            $ids = $this->Database->prepare('SELECT id FROM tl_bsa_member_group_referee_assignment WHERE id!=? AND pid=? AND refereeId=?')
                 ->execute($dc->id, $dc->__get('activeRecord')->pid, $varValue)
                 ->fetchEach('id')
             ;
@@ -314,14 +314,14 @@ class tl_bsa_member_group_member_assignment extends Backend
      */
     private function executeSorting($dc): void
     {
-        $arrID = $this->Database->prepare('SELECT gm.id FROM tl_bsa_member_group_member_assignment AS gm, tl_bsa_referee AS sr WHERE gm.refereeId=sr.id AND gm.pid=? ORDER BY sr.nameReverse ASC')
+        $arrID = $this->Database->prepare('SELECT gm.id FROM tl_bsa_member_group_referee_assignment AS gm, tl_bsa_referee AS sr WHERE gm.refereeId=sr.id AND gm.pid=? ORDER BY sr.nameReverse ASC')
             ->execute($dc->id)
             ->fetchEach('id')
         ;
 
         foreach ($arrID as $index => $id) {
             $sorting = ($index + 1) * 128;
-            $this->Database->prepare('UPDATE tl_bsa_member_group_member_assignment SET sorting=? WHERE id=?')
+            $this->Database->prepare('UPDATE tl_bsa_member_group_referee_assignment SET sorting=? WHERE id=?')
                 ->execute($sorting, $id)
             ;
         }

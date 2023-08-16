@@ -90,11 +90,11 @@ class AddressbookSynchronizer extends System
         } else {
             $query = 'SELECT DISTINCT tl_member_group.addressbook_token_id ';
             $query .= 'FROM tl_member_group ';
-            $query .= 'JOIN tl_bsa_member_group_member_assignment ON tl_member_group.id=tl_bsa_member_group_member_assignment.pid ';
+            $query .= 'JOIN tl_bsa_member_group_referee_assignment ON tl_member_group.id=tl_bsa_member_group_referee_assignment.pid ';
             $query .= 'WHERE tl_member_group.sync_addressbook=? ';
             $query .= 'AND tl_member_group.addressbook_token_id!=? ';
             $query .= 'AND tl_member_group.id!=? ';
-            $query .= 'AND tl_bsa_member_group_member_assignment.refereeId=?';
+            $query .= 'AND tl_bsa_member_group_referee_assignment.refereeId=?';
 
             $arrGroups = Database::getInstance()->prepare($query)
                 ->execute(true, '', $excludeGroupId, $objReferee->id)
@@ -240,7 +240,7 @@ class AddressbookSynchronizer extends System
      */
     private static function getCategories($objReferee, $excludeGroupId)
     {
-        $query = 'SELECT DISTINCT REPLACE(name, ",", "\,") AS name FROM tl_member_group JOIN tl_bsa_member_group_member_assignment ON tl_member_group.id=tl_bsa_member_group_member_assignment.pid WHERE tl_member_group.id!=? AND tl_bsa_member_group_member_assignment.refereeId=? ORDER BY name';
+        $query = 'SELECT DISTINCT REPLACE(name, ",", "\,") AS name FROM tl_member_group JOIN tl_bsa_member_group_referee_assignment ON tl_member_group.id=tl_bsa_member_group_referee_assignment.pid WHERE tl_member_group.id!=? AND tl_bsa_member_group_referee_assignment.refereeId=? ORDER BY name';
 
         $arrNames = Database::getInstance()->prepare($query)
             ->execute($excludeGroupId, $objReferee->id)

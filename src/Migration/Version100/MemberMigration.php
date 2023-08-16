@@ -18,7 +18,7 @@ use Contao\Idna;
 use Doctrine\DBAL\Connection;
 
 /**
- * Migration. Modify tl_member and tl_bsa_member_group_member_assignment.
+ * Migration. Modify tl_member and tl_bsa_member_group_referee_assignment.
  */
 class MemberMigration extends AbstractMigration
 {
@@ -45,8 +45,8 @@ class MemberMigration extends AbstractMigration
     public function shouldRun(): bool
     {
         return $this->shouldModifyMember()
-            || $this->shouldRenameMemberGroupMemberAssignmentTable()
-            || $this->shouldModifyMemberGroupMemberAssignmentColumns();
+            || $this->shouldRenameMemberGroupRefereeAssignmentTable()
+            || $this->shouldModifyMemberGroupRefereeAssignmentColumns();
     }
 
     public function run(): MigrationResult
@@ -90,16 +90,16 @@ class MemberMigration extends AbstractMigration
             $this->resultMessages[] = 'Data of table tl_member successfully updated.';
         }
 
-        if ($this->shouldRenameMemberGroupMemberAssignmentTable()) {
-            $this->connection->executeStatement('RENAME TABLE tl_bsa_gruppenmitglieder TO tl_bsa_member_group_member_assignment');
+        if ($this->shouldRenameMemberGroupRefereeAssignmentTable()) {
+            $this->connection->executeStatement('RENAME TABLE tl_bsa_gruppenmitglieder TO tl_bsa_member_group_referee_assignment');
             $this->resultMessages[] = 'Table tl_bsa_gruppenmitglieder successfully renamed.';
         }
 
-        if ($this->shouldModifyMemberGroupMemberAssignmentColumns()) {
-            $query = 'ALTER TABLE tl_bsa_member_group_member_assignment ';
+        if ($this->shouldModifyMemberGroupRefereeAssignmentColumns()) {
+            $query = 'ALTER TABLE tl_bsa_member_group_referee_assignment ';
             $query .= 'RENAME COLUMN schiedsrichter TO refereeId ';
             $this->connection->executeStatement($query);
-            $this->resultMessages[] = 'Columns of table tl_bsa_member_group_member_assignment successfully renamed.';
+            $this->resultMessages[] = 'Columns of table tl_bsa_member_group_referee_assignment successfully renamed.';
         }
 
         return $this->createResult(
@@ -121,17 +121,17 @@ class MemberMigration extends AbstractMigration
         return isset($columns['schiedsrichter']);
     }
 
-    private function shouldRenameMemberGroupMemberAssignmentTable(): bool
+    private function shouldRenameMemberGroupRefereeAssignmentTable(): bool
     {
         $schemaManager = $this->connection->createSchemaManager();
 
-        return $schemaManager->tablesExist(['tl_bsa_gruppenmitglieder']) && !$schemaManager->tablesExist(['tl_bsa_member_group_member_assignment']);
+        return $schemaManager->tablesExist(['tl_bsa_gruppenmitglieder']) && !$schemaManager->tablesExist(['tl_bsa_member_group_referee_assignment']);
     }
 
-    private function shouldModifyMemberGroupMemberAssignmentColumns(): bool
+    private function shouldModifyMemberGroupRefereeAssignmentColumns(): bool
     {
         $schemaManager = $this->connection->createSchemaManager();
-        $columns = $schemaManager->listTableColumns('tl_bsa_member_group_member_assignment');
+        $columns = $schemaManager->listTableColumns('tl_bsa_member_group_referee_assignment');
 
         return isset($columns['schiedsrichter']);
     }

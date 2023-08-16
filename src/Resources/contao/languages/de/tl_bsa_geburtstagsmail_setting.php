@@ -10,6 +10,9 @@ declare(strict_types=1);
  * @license LGPL-3.0-or-later
  */
 
+/*
+ * Legends
+ */
 $GLOBALS['TL_LANG']['tl_bsa_geburtstagsmail_setting']['bsa_geburtstagsmail_legend'] = 'Geburtstagsmail';
 $GLOBALS['TL_LANG']['tl_bsa_geburtstagsmail_setting']['bsa_geburtstag_info_legend'] = 'Infomail';
 
