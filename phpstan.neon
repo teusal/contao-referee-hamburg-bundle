@@ -5,6 +5,8 @@ includes:
     - tools/phpstan/vendor/phpstan/phpstan-symfony/rules.neon
 
 parameters:
+    phpVersion: 70400
+
     level: 6
 
     paths:

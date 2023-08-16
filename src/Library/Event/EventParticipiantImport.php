@@ -65,6 +65,7 @@ class EventParticipiantImport extends AbstractEventParticipiantHandler
 
                 $arrRows = [];
 
+                /** @phpstan-ignore-next-line */
                 while (($arrRow = @fgetcsv($resFile, null, ';')) !== false) {
                     $arrRows[] = $isRulesTest ? $arrRow : array_map('utf8_encode', $arrRow);
                 }
