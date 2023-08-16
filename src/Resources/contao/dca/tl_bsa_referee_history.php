@@ -124,15 +124,15 @@ class tl_bsa_referee_history extends Backend
         ;
 
         foreach ($rows as $row) {
-            $objSR = RefereeModel::findByPk($row['refereeId']);
+            $objReferee = RefereeModel::findByPk($row['refereeId']);
 
-            if (isset($objSR)) {
-                $srName = $objSR->__get('firstname').' '.$objSR->__get('lastname');
+            if (isset($objReferee)) {
+                $srName = $objReferee->firstname.' '.$objReferee->lastname;
             } else {
                 $srName = 'unbekannt (ID='.$row['refereeId'].')';
             }
 
-            if (!$objSR->clubId) {
+            if (!$objReferee->clubId) {
                 $arrSearch = ['Der Schiedsrichter', 'des Schiedsrichters'];
                 $arrReplace = ['Die Person', 'der Person'];
                 $row['text'] = str_replace($arrSearch, $arrReplace, $row['text']);

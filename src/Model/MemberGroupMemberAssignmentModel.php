@@ -14,13 +14,45 @@ namespace Teusal\ContaoRefereeHamburgBundle\Model;
 
 use Contao\Database;
 use Contao\Model;
+use Contao\Model\Collection;
 
 /**
  * Reads and writes member to member group assignments.
  *
- * @property int $refereeId
+ * @property string|int $id
+ * @property string|int $pid
+ * @property string|int $sorting
+ * @property string|int $tstamp
+ * @property string|int $refereeId
+ * @property string     $function
+ *
+ * @method static MemberGroupMemberAssignmentModel|null findById($id, array $opt=array())
+ * @method static MemberGroupMemberAssignmentModel|null findByPk($id, array $opt=array())
+ * @method static MemberGroupMemberAssignmentModel|null findByIdOrAlias($val, array $opt=array())
+ * @method static MemberGroupMemberAssignmentModel|null findOneBy($col, $val, array $opt=array())
+ * @method static MemberGroupMemberAssignmentModel|null findOneByPid($val, array $opt=array())
+ * @method static MemberGroupMemberAssignmentModel|null findOneBySorting($val, array $opt=array())
+ * @method static MemberGroupMemberAssignmentModel|null findOneByTstamp($val, array $opt=array())
+ * @method static MemberGroupMemberAssignmentModel|null findOneByRefereeId($col, $val, array $opt=array())
+ * @method static MemberGroupMemberAssignmentModel|null findOneByFunction($col, $val, array $opt=array())
+ *                                                                                                                                                     -
+ * @method static Collection|array<MemberGroupMemberAssignmentModel>|MemberGroupMemberAssignmentModel|null findByPid($val, array $opt=array())
+ * @method static Collection|array<MemberGroupMemberAssignmentModel>|MemberGroupMemberAssignmentModel|null findBySorting($val, array $opt=array())
+ * @method static Collection|array<MemberGroupMemberAssignmentModel>|MemberGroupMemberAssignmentModel|null findByTstamp($val, array $opt=array())
+ * @method static Collection|array<MemberGroupMemberAssignmentModel>|MemberGroupMemberAssignmentModel|null findByRefereeId($val, array $opt=array())
+ * @method static Collection|array<MemberGroupMemberAssignmentModel>|MemberGroupMemberAssignmentModel|null findByFunction($val, array $opt=array())
+ * @method static Collection|array<MemberGroupMemberAssignmentModel>|MemberGroupMemberAssignmentModel|null findMultipleByIds($val, array $opt=array())
+ * @method static Collection|array<MemberGroupMemberAssignmentModel>|MemberGroupMemberAssignmentModel|null findBy($col, $val, array $opt=array())
+ * @method static Collection|array<MemberGroupMemberAssignmentModel>|MemberGroupMemberAssignmentModel|null findAll(array $opt=array())
+ *                                                                                                                                                     -
+ * @method static integer countById($id, array $opt=array())
+ * @method static integer countByPid($val, array $opt=array())
+ * @method static integer countBySorting($val, array $opt=array())
+ * @method static integer countByTstamp($val, array $opt=array())
+ * @method static integer countByRefereeId($val, array $opt=array())
+ * @method static integer countByFunction($val, array $opt=array())
  */
-class MemberGroupAssignmentMemberModel extends Model
+class MemberGroupMemberAssignmentModel extends Model
 {
     /**
      * Table name.
@@ -45,3 +77,5 @@ class MemberGroupAssignmentMemberModel extends Model
         return $counted > 0;
     }
 }
+
+class_alias(MemberGroupMemberAssignmentModel::class, 'MemberGroupMemberAssignmentModel');

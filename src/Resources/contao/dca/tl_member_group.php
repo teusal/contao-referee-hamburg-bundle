@@ -18,7 +18,7 @@ use Contao\StringUtil;
 use Teusal\ContaoRefereeHamburgBundle\Library\Addressbook\AddressbookSynchronizer;
 use Teusal\ContaoRefereeHamburgBundle\Library\Member\BSAMemberGroup;
 use Teusal\ContaoRefereeHamburgBundle\Library\Newsletter\BSANewsletter;
-use Teusal\ContaoRefereeHamburgBundle\Model\MemberGroupAssignmentMemberModel;
+use Teusal\ContaoRefereeHamburgBundle\Model\MemberGroupMemberAssignmentModel;
 use Teusal\ContaoRefereeHamburgBundle\Model\RefereeModel;
 
 /*
@@ -206,11 +206,11 @@ class tl_bsa_member_group extends tl_member_group
      */
     public function memberIcon($row, $href, $label, $title, $icon, $attributes, $table, $rootRecordIds, $childRecordIds, $circularReference, $previous, $next, DataContainer $dc): string
     {
-        if (BSAMemberGroup::isVollautomatic($row['automatik'])) {
+        if (BSAMemberGroup::isFullyAutomated($row['automatik'])) {
             return Image::getHtml(preg_replace('/\.gif$/i', '_.gif', $icon), 'Gruppenmitglieder', 'title="Diese Gruppe wird automatisch verwaltet. Automatik: '.$GLOBALS['TL_LANG']['tl_member_group']['options'][$row['automatik']][0].'"').' ';
         }
 
-        if (BSAMemberGroup::isHalbautomatic($row['automatik'])) {
+        if (BSAMemberGroup::isPartlyAutomated($row['automatik'])) {
             $icon = 'user.gif';
         }
 
@@ -233,12 +233,12 @@ class tl_bsa_member_group extends tl_member_group
             BSAMemberGroup::clearCachedGroups($varValue);
             BSAMemberGroup::clearCachedGroups($dc->__get('activeRecord')->automatik);
 
-            if (BSAMemberGroup::isVollautomatic($varValue) || BSAMemberGroup::isVollautomatic($dc->__get('activeRecord')->automatik)) {
-                $objSR = RefereeModel::findAll();
+            if (BSAMemberGroup::isFullyAutomated($varValue) || BSAMemberGroup::isFullyAutomated($dc->__get('activeRecord')->automatik)) {
+                $objReferee = RefereeModel::findAll();
 
-                if (isset($objSR)) {
-                    while ($objSR->next()) {
-                        BSAMemberGroup::handleAutomaticGroups($objSR->id);
+                if (isset($objReferee)) {
+                    while ($objReferee->next()) {
+                        BSAMemberGroup::handleAutomaticGroups($objReferee->id);
                     }
                 }
             }
@@ -255,11 +255,11 @@ class tl_bsa_member_group extends tl_member_group
      */
     public function executeDelete(DataContainer $dc, $undoId): void
     {
-        $objMembers = MemberGroupAssignmentMemberModel::findBy('pid', $dc->id);
+        $objMembers = MemberGroupMemberAssignmentModel::findBy('pid', $dc->id);
 
         if (isset($objMembers)) {
             while ($objMembers->next()) {
-                AddressbookSynchronizer::executeSubmitSchiedsrichter($objMembers->refereeId, $dc->id);
+                AddressbookSynchronizer::executeSubmitReferee($objMembers->refereeId, $dc->id);
             }
         }
     }
@@ -271,11 +271,11 @@ class tl_bsa_member_group extends tl_member_group
      */
     public function executeSubmit(DataContainer $dc): void
     {
-        $objMembers = MemberGroupAssignmentMemberModel::findBy('pid', $dc->id);
+        $objMembers = MemberGroupMemberAssignmentModel::findBy('pid', $dc->id);
 
         if (isset($objMembers)) {
             while ($objMembers->next()) {
-                AddressbookSynchronizer::executeSubmitSchiedsrichter($objMembers->refereeId);
+                AddressbookSynchronizer::executeSubmitReferee($objMembers->refereeId);
             }
         }
     }

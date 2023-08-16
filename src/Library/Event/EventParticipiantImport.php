@@ -65,6 +65,7 @@ class EventParticipiantImport extends AbstractEventParticipiantHandler
 
                 $arrRows = [];
 
+                /** @phpstan-ignore-next-line */
                 while (($arrRow = @fgetcsv($resFile, null, ';')) !== false) {
                     $arrRows[] = $isRulesTest ? $arrRow : array_map('utf8_encode', $arrRow);
                 }
@@ -231,7 +232,7 @@ class EventParticipiantImport extends AbstractEventParticipiantHandler
 <form action="'.StringUtil::ampersand(Environment::get('request')).'" id="anwesenheit_import_form" class="tl_form tl_edit_form" method="post" enctype="multipart/form-data">
     <div class="tl_formbody_edit">
         <input type="hidden" name="FORM_SUBMIT" value="participiant_import" />
-        <input type="hidden" name="REQUEST_TOKEN" value="'.REQUEST_TOKEN.'">
+        <input type="hidden" name="REQUEST_TOKEN" value="'.System::getContainer()->get('contao.csrf.token_manager')->getDefaultTokenValue().'">
 
         <fieldset class="tl_tbox nolegend">
             <div class="widget">

@@ -16,8 +16,10 @@ use Contao\Environment;
 use Contao\Input;
 use Contao\Message;
 use Contao\StringUtil;
+use Contao\System;
 use Teusal\ContaoRefereeHamburgBundle\Model\ClubChairmanModel;
 use Teusal\ContaoRefereeHamburgBundle\Model\ClubModel;
+use Teusal\ContaoRefereeHamburgBundle\Model\EventParticipiantModel;
 
 /**
  * Class EventParticipiantRegistration.
@@ -83,12 +85,10 @@ class EventParticipiantRegistration extends AbstractEventParticipiantHandler
                 Message::addInfo('Es wurden keine neuen Teilnehmer für den Verein '.$objClub->nameShort.' eingetragen.');
             } else {
                 foreach ($arrToSave as $toSave) {
-                    $exist = $this->Database->prepare('SELECT * FROM tl_bsa_event_participiant WHERE pid=? AND refereeId=?')
-                        ->execute($this->objEvent->id, $toSave)
-                    ;
+                    $existing = EventParticipiantModel::findOneBy(['pid=?', 'refereeId=?'], [$this->objEvent->id, $toSave]);
 
-                    if ($exist->next()) {
-                        Message::addError('Ein Eintrag für "'.$exist->refereeNameReverse.'" existiert bereits. Es wurde daher kein neuer Eintrag angelegt.');
+                    if (isset($existing)) {
+                        Message::addError('Ein Eintrag für "'.$existing->refereeNameReverse.'" existiert bereits. Es wurde daher kein neuer Eintrag angelegt.');
                     } else {
                         $this->Database->prepare('INSERT INTO tl_bsa_event_participiant (pid, tstamp, refereeId, refereeNameReverse, type) SELECT ?, ?, id, nameReverse, ? FROM tl_bsa_referee WHERE id = ?')
                             ->execute($this->objEvent->id, time(), $type, $toSave)
@@ -108,7 +108,7 @@ class EventParticipiantRegistration extends AbstractEventParticipiantHandler
 <form action="'.StringUtil::ampersand(Environment::get('request')).'" id="participiant_registration_form" class="tl_form tl_edit_form" method="post">
     <div class="tl_formbody_edit">
         <input type="hidden" name="FORM_SUBMIT" id="FORM_SUBMIT" value="participiant_registration" />
-        <input type="hidden" name="REQUEST_TOKEN" value="'.REQUEST_TOKEN.'">
+        <input type="hidden" name="REQUEST_TOKEN" value="'.System::getContainer()->get('contao.csrf.token_manager')->getDefaultTokenValue().'">
         <input type="hidden" name="SUBMIT_MODE" id="SUBMIT_MODE" value="next" />
 
 ';

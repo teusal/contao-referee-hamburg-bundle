@@ -16,6 +16,7 @@ use Contao\Environment;
 use Contao\Input;
 use Contao\Message;
 use Contao\StringUtil;
+use Contao\System;
 
 /**
  * Class EventMatchOfficialsRegistration.
@@ -77,7 +78,7 @@ class EventMatchOfficialsRegistration extends AbstractEventParticipiantHandler
 <form action="'.StringUtil::ampersand(Environment::get('request')).'" id="match_officials_registration_form" class="tl_form tl_edit_form" method="post">
     <div class="tl_formbody_edit">
         <input type="hidden" name="FORM_SUBMIT" value="match_officials_registration" />
-        <input type="hidden" name="REQUEST_TOKEN" value="'.REQUEST_TOKEN.'">
+        <input type="hidden" name="REQUEST_TOKEN" value="'.System::getContainer()->get('contao.csrf.token_manager')->getDefaultTokenValue().'">
 
         <fieldset class="tl_tbox nolegend">
 ';

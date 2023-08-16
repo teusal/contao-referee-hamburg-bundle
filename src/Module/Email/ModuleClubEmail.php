@@ -19,6 +19,11 @@ use Teusal\ContaoRefereeHamburgBundle\Model\ClubChairmanModel;
  */
 class ModuleClubEmail extends AbstractModuleEmail
 {
+    /**
+     * returns all possible carbon copy options.
+     *
+     * @return array<string, array<string, string>> the list of selectable options
+     */
     protected function getCarbonCopyOptions(): array
     {
         $arrOptions = parent::getCarbonCopyOptions();
@@ -27,6 +32,11 @@ class ModuleClubEmail extends AbstractModuleEmail
         return $arrOptions;
     }
 
+    /**
+     * returns all possible recipient options.
+     *
+     * @return array<int, array<string, string>> the list of selectable options
+     */
     protected function getRecipientOptions(): array
     {
         $arrRecipientOptions = [];
@@ -45,6 +55,13 @@ class ModuleClubEmail extends AbstractModuleEmail
         return $arrRecipientOptions;
     }
 
+    /**
+     * returns the recipient data for the specified club.
+     *
+     * @param mixed $clubId The id of the club
+     *
+     * @return array<string, mixed> the list of recipient data
+     */
     protected function getRecipientData($clubId): array
     {
         return [

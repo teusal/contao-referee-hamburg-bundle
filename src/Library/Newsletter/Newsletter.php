@@ -33,14 +33,9 @@ use Teusal\ContaoRefereeHamburgBundle\Model\RefereeModel;
 class Newsletter extends \Contao\Newsletter
 {
     /**
-     * @var array
+     * @var array<string>
      */
     private $arrAttachments;
-
-    /**
-     * @var array
-     */
-    private $arrAlreadySent = [];
 
     /**
      * Constructor.
@@ -49,7 +44,7 @@ class Newsletter extends \Contao\Newsletter
     {
         parent::__construct();
 
-        if (TL_MODE === 'BE') {
+        if (\defined('TL_MODE') && TL_MODE === 'BE') {
             $this->import(BackendUser::class, 'User');
         }
     }
@@ -82,7 +77,7 @@ class Newsletter extends \Contao\Newsletter
             $this->redirect($this->getReferer(true));
         }
 
-        if ($availableTransports->isUserTransport($objNewsletter->mailerTransport) && (TL_MODE !== 'BE' || null === $this->User || $this->User->email !== $objNewsletter->mailerTransport)) {
+        if ($availableTransports->isUserTransport($objNewsletter->mailerTransport) && (!\defined('TL_MODE') || TL_MODE !== 'BE' || null === $this->User || $this->User->email !== $objNewsletter->mailerTransport)) {
             Message::addError('Sie sind nicht berechtigt, den Mailer-Transport '.$this->User->email.' "'.$objNewsletter->mailerTransport.'" zu verwenden.<br />Bitte ändern Sie gegebenenfalls den Mailer-Transport in der E-Mail, um diese selbst zu versenden.');
             $this->redirect($this->getReferer(true));
         }
@@ -121,7 +116,8 @@ class Newsletter extends \Contao\Newsletter
     /**
      * Generate the e-mail object and return it.
      *
-     * @param array $arrAttachments
+     * @param Result        $objNewsletter  The newsletter object
+     * @param array<string> $arrAttachments The attachments
      *
      * @return Email
      */
@@ -135,21 +131,17 @@ class Newsletter extends \Contao\Newsletter
     /**
      * Compile the newsletter and send it.
      *
-     * @param Email  $objEmail      the email object
-     * @param Result $objNewsletter the newsletter database result
-     * @param array  $arrRecipient
-     * @param string $text
-     * @param string $html
-     * @param string $css
+     * @param Email                 $objEmail      the email object
+     * @param Result                $objNewsletter the newsletter database result
+     * @param array<string, string> $arrRecipient
+     * @param string                $text
+     * @param string                $html
+     * @param string                $css
      *
      * @return bool
      */
     protected function sendNewsletter(Email $objEmail, Result $objNewsletter, $arrRecipient, $text, $html, $css = null)
     {
-        if (!isset($objNewsletter)) {
-            throw new \Exception('missing newsletter object while sending.');
-        }
-
         $objNewsletterChannel = NewsletterChannelModel::findById($objNewsletter->__get('pid'));
 
         if (!isset($objNewsletterChannel)) {
@@ -162,7 +154,7 @@ class Newsletter extends \Contao\Newsletter
         }
 
         // setting testdata for any testmail
-        if (TL_MODE === 'BE' && isset($_GET['preview'])) {
+        if (\defined('TL_MODE') && TL_MODE === 'BE' && isset($_GET['preview'])) {
             $email = $arrRecipient['email'];
             $arrRecipient = AbstractEmail::getRefereeForTestmail();
             $arrRecipient['email'] = $email;
@@ -186,6 +178,7 @@ class Newsletter extends \Contao\Newsletter
                 $arrRecipient['$salutationPersonnel'] = 'Liebe';
                 break;
 
+            case 'misc':
             default:
                 $arrRecipient['$salutationPersonnel'] = 'Liebe/Lieber';
                 break;
@@ -195,16 +188,15 @@ class Newsletter extends \Contao\Newsletter
         $arrRecipient['salutation'] = $arrRecipient['salutationPersonal'];
         $arrRecipient['anrede'] = $arrRecipient['salutationPersonal'];
         $arrRecipient['anrede_persoenlich'] = $arrRecipient['salutationPersonal'];
-        $arrRecipient['firstname'] = $arrRecipient['firstname'] ?: $arrRecipient['firstname'];
-        $arrRecipient['lastname'] = $arrRecipient['lastname'] ?: $arrRecipient['lastname'];
-        $arrRecipient['street'] = $arrRecipient['street'] ?: $arrRecipient['street'];
-        $arrRecipient['straße'] = $arrRecipient['street'] ?: $arrRecipient['straße'];
-        $arrRecipient['postal'] = $arrRecipient['postal'] ?: $arrRecipient['postal'];
-        $arrRecipient['city'] = $arrRecipient['city'] ?: $arrRecipient['city'];
-        $arrRecipient['telefon'] = $arrRecipient['phone'] ?: $arrRecipient['telefon'];
-        $arrRecipient['phone1'] = $arrRecipient['phone'] ?: $arrRecipient['phone1'];
-        $arrRecipient['handy'] = $arrRecipient['mobile'] ?: $arrRecipient['handy'];
-        $arrRecipient['mobile'] = $arrRecipient['mobile'] ?: $arrRecipient['mobile'];
+        $arrRecipient['vorname'] = $arrRecipient['firstname'];
+        $arrRecipient['nachname'] = $arrRecipient['lastname'];
+        $arrRecipient['straße'] = $arrRecipient['street'];
+        $arrRecipient['strasse'] = $arrRecipient['street'];
+        $arrRecipient['plz'] = $arrRecipient['postal'];
+        $arrRecipient['ort'] = $arrRecipient['city'];
+        $arrRecipient['telefon'] = $arrRecipient['phone'];
+        $arrRecipient['telefon_mobil'] = $arrRecipient['mobile'];
+        $arrRecipient['handy'] = $arrRecipient['mobile'];
 
         // Add optional reply to
         if (\strlen($objNewsletter->__get('replyToAddress'))) {
@@ -232,8 +224,6 @@ class Newsletter extends \Contao\Newsletter
         // sending the email
         $return = parent::sendNewsletter($objEmail, $objNewsletter, $arrRecipient, $text, $html, $css);
 
-        $this->arrAlreadySent[] = $arrRecipient['id'];
-
         // writing the referee history if the option is activated
         if ($objNewsletterChannel->__get('writeRefereeHistory') && $arrRecipient['refereeId'] && (!\is_array($_SESSION['REJECTED_RECIPIENTS']) || !\in_array($arrRecipient['email'], $_SESSION['REJECTED_RECIPIENTS'], true))) {
             SRHistory::insert($arrRecipient['refereeId'], $objNewsletter->__get('pid'), ['E-Mail', 'INFO'], 'Der Schiedsrichters %s wurde via E-Mail-Verteiler "%s" angeschrieben. Betreff: '.$objEmail->__get('subject'), __METHOD__);
@@ -245,10 +235,10 @@ class Newsletter extends \Contao\Newsletter
     /**
      * returns an array with a list of cc email addresses of chairman as well as vice chairman.
      *
-     * @param Result $objNewsletter the newsletter database result
-     * @param array  $arrRecipient  the recipient of the email
+     * @param Result                $objNewsletter the newsletter database result
+     * @param array<string, string> $arrRecipient  the recipient of the email
      *
-     * @return array|null list of cc email addresses of chairman as well as vice chairman or NULL
+     * @return array<string>|null list of cc email addresses of chairman as well as vice chairman or NULL
      */
     private function getCc(Result $objNewsletter, $arrRecipient)
     {
@@ -264,14 +254,14 @@ class Newsletter extends \Contao\Newsletter
             return null;
         }
 
-        $objSR = RefereeModel::findByPk($arrRecipient['refereeId']);
+        $objReferee = RefereeModel::findByPk($arrRecipient['refereeId']);
 
-        if (!isset($objSR)) {
+        if (!isset($objReferee)) {
             return null;
         }
 
         return $this->Database->prepare('SELECT tl_bsa_referee.email FROM tl_bsa_referee JOIN tl_bsa_club_chairman ON (tl_bsa_referee.id = tl_bsa_club_chairman.chairman OR tl_bsa_referee.id = tl_bsa_club_chairman.viceChairman1 OR tl_bsa_referee.id = tl_bsa_club_chairman.viceChairman2) WHERE tl_bsa_club_chairman.clubId = ? AND tl_bsa_referee.email <> ? AND tl_bsa_referee.email <> ?')
-            ->execute($objSR->__get('clubId'), $objSR->__get('email'), '')
+            ->execute($objReferee->clubId, $objReferee->email, '')
             ->fetchEach('email')
         ;
     }
@@ -281,8 +271,6 @@ class Newsletter extends \Contao\Newsletter
      *
      * @param NewsletterChannelModel $objNewsletterChannel the channel object
      * @param Result                 $objNewsletter        the newsletter database result
-     * @param array                  $arrRecipient
-     * @param string                 $text
      * @param string                 $html
      * @param string|null            $css
      */
@@ -292,16 +280,16 @@ class Newsletter extends \Contao\Newsletter
             return;
         }
 
-        if (TL_MODE === 'BE') {
+        if (\defined('TL_MODE') && TL_MODE === 'BE') {
             $this->Import(BackendUser::class, 'User');
             $strSentBy = ' vom Backend-User <b>'.$this->User->name.'</b>';
             $strSentByTxt = ' vom Backend-User "'.$this->User->name.'"';
-        } elseif (TL_MODE === 'FE') {
+        } elseif (\defined('TL_MODE') && TL_MODE === 'FE') {
             $this->import(FrontendUser::class, 'User');
             $strSentBy = ' vom Frontend-User <b>'.$this->User->firstname.' '.$this->User->lastname.'</b>';
             $strSentByTxt = ' vom Frontend-User "'.$this->User->firstname.' '.$this->User->lastname.'"';
         } else {
-            throw new \Exception('Unknown source of usage. TL_MODE: '.TL_MODE);
+            throw new \Exception('Unknown source of usage. TL_MODE: '.(\defined('TL_MODE') ? TL_MODE : 'unknown'));
         }
 
         $title = $objNewsletterChannel->__get('title');
@@ -316,11 +304,14 @@ class Newsletter extends \Contao\Newsletter
             $arrInfoRecipient = [
                 'email' => $infomailRecipient,
                 'firstname' => 'VORNAME',
-                'firstname' => 'VORNAME',
                 'lastname' => 'NACHNAME',
-                'lastname' => 'NACHNAME',
-                'salutationPersonal' => 'LIEBE/LIEBER',
-                'anrede_persoenlich' => 'LIEBE/LIEBER',
+                'dateOfBirth' => '946677600',
+                'gender' => 'misc',
+                'street' => 'Musterstraße 42',
+                'postal' => '42042',
+                'city' => 'Musterstadt',
+                'phone' => '040 / 1234567',
+                'mobile' => '0171 / 1234567',
             ];
 
             if ('dev' === System::getContainer()->getParameter('kernel.environment')) {
@@ -329,7 +320,7 @@ class Newsletter extends \Contao\Newsletter
 
             parent::sendNewsletter($objInfomail, $objNewsletter, $arrInfoRecipient, $textInfo, $htmlInfo, $css);
 
-            if (TL_MODE === 'BE') {
+            if (\defined('TL_MODE') && TL_MODE === 'BE') {
                 echo 'Sending newsletter-Info to <strong>'.$infomailRecipient.'</strong><br>';
             }
         }
@@ -337,7 +328,7 @@ class Newsletter extends \Contao\Newsletter
         $this->Database->prepare('UPDATE tl_newsletter SET infomailSent=? WHERE id=?')->execute('1', $objNewsletter->__get('id'));
         $objNewsletter->__set('infomailSent', '1');
 
-        if (TL_MODE === 'BE') {
+        if (\defined('TL_MODE') && TL_MODE === 'BE') {
             Message::addConfirmation('Info-Mail wurde an '.$objNewsletter->__get('info_to').' gesendet.');
         }
     }

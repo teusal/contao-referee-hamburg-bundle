@@ -47,7 +47,7 @@ $GLOBALS['TL_DCA']['tl_bsa_website_data_release'] = [
             'panelLayout' => 'filter;search,limit',
         ],
         'label' => [
-            'fields' => ['formular_erhalten_am', 'nameReverse'],
+            'fields' => ['dateOfFormReceived', 'nameReverse'],
             'format' => '<span style="color:#b3b3b3;padding-right:3px">[%s]</span> %s',
         ],
         'global_operations' => [
@@ -73,7 +73,7 @@ $GLOBALS['TL_DCA']['tl_bsa_website_data_release'] = [
     // Palettes
     'palettes' => [
         '__selector__' => [],
-        'default' => 'refereeId,formular_erhalten_am;zeige_strasse,zeige_plz,zeige_ort,zeige_geburtsdatum,zeige_telefon1,zeige_telefon2,zeige_telefon_mobil,zeige_fax,zeige_foto,link_email',
+        'default' => 'refereeId,dateOfFormReceived;showStreet,showPostal,showCity,showDateOfBirth,showPhone1,showPhone2,showMobile,showFax,showPhoto,showEmail',
     ],
 
     // Subpalettes
@@ -103,13 +103,13 @@ $GLOBALS['TL_DCA']['tl_bsa_website_data_release'] = [
             'eval' => ['doNotShow' => true],
             'sql' => "varchar(103) NOT NULL default ''",
         ],
-        'formular_erhalten_am' => [
+        'dateOfFormReceived' => [
             'inputType' => 'text',
             'flag' => DataContainer::SORT_MONTH_DESC,
             'eval' => ['mandatory' => true, 'rgxp' => 'date', 'datepicker' => true, 'tl_class' => 'clr w50 wizard'],
-            'sql' => "varchar(11) NOT NULL default ''",
+            'sql' => "varchar(10) NOT NULL default ''",
         ],
-        'zeige_geburtsdatum' => [
+        'showDateOfBirth' => [
             'inputType' => 'checkbox',
             'filter' => true,
             'save_callback' => [
@@ -117,7 +117,7 @@ $GLOBALS['TL_DCA']['tl_bsa_website_data_release'] = [
             ],
             'sql' => "char(1) NOT NULL default ''",
         ],
-        'zeige_strasse' => [
+        'showStreet' => [
             'inputType' => 'checkbox',
             'filter' => true,
             'save_callback' => [
@@ -125,7 +125,7 @@ $GLOBALS['TL_DCA']['tl_bsa_website_data_release'] = [
             ],
             'sql' => "char(1) NOT NULL default ''",
         ],
-        'zeige_plz' => [
+        'showPostal' => [
             'inputType' => 'checkbox',
             'filter' => true,
             'save_callback' => [
@@ -133,7 +133,7 @@ $GLOBALS['TL_DCA']['tl_bsa_website_data_release'] = [
             ],
             'sql' => "char(1) NOT NULL default ''",
         ],
-        'zeige_ort' => [
+        'showCity' => [
             'inputType' => 'checkbox',
             'filter' => true,
             'save_callback' => [
@@ -141,7 +141,7 @@ $GLOBALS['TL_DCA']['tl_bsa_website_data_release'] = [
             ],
             'sql' => "char(1) NOT NULL default ''",
         ],
-        'zeige_telefon1' => [
+        'showPhone1' => [
             'inputType' => 'checkbox',
             'filter' => true,
             'save_callback' => [
@@ -149,7 +149,7 @@ $GLOBALS['TL_DCA']['tl_bsa_website_data_release'] = [
             ],
             'sql' => "char(1) NOT NULL default ''",
         ],
-        'zeige_telefon2' => [
+        'showPhone2' => [
             'inputType' => 'checkbox',
             'filter' => true,
             'save_callback' => [
@@ -157,7 +157,7 @@ $GLOBALS['TL_DCA']['tl_bsa_website_data_release'] = [
             ],
             'sql' => "char(1) NOT NULL default ''",
         ],
-        'zeige_telefon_mobil' => [
+        'showMobile' => [
             'inputType' => 'checkbox',
             'filter' => true,
             'save_callback' => [
@@ -165,7 +165,7 @@ $GLOBALS['TL_DCA']['tl_bsa_website_data_release'] = [
             ],
             'sql' => "char(1) NOT NULL default ''",
         ],
-        'zeige_fax' => [
+        'showFax' => [
             'inputType' => 'checkbox',
             'filter' => true,
             'save_callback' => [
@@ -173,7 +173,7 @@ $GLOBALS['TL_DCA']['tl_bsa_website_data_release'] = [
             ],
             'sql' => "char(1) NOT NULL default ''",
         ],
-        'link_email' => [
+        'showEmail' => [
             'inputType' => 'checkbox',
             'filter' => true,
             'save_callback' => [
@@ -181,7 +181,7 @@ $GLOBALS['TL_DCA']['tl_bsa_website_data_release'] = [
             ],
             'sql' => "char(1) NOT NULL default ''",
         ],
-        'zeige_foto' => [
+        'showPhoto' => [
             'inputType' => 'checkbox',
             'filter' => true,
             'save_callback' => [
@@ -260,8 +260,8 @@ class tl_bsa_website_data_release extends Backend
      */
     public function switchDateOfBirth($varValue, DataContainer $dc)
     {
-        if ($dc->__get('activeRecord')->zeige_geburtsdatum !== $varValue) {
-            $this->insertRefereeHistory($dc->__get('activeRecord')->refereeId, 'zeige_geburtsdatum', $varValue);
+        if ($dc->__get('activeRecord')->showDateOfBirth !== $varValue) {
+            $this->insertRefereeHistory($dc->__get('activeRecord')->refereeId, 'showDateOfBirth', $varValue);
         }
 
         return $varValue;
@@ -277,8 +277,8 @@ class tl_bsa_website_data_release extends Backend
      */
     public function switchStreet($varValue, DataContainer $dc)
     {
-        if ($dc->__get('activeRecord')->zeige_strasse !== $varValue) {
-            $this->insertRefereeHistory($dc->__get('activeRecord')->refereeId, 'zeige_strasse', $varValue);
+        if ($dc->__get('activeRecord')->showStreet !== $varValue) {
+            $this->insertRefereeHistory($dc->__get('activeRecord')->refereeId, 'showStreet', $varValue);
         }
 
         return $varValue;
@@ -294,8 +294,8 @@ class tl_bsa_website_data_release extends Backend
      */
     public function switchZipcode($varValue, DataContainer $dc)
     {
-        if ($dc->__get('activeRecord')->zeige_plz !== $varValue) {
-            $this->insertRefereeHistory($dc->__get('activeRecord')->refereeId, 'zeige_plz', $varValue);
+        if ($dc->__get('activeRecord')->showPostal !== $varValue) {
+            $this->insertRefereeHistory($dc->__get('activeRecord')->refereeId, 'showPostal', $varValue);
         }
 
         return $varValue;
@@ -311,8 +311,8 @@ class tl_bsa_website_data_release extends Backend
      */
     public function switchCity($varValue, DataContainer $dc)
     {
-        if ($dc->__get('activeRecord')->zeige_ort !== $varValue) {
-            $this->insertRefereeHistory($dc->__get('activeRecord')->refereeId, 'zeige_ort', $varValue);
+        if ($dc->__get('activeRecord')->showCity !== $varValue) {
+            $this->insertRefereeHistory($dc->__get('activeRecord')->refereeId, 'showCity', $varValue);
         }
 
         return $varValue;
@@ -328,8 +328,8 @@ class tl_bsa_website_data_release extends Backend
      */
     public function switchPhone1($varValue, DataContainer $dc)
     {
-        if ($dc->__get('activeRecord')->zeige_telefon1 !== $varValue) {
-            $this->insertRefereeHistory($dc->__get('activeRecord')->refereeId, 'zeige_telefon1', $varValue);
+        if ($dc->__get('activeRecord')->showPhone1 !== $varValue) {
+            $this->insertRefereeHistory($dc->__get('activeRecord')->refereeId, 'showPhone1', $varValue);
         }
 
         return $varValue;
@@ -345,8 +345,8 @@ class tl_bsa_website_data_release extends Backend
      */
     public function switchPhone2($varValue, DataContainer $dc)
     {
-        if ($dc->__get('activeRecord')->zeige_telefon2 !== $varValue) {
-            $this->insertRefereeHistory($dc->__get('activeRecord')->refereeId, 'zeige_telefon2', $varValue);
+        if ($dc->__get('activeRecord')->showPhone2 !== $varValue) {
+            $this->insertRefereeHistory($dc->__get('activeRecord')->refereeId, 'showPhone2', $varValue);
         }
 
         return $varValue;
@@ -362,8 +362,8 @@ class tl_bsa_website_data_release extends Backend
      */
     public function switchPhoneMobile($varValue, DataContainer $dc)
     {
-        if ($dc->__get('activeRecord')->zeige_telefon_mobil !== $varValue) {
-            $this->insertRefereeHistory($dc->__get('activeRecord')->refereeId, 'zeige_telefon_mobil', $varValue);
+        if ($dc->__get('activeRecord')->showMobile !== $varValue) {
+            $this->insertRefereeHistory($dc->__get('activeRecord')->refereeId, 'showMobile', $varValue);
         }
 
         return $varValue;
@@ -379,8 +379,8 @@ class tl_bsa_website_data_release extends Backend
      */
     public function switchFax($varValue, DataContainer $dc)
     {
-        if ($dc->__get('activeRecord')->zeige_fax !== $varValue) {
-            $this->insertRefereeHistory($dc->__get('activeRecord')->refereeId, 'zeige_fax', $varValue);
+        if ($dc->__get('activeRecord')->showFax !== $varValue) {
+            $this->insertRefereeHistory($dc->__get('activeRecord')->refereeId, 'showFax', $varValue);
         }
 
         return $varValue;
@@ -396,8 +396,8 @@ class tl_bsa_website_data_release extends Backend
      */
     public function switchEmail($varValue, DataContainer $dc)
     {
-        if ($dc->__get('activeRecord')->link_email !== $varValue) {
-            $this->insertRefereeHistory($dc->__get('activeRecord')->refereeId, 'link_email', $varValue);
+        if ($dc->__get('activeRecord')->showEmail !== $varValue) {
+            $this->insertRefereeHistory($dc->__get('activeRecord')->refereeId, 'showEmail', $varValue);
         }
 
         return $varValue;
@@ -413,8 +413,8 @@ class tl_bsa_website_data_release extends Backend
      */
     public function switchPhoto($varValue, DataContainer $dc)
     {
-        if ($dc->__get('activeRecord')->zeige_foto !== $varValue) {
-            $this->insertRefereeHistory($dc->__get('activeRecord')->refereeId, 'zeige_foto', $varValue);
+        if ($dc->__get('activeRecord')->showPhoto !== $varValue) {
+            $this->insertRefereeHistory($dc->__get('activeRecord')->refereeId, 'showPhoto', $varValue);
         }
 
         return $varValue;

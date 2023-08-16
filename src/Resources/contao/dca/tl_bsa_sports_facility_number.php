@@ -79,7 +79,7 @@ $GLOBALS['TL_DCA']['tl_bsa_sports_facility_number'] = [
         'dfbnetNumber' => [
             'inputType' => 'text',
             'eval' => ['mandatory' => true, 'unique' => true, 'rgxp' => 'digit', 'maxlength' => 10, 'minlength' => 10, 'tl_class' => 'w50'],
-            'sql' => 'varchar(10) NULL',
+            'sql' => "varchar(10) NOT NULL default ''",
         ],
     ],
 ];

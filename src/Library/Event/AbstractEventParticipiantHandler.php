@@ -27,6 +27,9 @@ use Teusal\ContaoRefereeHamburgBundle\Model\EventModel;
  */
 abstract class AbstractEventParticipiantHandler extends Backend
 {
+    /**
+     * The event for dealing with the recipients.
+     */
     protected EventModel $objEvent;
 
     /**
@@ -46,9 +49,11 @@ abstract class AbstractEventParticipiantHandler extends Backend
 
         if ('spiele' === Input::get('key') || 'besucher' === Input::get('key') || 'import' === Input::get('key')) {
             // Load and cache the event.
-            $this->objEvent = EventModel::findByPk(Input::get('id'));
+            $objEvent = EventModel::findByPk(Input::get('id'));
 
-            if (!isset($this->objEvent)) {
+            if (isset($objEvent)) {
+                $this->objEvent = $objEvent;
+            } else {
                 throw new \Exception('Die Veranstaltung konnte nicht ermittelt werden.');
             }
 

@@ -27,7 +27,7 @@ $GLOBALS['TL_DCA']['tl_bsa_member_group_newsletter_assignment'] = [
             [tl_bsa_member_group_newsletter_assignment::class, 'doSorting'],
         ],
         'ondelete_callback' => [
-            [BSANewsletter::class, 'deleteNewsletterzuordnung'],
+            [BSANewsletter::class, 'deleteNewsletterAssignment'],
         ],
         'sql' => [
             'keys' => [
@@ -99,7 +99,7 @@ $GLOBALS['TL_DCA']['tl_bsa_member_group_newsletter_assignment'] = [
             'relation' => ['type' => 'belongsTo', 'load' => 'eager'],
             'save_callback' => [
                 [tl_bsa_member_group_newsletter_assignment::class, 'validateDuplicate'],
-                [BSANewsletter::class, 'saveNewsletterzuordnung'],
+                [BSANewsletter::class, 'saveNewsletterAssignment'],
             ],
             'sql' => "int(10) unsigned NOT NULL default '0'",
         ],

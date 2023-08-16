@@ -19,7 +19,7 @@ use Contao\Message;
 use Contao\System;
 use Teusal\ContaoRefereeHamburgBundle\Library\SRHistory;
 use Teusal\ContaoRefereeHamburgBundle\Model\ClubChairmanModel;
-use Teusal\ContaoRefereeHamburgBundle\Model\MemberGroupAssignmentMemberModel;
+use Teusal\ContaoRefereeHamburgBundle\Model\MemberGroupMemberAssignmentModel;
 use Teusal\ContaoRefereeHamburgBundle\Model\RefereeModel;
 
 /**
@@ -52,7 +52,11 @@ final class BSAMemberGroup extends System
         ],
     ];
 
-    // temporäre Liste für neu angelegte Gruppen
+    /**
+     * A cache of automated groups, sorted by automatic key.
+     *
+     * @var array<string, integer>
+     */
     private static $cachedGroups = [];
 
     /**
@@ -60,9 +64,9 @@ final class BSAMemberGroup extends System
      *
      * @param DataContainer|null $dc Data Container object or null
      *
-     * @return array available options
+     * @return array<string, array<string>> available options
      */
-    public function getAllAutomaticOptions(DataContainer $dc): array
+    public function getAllAutomaticOptions($dc): array
     {
         return self::AUTOMATICS;
     }
@@ -80,10 +84,10 @@ final class BSAMemberGroup extends System
             throw new \Exception('wrong datatype or zero given');
         }
 
-        $objSR = RefereeModel::findReferee($intSR);
+        $objReferee = RefereeModel::findReferee($intSR);
 
         // zuerst für gelöschte SR alle automatischen Gruppen entfernen
-        if (!isset($objSR) || $objSR->__get('deleted')) {
+        if (!isset($objReferee) || $objReferee->deleted) {
             self::deleteFromGroup($intSR, 'alle');
             self::deleteFromGroup($intSR, 'alle_sr');
             self::deleteFromGroup($intSR, 'obleute');
@@ -130,20 +134,20 @@ final class BSAMemberGroup extends System
             self::deleteFromGroup($intSR, 'Ü40');
             self::deleteFromGroup($intSR, 'm');
             self::deleteFromGroup($intSR, 'w');
-        } elseif ('passiv' === $objSR->__get('state')) {
+        } elseif ('passiv' === $objReferee->state) {
             self::deleteFromGroup($intSR, 'aktive');
             self::addToGroup($intSR, 'passive');
             self::deleteFromGroup($intSR, 'U18');
             self::deleteFromGroup($intSR, 'Ü40');
             self::deleteFromGroup($intSR, 'm');
             self::deleteFromGroup($intSR, 'w');
-        } elseif ('aktiv' === $objSR->__get('state')) {
+        } elseif ('aktiv' === $objReferee->state) {
             // Hinzufügen zu aktiven SR und entfernen aus den passiven
             self::addToGroup($intSR, 'aktive');
             self::deleteFromGroup($intSR, 'passive');
 
             // Ermittlung des Alters und Sortierung in die Gruppen U18 oder Ü40
-            $srAlter = RefereeModel::getAge($objSR);
+            $srAlter = $objReferee->age;
 
             if ($srAlter < 18) {
                 self::addToGroup($intSR, 'U18');
@@ -157,10 +161,10 @@ final class BSAMemberGroup extends System
             }
 
             // Aufteilung in männlich/weiblich
-            if ('m' === $objSR->__get('gender') && $isClubReferee) {
+            if ('m' === $objReferee->gender) {
                 self::addToGroup($intSR, 'm');
                 self::deleteFromGroup($intSR, 'w');
-            } elseif ('w' === $objSR->__get('gender') && $isClubReferee) {
+            } elseif ('w' === $objReferee->gender) {
                 self::deleteFromGroup($intSR, 'm');
                 self::addToGroup($intSR, 'w');
             } else {
@@ -187,11 +191,7 @@ final class BSAMemberGroup extends System
      */
     public static function updateHalbautomaticGroup(MemberGroupModel $group)
     {
-        if (!isset($group)) {
-            throw new \Exception('no group');
-        }
-
-        if (!self::isHalbautomatic($group->__get('automatik'))) {
+        if (!self::isPartlyAutomated($group->__get('automatik'))) {
             throw new \Exception('not a halbautomatic group');
         }
 
@@ -330,13 +330,13 @@ final class BSAMemberGroup extends System
     }
 
     /**
-     * Löscht einen Schiedsrichter aus allen Gruppen.
+     * Deletes a referee from all groups.
+     *
+     * @param int $intSR The referee's id
      */
     public static function deleteFromGroups($intSR): void
     {
-        $intSR = (int) $intSR;
-
-        if (!\is_int($intSR) || 0 === $intSR) {
+        if (0 === $intSR) {
             throw new \Exception('wrong datatype or zero given');
         }
 
@@ -359,9 +359,13 @@ final class BSAMemberGroup extends System
     }
 
     /**
-     * Ermittelt die Gruppen-IDs eines Schiedsrichters und setzt die Liste der Gruppen am Login tl_member.
+     * Gets the group IDs of a referee and sets the list of groups at login in tl_member.
+     *
+     * @param int      $intSR      The referee's id
+     * @param int|null $idToRemove An id which should be removed from the groups list
+     * @param int|null $idToAdd    An id which should be added to the groups list
      */
-    public static function setGroupsToMember($intSR, $idToRemove = 0, $idToAdd = 0): void
+    public static function setGroupsToMember($intSR, $idToRemove = null, $idToAdd = null): void
     {
         $intSR = (int) $intSR;
 
@@ -389,9 +393,11 @@ final class BSAMemberGroup extends System
     }
 
     /**
-     * Fügt einen SR in die Gruppe Obleute ein.
+     * Adds a referee from the group of chairmans.
+     *
+     * @param int $intSR The referee's id
      */
-    public static function addToObleute($intSR): void
+    public static function addToChairmansGroup($intSR): void
     {
         if (0 === $intSR) {
             return;
@@ -400,9 +406,11 @@ final class BSAMemberGroup extends System
     }
 
     /**
-     * Entfernt einen SR aus der Gruppe Obleute.
+     * Removes a referee from the group of chairmans.
+     *
+     * @param int $intSR The referee's id
      */
-    public static function removeFromObleute($intSR): void
+    public static function removeFromChairmansGroup($intSR): void
     {
         if (0 === $intSR) {
             return;
@@ -415,26 +423,26 @@ final class BSAMemberGroup extends System
      */
     public static function updateOnBirthday(): void
     {
-        $arrSR = RefereeModel::getPersonWithBirthdayToday();
+        $objReferee = RefereeModel::getRefereesWithBirthdayToday();
 
-        if (empty($arrSR)) {
+        if (null === $objReferee) {
             System::log('BSA-Gruppenverwaltung wurde ausgeführt, es sind keine Gruppen an Geburtstagen zu aktualisieren.', 'BSA Gruppenverwaltung updateOnBirthday()', TL_CRON);
 
             return;
         }
 
-        foreach ($arrSR as $sr) {
-            self::handleAutomaticGroups($sr);
+        while ($objReferee->next()) {
+            self::handleAutomaticGroups($objReferee->id);
         }
-        System::log('BSA-Gruppenverwaltung wurde ausgeführt, die Gruppen von '.\count($arrSR).' Geburtstagskind(ern) wurde(n) aktualisiert.', 'BSA Gruppenverwaltung updateOnBirthday()', TL_CRON);
+        System::log('BSA-Gruppenverwaltung wurde ausgeführt, die Gruppen von '.$objReferee->count().' Geburtstagskind(ern) wurde(n) aktualisiert.', 'BSA Gruppenverwaltung updateOnBirthday()', TL_CRON);
     }
 
     /**
-     * tells you if an automatic is an 'vollautomatic' or not.
+     * tells you if an automatic is a fully automated group or not.
      *
      * @param mixed $automaticKey
      */
-    public static function isVollautomatic($automaticKey): bool
+    public static function isFullyAutomated($automaticKey): bool
     {
         return !empty($automaticKey)
             && \in_array(
@@ -445,11 +453,11 @@ final class BSAMemberGroup extends System
     }
 
     /**
-     * tells you if an automatic is an 'halbautomatic' or not.
+     * tells you if an automatic is a partly automated group or not.
      *
      * @param mixed $automaticKey
      */
-    public static function isHalbautomatic($automaticKey): bool
+    public static function isPartlyAutomated($automaticKey): bool
     {
         return !empty($automaticKey)
             && \in_array(
@@ -462,7 +470,7 @@ final class BSAMemberGroup extends System
     /**
      * clearing the cache of automatic grous.
      *
-     * @param string|null $automaticKey
+     * @param string|null $automaticKey A specified group or null for the entire cache
      */
     public static function clearCachedGroups($automaticKey = null): void
     {
@@ -474,7 +482,10 @@ final class BSAMemberGroup extends System
     }
 
     /**
-     * Fügt einen Schiedsrichter in eine Automatikgruppe ein.
+     * Adds a referee to an automatic group.
+     *
+     * @param int    $intSR        The id of the referee
+     * @param string $automaticKey The key of the automatic
      */
     private static function addToGroup($intSR, $automaticKey): void
     {
@@ -485,7 +496,7 @@ final class BSAMemberGroup extends System
         $intGroup = self::getAutomatikGroupId($automaticKey);
 
         if ($intGroup) {
-            if (!MemberGroupAssignmentMemberModel::exists($intGroup, $intSR)) {
+            if (!MemberGroupMemberAssignmentModel::exists($intGroup, $intSR)) {
                 Database::getInstance()->prepare('INSERT INTO tl_bsa_member_group_member_assignment (pid, tstamp, refereeId) VALUES (?,?,?)')
                     ->execute($intGroup, time(), $intSR)
                 ;
@@ -496,7 +507,10 @@ final class BSAMemberGroup extends System
     }
 
     /**
-     * Löscht einen Schiedsrichter aus einer Automatikgruppe.
+     * Deletes a referee from an automatic group.
+     *
+     * @param int    $intSR        The id of the referee
+     * @param string $automaticKey The key of the automatic
      */
     private static function deleteFromGroup($intSR, $automaticKey): void
     {
@@ -518,11 +532,11 @@ final class BSAMemberGroup extends System
     }
 
     /**
-     * Liefert die ID einer Gruppe.
+     * Returns the ID of a automated group.
      *
      * @param string $automaticKey
      *
-     * @return int|null
+     * @return int
      */
     private static function getAutomatikGroupId($automaticKey)
     {
@@ -530,7 +544,7 @@ final class BSAMemberGroup extends System
             $objGroup = MemberGroupModel::findOneBy('automatik', $automaticKey);
 
             if (isset($objGroup)) {
-                self::$cachedGroups[$automaticKey] = $objGroup->id;
+                self::$cachedGroups[$automaticKey] = (int) $objGroup->id;
             }
         }
 

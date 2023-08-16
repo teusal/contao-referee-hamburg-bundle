@@ -25,16 +25,21 @@ class BSAEmail extends AbstractEmail
         parent::__construct();
     }
 
-    protected function getSenderNameReferenceAddons()
-    {
-        return [];
-    }
-
+    /**
+     * provides additional replacements used in subject.
+     *
+     * @return array<array<string>>
+     */
     protected function getSubjectReferenceAddons()
     {
         return [];
     }
 
+    /**
+     * provides additional replacements used in body text.
+     *
+     * @return array<array<string>>
+     */
     protected function getTextReferenceAddons()
     {
         return [];

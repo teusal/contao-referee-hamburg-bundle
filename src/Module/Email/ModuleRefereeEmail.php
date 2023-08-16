@@ -21,6 +21,11 @@ use Teusal\ContaoRefereeHamburgBundle\Model\RefereeModel;
  */
 class ModuleRefereeEmail extends AbstractModuleEmail
 {
+    /**
+     * returns all possible recipient options.
+     *
+     * @return array<int, array<string, string>> the list of selectable options
+     */
     protected function getRecipientOptions(): array
     {
         $arrRecipientOptions = [];
@@ -57,6 +62,13 @@ class ModuleRefereeEmail extends AbstractModuleEmail
         return $arrRecipientOptions;
     }
 
+    /**
+     * returns the recipient data for the specified club.
+     *
+     * @param mixed $refereeId The id of the club
+     *
+     * @return array<string, mixed> the list of recipient data
+     */
     protected function getRecipientData($refereeId): array
     {
         $objReferee = RefereeModel::findByPk($refereeId);

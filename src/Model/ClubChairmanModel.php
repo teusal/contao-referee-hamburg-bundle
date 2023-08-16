@@ -14,13 +14,43 @@ namespace Teusal\ContaoRefereeHamburgBundle\Model;
 
 use Contao\Database;
 use Contao\Model;
+use Contao\Model\Collection;
 
 /**
  * Read and write club chairman data.
  *
- * @method static ClubChairmanModel|null findOneBy($col, $val, array $opt=array())
+ * @property string|int      $id
+ * @property string|int      $tstamp
+ * @property string|int      $clubId
+ * @property string|int|null $chairman
+ * @property string|int|null $viceChairman1
+ * @property string|int|null $viceChairman2
  *
- * @property int $club
+ * @method static ClubChairmanModel|null findById($id, array $opt=array())
+ * @method static ClubChairmanModel|null findByPk($id, array $opt=array())
+ * @method static ClubChairmanModel|null findByIdOrAlias($val, array $opt=array())
+ * @method static ClubChairmanModel|null findOneBy($col, $val, array $opt=array())
+ * @method static ClubChairmanModel|null findOneByTstamp($col, $val, array $opt=array())
+ * @method static ClubChairmanModel|null findOneByClubId($col, $val, array $opt=array())
+ * @method static ClubChairmanModel|null findOneByChairman($col, $val, array $opt=array())
+ * @method static ClubChairmanModel|null findOneByViceChairman1($col, $val, array $opt=array())
+ * @method static ClubChairmanModel|null findOneByViceChairman2($col, $val, array $opt=array())
+ *                                                                                                                         -
+ * @method static Collection|array<ClubChairmanModel>|ClubChairmanModel|null findByTstamp($val, array $opt=array())
+ * @method static Collection|array<ClubChairmanModel>|ClubChairmanModel|null findByClubId($val, array $opt=array())
+ * @method static Collection|array<ClubChairmanModel>|ClubChairmanModel|null findByChairman($val, array $opt=array())
+ * @method static Collection|array<ClubChairmanModel>|ClubChairmanModel|null findByViceChairman1($val, array $opt=array())
+ * @method static Collection|array<ClubChairmanModel>|ClubChairmanModel|null findByViceChairman2($val, array $opt=array())
+ * @method static Collection|array<ClubChairmanModel>|ClubChairmanModel|null findMultipleByIds($val, array $opt=array())
+ * @method static Collection|array<ClubChairmanModel>|ClubChairmanModel|null findBy($col, $val, array $opt=array())
+ * @method static Collection|array<ClubChairmanModel>|ClubChairmanModel|null findAll(array $opt=array())
+ *                                                                                                                         -
+ * @method static integer countById($id, array $opt=array())
+ * @method static integer countByTstamp($val, array $opt=array())
+ * @method static integer countByClubId($val, array $opt=array())
+ * @method static integer countByChairman($val, array $opt=array())
+ * @method static integer countByViceChairman1($val, array $opt=array())
+ * @method static integer countByViceChairman2($val, array $opt=array())
  */
 class ClubChairmanModel extends Model
 {
@@ -54,9 +84,9 @@ class ClubChairmanModel extends Model
      */
     public static function getClubOfChairman($refereeId)
     {
-        $objSR = RefereeModel::findReferee($refereeId);
+        $objReferee = RefereeModel::findReferee($refereeId);
 
-        if (!isset($objSR) || $objSR->__get('deleted')) {
+        if (!isset($objReferee) || $objReferee->deleted) {
             return null;
         }
 
@@ -70,7 +100,7 @@ class ClubChairmanModel extends Model
      *
      * @param int $clubId the id of the club
      *
-     * @return array an array with all email addresses
+     * @return array<string> an array with all email addresses
      */
     public static function getEmailAddressesOfChairmans(int $clubId): array
     {
@@ -78,6 +108,8 @@ class ClubChairmanModel extends Model
             ->prepare('SELECT tl_bsa_referee.email FROM tl_bsa_referee JOIN tl_bsa_club_chairman ON (tl_bsa_referee.id=tl_bsa_club_chairman.chairman OR tl_bsa_referee.id=tl_bsa_club_chairman.viceChairman1 OR tl_bsa_referee.id=tl_bsa_club_chairman.viceChairman2) WHERE tl_bsa_club_chairman.clubId=? AND tl_bsa_referee.email<>? ORDER BY tl_bsa_referee.email')
             ->execute($clubId, '')
             ->fetchEach('email')
-    ;
+        ;
     }
 }
+
+class_alias(ClubChairmanModel::class, 'ClubChairmanModel');

@@ -32,7 +32,13 @@ class SRHistory extends System
     }
 
     /**
-     * Erzeugt einen Eintrag im Verlauf eines Schiedsrichters.
+     * Creates an entry in the history of a referee.
+     *
+     * @param int             $intSR
+     * @param string|int|null $referenceId
+     * @param array<string>   $arrAction
+     * @param string          $strText
+     * @param string          $strFunction
      */
     public static function insert($intSR, $referenceId, $arrAction, $strText, $strFunction): void
     {
@@ -44,24 +50,29 @@ class SRHistory extends System
                 $arrAction[0],
                 $arrAction[1],
                 StringUtil::specialchars($strText),
-                (\strlen($GLOBALS['TL_USERNAME']) ? TL_MODE.'::'.$GLOBALS['TL_USERNAME'] : ''),
+                (\strlen($GLOBALS['TL_USERNAME']) ? (\defined('TL_MODE') ? TL_MODE : 'XX').'::'.$GLOBALS['TL_USERNAME'] : ''),
                 $strFunction
             )
         ;
     }
 
     /**
-     * Erzeugt einen Eintrag im Verlauf eines Schiedsrichters beim Wiederherstellen eines Schiedsrichters.
+     * Creates an entry in a referee's history when restoring a referee.
+     *
+     * @param int $intSR
      */
     public static function insertByUndeleteSchiedsrichter($intSR): void
     {
-        static::insertByDeleteSchiedsrichter($intSR, 0);
+        static::insertByDeleteSchiedsrichter($intSR, false);
     }
 
     /**
-     * Erzeugt einen Eintrag im Verlauf eines Schiedsrichters beim Löschen eines Schiedsrichters.
+     * Creates an entry in the history of a referee when deleting a referee.
+     *
+     * @param int  $intSR
+     * @param bool $deleted
      */
-    public static function insertByDeleteSchiedsrichter($intSR, $deleted = 1): void
+    public static function insertByDeleteSchiedsrichter($intSR, $deleted = true): void
     {
         if ($deleted) {
             $action = 'REMOVE';
@@ -74,7 +85,10 @@ class SRHistory extends System
     }
 
     /**
-     * Erzeugt einen Eintrag im Verlauf eines Schiedsrichters beim Löschen eines Mitglieds.
+     * Creates an entry in a referee's history when a member is deleted.
+     *
+     * @param DataContainer $dc     Data Container object
+     * @param int           $undoId The ID of the tl_undo database record
      */
     public function insertByDeleteMember(DataContainer $dc, $undoId): void
     {
@@ -84,9 +98,14 @@ class SRHistory extends System
     }
 
     /**
-     * Erzeugt einen Eintrag im Verlauf eines Schiedsrichters beim Aktivieren oder Deaktivieren eines Logins.
+     * Creates an entry in a referee's history when activating or deactivating a login.
+     *
+     * @param mixed         $varValue Value to be saved
+     * @param DataContainer $dc       Data Container object
+     *
+     * @return mixed
      */
-    public function insertByToggleMember($blnVisible, $dc)
+    public function insertByDisableMember($varValue, $dc)
     {
         $intSR = 0;
         $intMember = 0;
@@ -111,20 +130,23 @@ class SRHistory extends System
         }
 
         if ($intSR) {
-            static::insert($intSR, $intMember, ['Login', 'EDIT'], 'Der Login des Schiedsrichter %s mit dem Benutzernamen "%s" wurde '.($blnVisible ? 'aktiviert' : 'deaktiviert').'.', __METHOD__);
+            static::insert($intSR, $intMember, ['Login', 'EDIT'], 'Der Login des Schiedsrichter %s mit dem Benutzernamen "%s" wurde '.($varValue ? 'deaktiviert' : 'aktiviert').'.', __METHOD__);
         }
 
-        return $blnVisible;
+        return $varValue;
     }
 
     /**
-     * Erzeugt einen Eintrag im Verlauf eines Schiedsrichters beim Austragen von Newsletter aus dem Frontend heraus.
+     * Creates an entry in a referee's history when unsubscribing newsletters from the frontend.
+     *
+     * @param string       $email    the recipient’s email address which has been removed
+     * @param array<mixed> $channels the channels from which the recipient has unsubscribed
      */
-    public function unsubscribeNewsletterToSRHistory($varInput, $arrRemove): void
+    public function unsubscribeNewsletterToSRHistory($email, $channels): void
     {
-        foreach ($arrRemove as $channel) {
+        foreach ($channels as $channel) {
             $arrSR = Database::getInstance()->prepare('SELECT r.refereeId FROM tl_newsletter_recipients AS r, tl_bsa_referee AS sr WHERE r.refereeId=sr.id AND r.pid=? AND r.email=?')
-                ->execute($channel, $varInput)
+                ->execute($channel, $email)
                 ->fetchEach('refereeId')
             ;
 

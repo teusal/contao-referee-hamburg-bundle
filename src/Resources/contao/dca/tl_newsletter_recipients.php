@@ -68,10 +68,10 @@ class tl_bsa_newsletter_recipients extends Backend
      */
     public function getList($arrRow)
     {
-        $objSR = RefereeModel::findReferee($arrRow['refereeId']);
+        $objReferee = RefereeModel::findReferee($arrRow['refereeId']);
 
-        if (isset($objSR)) {
-            return $objSR->__get('nameReverse');
+        if (isset($objReferee)) {
+            return $objReferee->nameReverse;
         }
 
         return '???';
@@ -86,14 +86,14 @@ class tl_bsa_newsletter_recipients extends Backend
      */
     public function getSchiedsrichterNotDeleted(DataContainer $dc)
     {
-        $objSR = RefereeModel::findBy('deleted', '', ['order' => 'nameReverse']);
+        $objReferee = RefereeModel::findBy('deleted', '', ['order' => 'nameReverse']);
 
         $options = [];
 
-        if (null !== $objSR) {
-            while ($objSR->next()) {
-                if (strlen($objSR->__get('email'))) {
-                    $options[$objSR->id] = $objSR->__get('nameReverse');
+        if (null !== $objReferee) {
+            while ($objReferee->next()) {
+                if (strlen($objReferee->email)) {
+                    $options[$objReferee->id] = $objReferee->nameReverse;
                 }
             }
         }

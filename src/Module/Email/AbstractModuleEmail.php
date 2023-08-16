@@ -19,6 +19,7 @@ use Contao\CheckBox;
 use Contao\Config;
 use Contao\CoreBundle\Mailer\TransportConfig;
 use Contao\DataContainer;
+use Contao\Environment;
 use Contao\Input;
 use Contao\Message;
 use Contao\SelectMenu;
@@ -46,7 +47,7 @@ abstract class AbstractModuleEmail extends BackendModule
     /**
      * clubs.
      *
-     * @var array<int,string>
+     * @var array<int, array<string, mixed>>
      */
     protected $arrClubs = [];
 
@@ -67,7 +68,7 @@ abstract class AbstractModuleEmail extends BackendModule
      */
     public function __construct(DataContainer $dc = null)
     {
-        parent::__construct();
+        parent::__construct($dc);
 
         // import the backend user
         $this->import(BackendUser::class, 'User');
@@ -129,8 +130,8 @@ abstract class AbstractModuleEmail extends BackendModule
 
                 $objEmail = new BSAEmail();
                 $objEmail->setMailerTransport($this->transport->getName());
-                $objEmail->setSchiedsrichter($recipientData['refereeId']);
-                $objEmail->setVerein($recipientData['clubId']);
+                $objEmail->setReferee($recipientData['refereeId']);
+                $objEmail->setClub($recipientData['clubId']);
                 $objEmail->sendCc($arrCC);
                 $objEmail->sendBcc($arrBCC);
                 $objEmail->__set('subject', $subject->value);
@@ -159,7 +160,7 @@ abstract class AbstractModuleEmail extends BackendModule
         $this->Template->__set('emailText', $emailText);
         $this->Template->__set('tinyNews', $objTinyNews);
         $this->Template->__set('messages', Message::generate());
-        $this->Template->__set('action', StringUtil::ampersand($this->Environment->request));
+        $this->Template->__set('action', StringUtil::ampersand(Environment::get('request')));
         $this->Template->__set('href', $this->getReferer(true));
         $this->Template->__set('title', StringUtil::specialchars($GLOBALS['TL_LANG']['MSC']['backBT']));
         $this->Template->__set('button', $GLOBALS['TL_LANG']['MSC']['backBT']);
@@ -168,7 +169,7 @@ abstract class AbstractModuleEmail extends BackendModule
     /**
      * returns the options for the widgets carbon copy and blind carbon copy.
      *
-     * @return array the options
+     * @return array<string, array<string, string>> the options
      */
     protected function getCarbonCopyOptions()
     {
@@ -182,16 +183,16 @@ abstract class AbstractModuleEmail extends BackendModule
     /**
      * provides the array of options to be set as recipients.
      *
-     * @return array the list of options
+     * @return array<int, array<string, string>> the list of options
      */
     abstract protected function getRecipientOptions(): array;
 
     /**
      * provides the array with the data of the to recipients.
      *
-     * @param mixed $recipientId the id of theselected recipient
+     * @param mixed $recipientId the id of the selected recipient
      *
-     * @return array the data of the recipient
+     * @return array<string, mixed> the data of the recipient
      */
     abstract protected function getRecipientData($recipientId): array;
 
@@ -275,7 +276,6 @@ abstract class AbstractModuleEmail extends BackendModule
         $widget->id = 'body';
         $widget->name = 'body';
         $widget->label = 'Text:';
-        $widget->rte = 'ace';
         $widget->mandatory = true;
         $widget->disabled = $this->disabled;
 
@@ -289,7 +289,7 @@ abstract class AbstractModuleEmail extends BackendModule
      * @param mixed         $recipientClubId        the id of the recipients club
      * @param array<string> $excludedEmailAddresses the email addresses to be excluded from the result list (i.e. recipients of to-addresses)
      *
-     * @return array empty array or list of email addresses
+     * @return array<string> empty array or list of email addresses
      */
     private function getRecepientsOfCarbonCopyCheckboxes(CheckBox $objCheckBoxWidget, $recipientClubId, array $excludedEmailAddresses)
     {

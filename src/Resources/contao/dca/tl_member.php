@@ -91,7 +91,7 @@ $GLOBALS['TL_DCA']['tl_member']['config']['enableVersioning'] = false;
 /*
  * Change fields
  */
-$GLOBALS['TL_DCA']['tl_member']['fields']['disable']['save_callback'][] = [SRHistory::class, 'insertByToggleMember'];
+$GLOBALS['TL_DCA']['tl_member']['fields']['disable']['save_callback'][] = [SRHistory::class, 'insertByDisableMember'];
 $GLOBALS['TL_DCA']['tl_member']['fields']['email']['eval']['rgxp'] = 'friendly';
 
 /*

@@ -20,6 +20,7 @@ use Contao\Date;
 use Contao\Email;
 use Contao\Message;
 use Contao\System;
+use Contao\User;
 use Teusal\ContaoRefereeHamburgBundle\Library\Mailer\AvailableTransports;
 use Teusal\ContaoRefereeHamburgBundle\Library\SRHistory;
 use Teusal\ContaoRefereeHamburgBundle\Model\ClubModel;
@@ -30,10 +31,25 @@ use Teusal\ContaoRefereeHamburgBundle\Model\RefereeModel;
  */
 abstract class AbstractEmail extends Email
 {
+    /**
+     * The values to be used while replace the used definitions within an email.
+     *
+     * @var array<string, array<string, mixed>>
+     */
     protected $replacementValues = [];
 
+    /**
+     * counter of sent mails.
+     *
+     * @var int
+     */
     protected static $countSentMails = 0;
 
+    /**
+     * Backend user replacement definitions.
+     *
+     * @var array<array<string>>
+     */
     protected static $beUser = [
         ['colspan', '<h1 style="margin-top: 15px; font-weight: bold;">Ersetzungen durch Daten des ausführenden Backend-Benutzers</h1>'],
         ['#BE-USER_NAME#', 'Name des ausführenden Backend-Benutzers'],
@@ -42,17 +58,32 @@ abstract class AbstractEmail extends Email
         ['#BE-USER_EMAIL#', 'E-Mail-Adresse des ausführenden Backend-Benutzers'],
     ];
 
+    /**
+     * Backend user signature replacement definition.
+     *
+     * @var array<array<string>>
+     */
     protected static $beUserSignatur = [
         ['#BE-USER_SIGNATUR#', 'Signatur des ausführenden Backend-Benutzers'],
     ];
 
+    /**
+     * Webmaster replacement definitions.
+     *
+     * @var array<array<string>>
+     */
     protected static $webmaster = [
         ['colspan', '<h1 style="margin-top: 15px; font-weight: bold;">Ersetzungen durch Daten des Webmasters</h1>'],
         ['#WEBMASTER_NAME#', 'Name des Webmasters'],
         ['#WEBMASTER_EMAIL#', 'E-Mail-Adresse des Webmasters'],
     ];
 
-    protected static $sr = [
+    /**
+     * Referee replacement definitions.
+     *
+     * @var array<array<string>>
+     */
+    protected static $referee = [
         ['colspan', '<h1 style="margin-top: 15px; font-weight: bold;">Ersetzungen durch Daten des angeschriebenen Schiedsrichters</h1>'],
         ['#SR_ANREDE#', 'Anrede des Schiedsrichters (Liebe, Lieber oder Liebe/Lieber)'],
         ['#SR_VORNAME#', 'Vorname des Schiedsrichter'],
@@ -63,12 +94,22 @@ abstract class AbstractEmail extends Email
         ['#SR_ALTER#', 'Das Alter des Schiedsrichters'],
     ];
 
+    /**
+     * Club replacement definitions.
+     *
+     * @var array<array<string>>
+     */
     protected static $club = [
         ['colspan', '<h1 style="margin-top: 15px; font-weight: bold;">Ersetzungen durch Daten des Vereins des angeschriebenen Schiedsrichters</h1>'],
         ['#VEREIN_NAME#', 'Langer Name des Vereins'],
         ['#VEREIN_NAME_KURZ#', 'Kurzer Name des Vereins'],
     ];
 
+    /**
+     * Current date replacement definitions.
+     *
+     * @var array<array<string>>
+     */
     protected static $currentDate = [
         ['colspan', '<h1 style="margin-top: 15px; font-weight: bold;">Ersetzungen durch Daten des Vereins des angeschriebenen Schiedsrichters</h1>'],
         ['#DATUM_TTMMJJJJ#', 'Aktuelles Datum im Format Tag.Monat.Jahr, z.B. 31.12.1990'],
@@ -76,12 +117,29 @@ abstract class AbstractEmail extends Email
         ['#DATUM_JAHR#', 'Aktuelles Kalenderjahr, z.B. 1990'],
     ];
 
-    private $srID;
+    /**
+     * The id of the referee or null.
+     *
+     * @var int|null
+     */
+    private $refereeId;
+
+    /**
+     * test or not.
+     *
+     * @var bool
+     */
     private $isTest = false;
+
+    /**
+     * development environment or not.
+     *
+     * @var bool
+     */
     private $isDevEnvironment = false;
 
     /**
-     * Konstruktor.
+     * constructor.
      */
     public function __construct()
     {
@@ -91,7 +149,7 @@ abstract class AbstractEmail extends Email
             $this->isDevEnvironment = true;
         }
 
-        if (TL_MODE === 'BE') {
+        if (\defined('TL_MODE') && TL_MODE === 'BE') {
             $this->setBackendUser(BackendUser::getInstance());
         }
 
@@ -107,6 +165,14 @@ abstract class AbstractEmail extends Email
         ];
     }
 
+    /**
+     * Set an object property.
+     *
+     * @param string $strKey   The property name
+     * @param mixed  $varValue The property value
+     *
+     * @throws \Exception If $strKey is unknown
+     */
     public function __set($strKey, $varValue): void
     {
         switch ($strKey) {
@@ -118,7 +184,7 @@ abstract class AbstractEmail extends Email
 
             case 'from':
                 if (!\strlen($varValue)) {
-                    if (TL_MODE === 'BE') {
+                    if (\defined('TL_MODE') && TL_MODE === 'BE') {
                         $varValue = BackendUser::getInstance()->email;
                     } else {
                         $varValue = Config::get('adminEmail');
@@ -146,23 +212,33 @@ abstract class AbstractEmail extends Email
         $this->addHeader('X-Transport', $mailerTransport);
     }
 
+    /**
+     * returns the dca field definition for the selection of the mailer transport.
+     *
+     * @return array<string, mixed>
+     */
     final public function getMailerTransportField()
     {
         return [
             'label' => &$GLOBALS['TL_LANG']['mail_config']['mailerTransport'],
             'exclude' => true,
             'inputType' => 'select',
-            'eval' => ['tl_class' => 'w50', 'includeBlankOption' => false, 'mandatory' => true, 'includeBlankOption' => true],
+            'eval' => ['tl_class' => 'w50', 'includeBlankOption' => true, 'mandatory' => true],
             'options_callback' => ['contao.mailer.available_transports', 'getTransportOptions'],
         ];
     }
 
-    final public function getSubjectField()
+    /**
+     * returns the dca field definition for the input of the subject.
+     *
+     * @return array<string, mixed>
+     */
+    final public function getSubjectField(): array
     {
         return [
             'label' => &$GLOBALS['TL_LANG']['mail_config']['subject'],
             'inputType' => 'text',
-            'reference' => array_merge(static::$beUser, static::$webmaster, static::$currentDate, static::$sr, $this->getSubjectReferenceAddons()),
+            'reference' => array_merge(static::$beUser, static::$webmaster, static::$currentDate, static::$referee, $this->getSubjectReferenceAddons()),
             'eval' => ['helpwizard' => true, 'decodeEntities' => true, 'mandatory' => true, 'tl_class' => 'long clr'],
             'save_callback' => [
                 [static::class, 'validateSubject'],
@@ -170,12 +246,17 @@ abstract class AbstractEmail extends Email
         ];
     }
 
+    /**
+     * returns the dca field definition for the input of the body text.
+     *
+     * @return array<string, mixed>
+     */
     final public function getTextField()
     {
         return [
             'label' => &$GLOBALS['TL_LANG']['mail_config']['text'],
             'inputType' => 'textarea',
-            'reference' => array_merge(static::$beUser, static::$beUserSignatur, static::$webmaster, static::$currentDate, static::$sr, static::$club, $this->getTextReferenceAddons()),
+            'reference' => array_merge(static::$beUser, static::$beUserSignatur, static::$webmaster, static::$currentDate, static::$referee, static::$club, $this->getTextReferenceAddons()),
             'eval' => ['helpwizard' => true, 'rte' => 'tinyNews', 'mandatory' => true],
             'save_callback' => [
                 [static::class, 'validateText'],
@@ -183,6 +264,11 @@ abstract class AbstractEmail extends Email
         ];
     }
 
+    /**
+     * returns the dca field definition for the input of the blind carbon copy recipients.
+     *
+     * @return array<string, mixed>
+     */
     final public function getBccField()
     {
         return [
@@ -226,7 +312,12 @@ abstract class AbstractEmail extends Email
         return $varValue;
     }
 
-    final public function setBackendUser(BackendUser $user): void
+    /**
+     * setting the BackendUser.
+     *
+     * @param User $user The user
+     */
+    final public function setBackendUser(User $user): void
     {
         $arrName = explode(' ', $user->name);
         $lastname = $arrName[\count($arrName) - 1];
@@ -236,78 +327,100 @@ abstract class AbstractEmail extends Email
             'VORNAME' => implode(' ', $arrName),
             'NACHNAME' => $lastname,
             'EMAIL' => $user->email,
-            'SIGNATUR' => $user->signatur_html,
+            'SIGNATUR' => $user->__get('signatur_html'),
         ];
     }
 
-    final public function setSchiedsrichter($intSR): void
+    /**
+     * setting the referee.
+     *
+     * @param string|int $refereeId The referee id
+     */
+    final public function setReferee($refereeId): void
     {
-        $objSR = RefereeModel::findReferee($intSR);
+        $objReferee = RefereeModel::findByPk($refereeId);
 
-        if (!isset($objSR)) {
-            $this->srID = null;
+        if (!isset($objReferee)) {
+            $this->refereeId = null;
             unset($this->replacementValues['SR']);
+            $this->setClub(0);
 
             return;
         }
 
-        $this->srID = $objSR->id;
+        $this->refereeId = (int) $objReferee->id;
 
-        switch ($objSR->__get('gender')) {
-                case 'm':
-                case 'male':
-                    $this->replacementValues['SR']['ANREDE'] = 'Lieber';
-                    break;
-                case 'w':
-                case 'female':
-                    $this->replacementValues['SR']['ANREDE'] = 'Liebe';
-                    break;
+        switch ($objReferee->gender) {
+            case 'm':
+            case 'male':
+                $this->replacementValues['SR']['ANREDE'] = 'Lieber';
+                break;
+            case 'w':
+            case 'female':
+                $this->replacementValues['SR']['ANREDE'] = 'Liebe';
+                break;
 
-                default:
-                    $this->replacementValues['SR']['ANREDE'] = 'Liebe/Lieber';
-                    break;
-            }
-        $this->replacementValues['SR']['VORNAME'] = $objSR->__get('firstname');
-        $this->replacementValues['SR']['NACHNAME'] = $objSR->__get('lastname');
-        $this->replacementValues['SR']['NAME'] = $objSR->__get('firstname').' '.$objSR->__get('lastname');
-        $this->replacementValues['SR']['NAME_REV'] = $objSR->__get('nameReverse');
-        $this->replacementValues['SR']['EMAIL'] = $objSR->__get('email');
-        $this->replacementValues['SR']['ALTER'] = RefereeModel::getAge($objSR);
+            default:
+                $this->replacementValues['SR']['ANREDE'] = 'Liebe/Lieber';
+                break;
+        }
+        $this->replacementValues['SR']['VORNAME'] = $objReferee->firstname;
+        $this->replacementValues['SR']['NACHNAME'] = $objReferee->lastname;
+        $this->replacementValues['SR']['NAME'] = $objReferee->firstname.' '.$objReferee->lastname;
+        $this->replacementValues['SR']['NAME_REV'] = $objReferee->nameReverse;
+        $this->replacementValues['SR']['EMAIL'] = $objReferee->email;
+        $this->replacementValues['SR']['ALTER'] = $objReferee->age;
 
-        $this->setVerein($objSR->__get('clubId'));
+        $this->setClub($objReferee->clubId);
     }
 
-    final public function setVerein($intVerein): void
+    /**
+     * setting the club.
+     *
+     * @param string|int $clubId The club id
+     */
+    final public function setClub($clubId): void
     {
-        $objVerein = ClubModel::findByPk($intVerein);
+        $objClub = ClubModel::findByPk($clubId);
 
-        if (!isset($objVerein)) {
-            unset($this->replacementValues['VEREIN']);
-
-            return;
+        if (isset($objClub)) {
+            $this->replacementValues['VEREIN']['NAME'] = $objClub->name;
+            $this->replacementValues['VEREIN']['NAME_KURZ'] = $objClub->nameShort;
+        } else {
+            $this->replacementValues['VEREIN']['NAME'] = '-';
+            $this->replacementValues['VEREIN']['NAME_KURZ'] = '-';
         }
-
-        $this->replacementValues['VEREIN']['NAME'] = (isset($objVerein) ? $objVerein->__get('name') : '-');
-        $this->replacementValues['VEREIN']['NAME_KURZ'] = (isset($objVerein) ? $objVerein->__get('nameShort') : '-');
     }
 
+    /**
+     * adding more replacements to the list auf replacement values.
+     *
+     * @param string               $key             The group key of replacements
+     * @param array<string, mixed> $arrReplacements The key value pairs of replacements
+     */
     public function addReplacements($key, $arrReplacements): void
     {
         $this->replacementValues = array_merge($this->replacementValues, [$key => $arrReplacements]);
     }
 
+    /**
+     * mark as a testmail.
+     *
+     * @param bool $isTest true if it is a test
+     */
     public function setTest($isTest): void
     {
         $this->isTest = $isTest;
     }
 
     /**
-     * Sendet die Mail und schreibt in die SRHistory.
+     * Send the mail and write in the referee's history.
      *
-     * @return bool
+     * @return bool true if it sent successfully
      */
-    public function sendTo()
+    public function sendTo(): bool
     {
+        /** @phpstan-ignore-next-line */
         if (!$this->objMessage->getHeaders()->has('X-Transport')) {
             throw new \Exception('mailerTransport not set or not found');
         }
@@ -332,8 +445,8 @@ abstract class AbstractEmail extends Email
 
         $result = parent::sendTo($email);
 
-        if ($this->srID && !$this->isTest) {
-            SRHistory::insert($this->srID, null, ['E-Mail', 'INFO'], 'Der Schiedsrichters %s wurde per E-Mail angeschrieben. Betreff: '.$this->__get('subject'), __METHOD__);
+        if ($this->refereeId && !$this->isTest) {
+            SRHistory::insert($this->refereeId, null, ['E-Mail', 'INFO'], 'Der Schiedsrichters %s wurde per E-Mail angeschrieben. Betreff: '.$this->__get('subject'), __METHOD__);
         }
 
         ++static::$countSentMails;
@@ -344,11 +457,11 @@ abstract class AbstractEmail extends Email
     /**
      * returns an array with referee data to use as reference in testmails.
      *
-     * @return array data of a referee
+     * @return array<string, mixed> data of a referee
      */
     public static function getRefereeForTestmail(): array
     {
-        if (TL_MODE !== 'BE') {
+        if (!\defined('TL_MODE') || TL_MODE !== 'BE') {
             throw new \Exception('getRefereeForTestmail is only available in Backend!');
         }
 
@@ -360,7 +473,7 @@ abstract class AbstractEmail extends Email
         ;
 
         // den SR zum Backend-Login anhand des Namens laden...
-        if (!isset($data) || !\is_array($data) || empty($data)) {
+        if (!\is_array($data) || empty($data)) {
             $data = Database::getInstance()->prepare('SELECT * FROM tl_bsa_referee WHERE CONCAT(firstname," ",lastname) = ?')
                 ->limit(1)
                 ->execute(BackendUser::getInstance()->name)
@@ -368,7 +481,7 @@ abstract class AbstractEmail extends Email
             ;
         }
 
-        if (!isset($data) || !\is_array($data) || empty($data)) {
+        if (!\is_array($data) || empty($data)) {
             $data = [
                 'id' => -1,
                 'gender' => 'm',
@@ -383,29 +496,57 @@ abstract class AbstractEmail extends Email
         return $data;
     }
 
+    /**
+     * provides additional replacements used in subject.
+     *
+     * @return array<array<string>>
+     */
     abstract protected function getSubjectReferenceAddons();
 
+    /**
+     * provides additional replacements used in body text.
+     *
+     * @return array<array<string>>
+     */
     abstract protected function getTextReferenceAddons();
 
-    private function getReplacementsDefined($field)
+    /**
+     * returns all keys of the field reference, which is comparable to the keys of all substitutions.
+     *
+     * @param array<string, mixed> $dcaFieldDefinition The dca field definition
+     *
+     * @return array<string>
+     */
+    private function getReplacementsDefined($dcaFieldDefinition)
     {
         $result = [];
 
-        foreach ($field['reference'] as $value) {
-            if (\is_array($value)) {
-                $result[] = $value[0];
+        foreach ($dcaFieldDefinition['reference'] as $reference) {
+            if (\is_array($reference)) {
+                $strReplacementKey = (string) $reference[0];
+
+                if (preg_match($strReplacementKey, '/#.*#/')) {
+                    $result[] = $strReplacementKey;
+                }
             }
         }
 
         return $result;
     }
 
+    /**
+     * extracts the replacement that are used in the specified string.
+     *
+     * @param string $varValue The value including to be checked
+     *
+     * @return array<string> all necessary replacement keys
+     */
     private function getReplacementsNeeded($varValue)
     {
         $result = [];
 
         if (0 !== substr_count($varValue, '#') % 2) {
-            throw new \Exception('Das Zeichen # umschließt Ersetzungen und darf daher nur dafür beutzt werden. Eine Ersetzung muss immer mit # beginnen und enden.');
+            throw new \Exception('Das Zeichen # umschließt Ersetzungen und darf daher nur dafür benutzt werden. Eine Ersetzung muss immer mit # beginnen und enden.');
         }
 
         $offset = 0;
@@ -423,6 +564,12 @@ abstract class AbstractEmail extends Email
         return $result;
     }
 
+    /**
+     * validating of all used replacements, if they are defined.
+     *
+     * @param array<string> $arrDefined List of all replacement definitions
+     * @param array<string> $arrNeeded  List of all required replacements
+     */
     private function validateReplacements($arrDefined, $arrNeeded): void
     {
         $arrNotFound = [];
@@ -438,7 +585,14 @@ abstract class AbstractEmail extends Email
         }
     }
 
-    private function doReplace($varValue)
+    /**
+     * replaces all used replacements in the string.
+     *
+     * @param string $varValue The string to be replaced
+     *
+     * @return string The string after replacements
+     */
+    private function doReplace($varValue): string
     {
         if (!\strlen($varValue)) {
             return $varValue;
@@ -460,7 +614,7 @@ abstract class AbstractEmail extends Email
 
         if (!empty($arrNeeded)) {
             Message::addError('Ersetzung ist nicht definiert: '.htmlspecialchars(implode(', ', $arrNeeded)).'<br/>Die E-Mail wurde nicht versendet');
-            System::log('Replacement not found ('.implode(';', $arrNeeded).')', 'AbstractEmail::doReplace', ERROR);
+            System::getContainer()->get('monolog.logger.contao.error')->error('Replacement not found ('.implode(';', $arrNeeded).')');
 
             throw new \Exception('Replacement not found ('.implode(';', $arrNeeded).')');
         }

@@ -23,6 +23,12 @@ class AvailableTransports extends \Contao\CoreBundle\Mailer\AvailableTransports
     private const USER_TRANSPORT = 'user_transport';
     private const SYSTEM_TRANSPORT = 'system_transport';
 
+    /**
+     * constructor.
+     */
+    /**
+     * @phpstan-ignore-next-line
+     */
     public function __construct(TranslatorInterface $translator = null)
     {
         // unset translator to prevent messages of missing translations
@@ -43,6 +49,8 @@ class AvailableTransports extends \Contao\CoreBundle\Mailer\AvailableTransports
 
     /**
      * Returns the available transports as options suitable for widgets.
+     *
+     * @phpstan-ignore-next-line
      *
      * @return array<string, array<string, string>>
      */
@@ -98,11 +106,11 @@ class AvailableTransports extends \Contao\CoreBundle\Mailer\AvailableTransports
      */
     public function getSystemAndBackendUserTransportOptions(): array
     {
-        $user = BackendUser::getInstance();
-
-        if (TL_MODE !== 'BE' || !isset($user)) {
+        if (!\defined('TL_MODE') || TL_MODE !== 'BE') {
             return $this->getSystemTransportOptions();
         }
+
+        $user = BackendUser::getInstance();
 
         $options = $this->getTransportOptions();
 

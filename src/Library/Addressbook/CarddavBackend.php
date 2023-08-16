@@ -146,7 +146,7 @@ class CarddavBackend
     /**
      * CardDAV server url_parts.
      *
-     * @var array
+     * @var array<mixed>
      */
     private $url_parts;
 
@@ -174,14 +174,14 @@ class CarddavBackend
     /**
      * Characters used for vCard id generation.
      *
-     * @var array
+     * @var array<mixed>
      */
     private $vcard_id_chars = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 'A', 'B', 'C', 'D', 'E', 'F'];
 
     /**
      * CardDAV server connection (curl handle).
      *
-     * @var resource
+     * @var resource|null
      */
     private $curl;
 
@@ -195,7 +195,7 @@ class CarddavBackend
     /**
      * All available debug information.
      *
-     * @var array
+     * @var array<mixed>
      */
     private $debug_information = [];
 
@@ -226,7 +226,7 @@ class CarddavBackend
     /**
      * Sets debug information.
      *
-     * @param array $debug_information Debug information
+     * @param array<mixed> $debug_information Debug information
      */
     public function set_debug(array $debug_information): void
     {
@@ -265,7 +265,7 @@ class CarddavBackend
     /**
      * Gets all available debug information.
      *
-     * @return array $this->debug_information	All available debug information
+     * @return array<mixed> $this->debug_information	All available debug information
      */
     public function get_debug()
     {
@@ -307,7 +307,7 @@ class CarddavBackend
      */
     public function get_vcard($vcard_id)
     {
-        $vcard_id = str_replace('.vcf', null, $vcard_id);
+        $vcard_id = str_replace('.vcf', '', $vcard_id);
         $result = $this->query($this->url.$vcard_id.'.vcf', 'GET');
 
         switch ($result['http_code']) {
@@ -329,11 +329,11 @@ class CarddavBackend
      */
     public function get_xml_vcard($vcard_id)
     {
-        $vcard_id = str_replace('.vcf', null, $vcard_id);
+        $vcard_id = str_replace('.vcf', '', $vcard_id);
 
         $xml = new \XMLWriter();
         $xml->openMemory();
-        $xml->setIndent(4);
+        $xml->setIndent(true);
         $xml->startDocument('1.0', 'utf-8');
         $xml->startElement('C:addressbook-multiget');
         $xml->writeAttribute('xmlns:D', 'DAV:');
@@ -476,7 +476,7 @@ class CarddavBackend
      */
     private function clean_vcard($vcard)
     {
-        return str_replace("\t", null, $vcard);
+        return str_replace("\t", '', $vcard);
     }
 
     /**
@@ -499,21 +499,24 @@ class CarddavBackend
 
         $simplified_xml = new \XMLWriter();
         $simplified_xml->openMemory();
-        $simplified_xml->setIndent(4);
+        $simplified_xml->setIndent(true);
 
         $simplified_xml->startDocument('1.0', 'utf-8');
         $simplified_xml->startElement('response');
 
         if (!empty($xml->response)) {
             foreach ($xml->response as $response) {
+                /** @phpstan-ignore-next-line */
                 if (preg_match('/vcard/', $response->propstat->prop->getcontenttype) || preg_match('/vcf/', $response->href)) {
+                    /** @phpstan-ignore-next-line */
                     $id = basename($response->href);
-                    $id = str_replace('.vcf', null, $id);
+                    $id = str_replace('.vcf', '', $id);
 
                     if (!empty($id)) {
                         $simplified_xml->startElement('element');
                         $simplified_xml->writeElement('id', $id);
-                        $simplified_xml->writeElement('etag', str_replace('"', null, $response->propstat->prop->getetag));
+                        /** @phpstan-ignore-next-line */
+                        $simplified_xml->writeElement('etag', str_replace('"', '', $response->propstat->prop->getetag));
                         $simplified_xml->writeElement('last_modified', $response->propstat->prop->getlastmodified);
 
                         if (true === $include_vcards) {
@@ -521,7 +524,9 @@ class CarddavBackend
                         }
                         $simplified_xml->endElement();
                     }
-                } elseif (preg_match('/unix-directory/', $response->propstat->prop->getcontenttype)) {
+                }
+                /** @phpstan-ignore-next-line */
+                elseif (preg_match('/unix-directory/', $response->propstat->prop->getcontenttype)) {
                     if (isset($response->propstat->prop->href)) {
                         $href = $response->propstat->prop->href;
                     } elseif (isset($response->href)) {
@@ -530,7 +535,7 @@ class CarddavBackend
                         $href = null;
                     }
 
-                    $url = str_replace($this->url_parts['path'], null, $this->url).$href;
+                    $url = str_replace($this->url_parts['path'], '', $this->url).$href;
                     $simplified_xml->startElement('addressbook_element');
                     $simplified_xml->writeElement('display_name', $response->propstat->prop->displayname);
                     $simplified_xml->writeElement('url', $url);
@@ -556,11 +561,11 @@ class CarddavBackend
     private function clean_response($response)
     {
         $response = utf8_encode($response);
-        $response = str_replace('D:', null, $response);
-        $response = str_replace('d:', null, $response);
-        $response = str_replace('C:', null, $response);
+        $response = str_replace('D:', '', $response);
+        $response = str_replace('d:', '', $response);
+        $response = str_replace('C:', '', $response);
 
-        return str_replace('c:', null, $response);
+        return str_replace('c:', '', $response);
     }
 
     /**
@@ -571,7 +576,7 @@ class CarddavBackend
      * @param string $content      Content for CardDAV queries
      * @param string $content_type Set content type
      *
-     * @return array Raw CardDAV Response and http status code
+     * @return array<string, mixed> Raw CardDAV Response and http status code
      */
     private function query($url, $method, $content = null, $content_type = null)
     {

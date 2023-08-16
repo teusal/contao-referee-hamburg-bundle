@@ -30,10 +30,15 @@ use Teusal\ContaoRefereeHamburgBundle\Model\RefereeModel;
  */
 class MemberCreator extends System
 {
+    /**
+     * Collection of generated logins in a process.
+     *
+     * @var array<integer, array<string, array<mixed>|bool|string>>
+     */
     private $createdLogins = [];
 
     /**
-     * Konstruktor.
+     * Constructor.
      */
     public function __construct()
     {
@@ -43,48 +48,52 @@ class MemberCreator extends System
     }
 
     /**
-     * Erzeugen eines Logins, wenn es notwendig ist.
+     * Generate a login for the specified referee when it is necessary.
+     *
+     * @param int $srId The id of the referee
+     *
+     * @return bool true if the requested login ist created
      */
-    public function createLoginIfNeeded($srID)
+    public function createLoginIfNeeded($srId)
     {
         if (!Config::get('bsa_import_login_create')) {
             return false;
         }
 
-        if (!$srID) {
+        if (!$srId) {
             return false;
         }
 
-        $objMember = MemberModel::findOneBy('refereeId', $srID);
+        $objMember = MemberModel::findOneBy('refereeId', $srId);
 
         if (isset($objMember)) {
             return false;
         }
 
-        $objSR = RefereeModel::findOneBy(['id = ?', 'email != ?', 'deleted = ?'], [$srID, '', '']);
+        $objReferee = RefereeModel::findOneBy(['id = ?', 'email != ?', 'deleted = ?'], [$srId, '', '']);
 
-        if (!isset($objSR)) {
+        if (!isset($objReferee)) {
             return false;
         }
 
-        $jetzt = new Date();
+        $now = new Date();
         $username = str_replace(
             ['ä', 'ö', 'ü', 'ß', ' ', '\\', '/'],
             ['ae', 'oe', 'ue', 'ss', '', '-', '-'],
-            strtolower($objSR->firstname.'.'.$objSR->lastname)
+            strtolower($objReferee->firstname.'.'.$objReferee->lastname)
         );
 
         if (!$this->checkUsername($username)) {
-            $usernameAppended = $username.'.'.Date::parse('Y', $objSR->dateOfBirth);
+            $usernameAppended = $username.'.'.Date::parse('Y', $objReferee->dateOfBirth);
 
             if (!$this->checkUsername($usernameAppended)) {
-                $usernameAppended = $username.'.'.Date::parse(Config::get('dateFormat'), $objSR->dateOfBirth);
+                $usernameAppended = $username.'.'.Date::parse(Config::get('dateFormat'), $objReferee->dateOfBirth);
 
                 if (!$this->checkUsername($usernameAppended)) {
-                    $usernameAppended = $username.'.'.$objSR->cardNumber;
+                    $usernameAppended = $username.'.'.$objReferee->cardNumber;
 
                     if (!$this->checkUsername($usernameAppended)) {
-                        Message::addError('Es konnte kein Login für SR '.$objSR->firstname.' '.$objSR->lastname.' ID='.$objSR->id.' angelegt werden. Der Benutzername '.$username.' existiert bereits.');
+                        Message::addError('Es konnte kein Login für SR '.$objReferee->firstname.' '.$objReferee->lastname.' ID='.$objReferee->id.' angelegt werden. Der Benutzername '.$username.' existiert bereits.');
 
                         return false;
                     }
@@ -97,48 +106,52 @@ class MemberCreator extends System
         $password = substr(md5(uniqid((string) (mt_rand()), true)), 0, 8);
         $pwd = password_hash($password, PASSWORD_DEFAULT);
 
-        $gender = 'misc';
+        $gender = '';
 
-        if ('m' === $objSR->gender) {
+        if ('m' === $objReferee->gender) {
             $gender = 'male';
-        } elseif ('w' === $objSR->gender) {
+        } elseif ('w' === $objReferee->gender) {
             $gender = 'female';
         }
 
         $res = $this->Database->prepare('INSERT INTO tl_member (tstamp, firstname, lastname, dateOfBirth, gender, street, postal, city, phone, mobile, fax, email, groups, login, username, password, refereeId, dateAdded) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)')
-            ->execute($jetzt->__get('tstamp'), $objSR->firstname, $objSR->lastname, $objSR->dateOfBirth, $gender, $objSR->street, $objSR->postal, $objSR->city, $objSR->phone1, $objSR->mobile, $objSR->fax, $objSR->getFriendlyEmail(), serialize([]), true, $username, $pwd, $objSR->id, $jetzt->__get('tstamp'))
+            ->execute($now->__get('tstamp'), $objReferee->firstname, $objReferee->lastname, $objReferee->dateOfBirth, $gender, $objReferee->street, $objReferee->postal, $objReferee->city, $objReferee->phone1, $objReferee->mobile, $objReferee->fax, $objReferee->friendlyEmail, serialize([]), true, $username, $pwd, $objReferee->id, $now->__get('tstamp'))
         ;
 
         if (0 === $res->__get('affectedRows')) {
             return false;
         }
 
-        SRHistory::insert($srID, $res->__get('insertId'), ['Login', 'ADD'], 'Der Login des Schiedsrichters %s wurde mit dem Benutzernamen "%s" erstellt.', __METHOD__);
+        SRHistory::insert($srId, $res->__get('insertId'), ['Login', 'ADD'], 'Der Login des Schiedsrichters %s wurde mit dem Benutzernamen "%s" erstellt.', __METHOD__);
 
-        $this->createdLogins[$srID] = ['sr' => $objSR->row(), 'username' => $username, 'password' => $password, 'notificationMailSent' => false];
+        $this->createdLogins[$srId] = ['sr' => $objReferee->row(), 'username' => $username, 'password' => $password, 'notificationMailSent' => false];
 
         return true;
     }
 
     /**
-     * Sendet Mails mit der Benachrichtigung an den User, für den ein Login angelegt wurde. Dabei wird die gesamte interne
-     * Liste createdLogins abgearbeitet.
-     * Optional kann eine ID eines Schiedsrichters übergeben werden. Wenn diese gesetzt ist, so wird der Mailversand nur
-     * für den entsprechenden Schiedsrichter verarbeitet.
+     * Sends mails with the notification to the user for whom a login was created. The entire internal
+     * list of createdLogins is processed.
+     * Optionally, an ID of a referee can be transferred. If this is set, the mail dispatch is processed
+     * only for the corresponding referee.
+     *
+     * @param int $srId optional id of a referee
+     *
+     * @return bool true if all emails were sent successfully
      */
-    public function sendNotificationMails($srID = 0)
+    public function sendNotificationMails($srId = 0)
     {
         if (!Config::get('bsa_import_login_send_mail')) {
             return false;
         }
 
-        if (0 !== $srID) {
-            if (!isset($this->createdLogins[$srID]) || $this->createdLogins[$srID]['notificationMailSent']) {
+        if (0 !== $srId) {
+            if (!isset($this->createdLogins[$srId]) || $this->createdLogins[$srId]['notificationMailSent']) {
                 return true;
             }
 
-            $this->sendNotificationMail($this->createdLogins[$srID]['sr'], $this->createdLogins[$srID]['username'], $this->createdLogins[$srID]['password']);
-            $this->createdLogins[$srID]['notificationMailSent'] = true;
+            $this->sendNotificationMail($this->createdLogins[$srId]['sr'], $this->createdLogins[$srId]['username'], $this->createdLogins[$srId]['password']);
+            $this->createdLogins[$srId]['notificationMailSent'] = true;
         }
 
         $mailSuccessfullySent = true;
@@ -152,18 +165,20 @@ class MemberCreator extends System
     }
 
     /**
-     * Sendet eine Testmail.
+     * Sends a test mail.
+     *
+     * @return bool true if the email was sent successfully
      */
     public static function sendTestmail()
     {
-        if (TL_MODE !== 'BE') {
+        if (!\defined('TL_MODE') || TL_MODE !== 'BE') {
             return false;
         }
 
         $data = AbstractEmail::getRefereeForTestmail();
 
         try {
-            return static::sendNotificationMail($data, BackendUser::getInstance()->username, 'XYZ', true);
+            return self::sendNotificationMail($data, BackendUser::getInstance()->username, 'XYZ', true);
         } catch (TransportException $e) {
             // TODO i.e. handle send as denied exception
             throw $e;
@@ -171,33 +186,46 @@ class MemberCreator extends System
     }
 
     /**
-     * Liefert das Array mit angelegten Logins.
+     * Returns the array with created logins.
+     *
+     * @return array<integer, array<string, array<mixed>|bool|string>>
      */
-    public function getCreatedLogins()
+    public function getCreatedLogins(): array
     {
         return $this->createdLogins;
     }
 
     /**
-     * Prüft den übergebenen Benutzernamen. Wenn er in der Datenbank bereits existiert liefert die Methode false zurück.
+     * Checks the passed user name. If it already exists in the database the method returns false.
+     *
+     * @param string $username The username you want to check
+     *
+     * @return bool true if the username is unique
      */
-    private function checkUsername($usernameToCheck)
+    private function checkUsername($username): bool
     {
-        $objExisting = MemberModel::findOneBy('username', $usernameToCheck);
+        $objExisting = MemberModel::findOneBy('username', $username);
 
         return null === $objExisting;
     }
 
     /**
-     * Sendet die Mail mit der Benachrichtigung an den übergebenen User.
+     * Sends the mail with the notification to the passed user.
+     *
+     * @param array<string, mixed> $sr       The referee
+     * @param string               $username The new username
+     * @param string               $password The new password
+     * @param bool                 $test     true if it is a test, default false
+     *
+     * @return bool true if the email was sent successfully
      */
-    private static function sendNotificationMail($sr, $username, $password, $test = false)
+    private static function sendNotificationMail($sr, $username, $password, $test = false): bool
     {
         $mailSuccessfullySent = false;
 
         $objEmail = new LoginEmail();
         $objEmail->setMailerTransport(Config::get('bsa_import_login_mail_mailer_transport'));
-        $objEmail->setSchiedsrichter($sr['id']);
+        $objEmail->setReferee($sr['id']);
         $objEmail->setLogin($username, $password);
         $objEmail->setTest($test);
 

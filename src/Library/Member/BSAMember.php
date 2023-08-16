@@ -48,7 +48,7 @@ class BSAMember extends System
      *
      * @param DataContainer|int $var
      */
-    public function executeSubmitSchiedsrichter($var): void
+    public function executeSubmitReferee($var): void
     {
         $intId = 0;
 
@@ -59,41 +59,41 @@ class BSAMember extends System
         }
 
         // Den Schiedsrichter laden
-        $objSR = RefereeModel::findReferee($intId);
+        $objReferee = RefereeModel::findReferee($intId);
 
-        if (!isset($objSR)) {
+        if (!isset($objReferee)) {
             throw new \Exception('Schiedsrichter zu ID '.$intId.' nicht gefunden!');
         }
 
         // Die personenbezogenen Daten an den Login tl_member übernehmen
-        $this->setPersonalData($objSR);
+        $this->setPersonalData($objReferee);
 
         // nur Obleute oder aktive Schiedsrichter sollen automatisch verwaltete Logins haben
-        $needsLogin = $this->needsLogin($objSR->id);
+        $needsLogin = $this->needsLogin($objReferee->id);
 
         // existierenden Login tl_member laden
-        $objMember = MemberModel::findOneBy('refereeId', $objSR->id);
+        $objMember = MemberModel::findOneBy('refereeId', $objReferee->id);
 
-        if ($objSR->deleted || !$needsLogin) {
+        if ($objReferee->deleted || !$needsLogin) {
             // Mitglied deaktivieren
             if (isset($objMember) && !$objMember->disable) {
                 // Login deaktivieren
                 $objMember->disable = true;
                 $objMember->save();
                 // aus allen Gruppen entfernen
-                BSAMemberGroup::deleteFromGroups($objSR->id);
+                BSAMemberGroup::deleteFromGroups($objReferee->id);
             }
         } else {
-            if (!isset($objMember) && $needsLogin) {
+            if (!isset($objMember)) {
                 // Login anlegen
-                $this->MemberCreator->createLoginIfNeeded($objSR->id);
+                $this->MemberCreator->createLoginIfNeeded($objReferee->id);
 
                 if (Config::get('bsa_import_login_send_mail')) {
-                    $this->MemberCreator->sendNotificationMails($objSR->id);
+                    $this->MemberCreator->sendNotificationMails($objReferee->id);
                 }
 
                 // Den neuen Login laden
-                $objMember = MemberModel::findOneBy('refereeId', $objSR->id);
+                $objMember = MemberModel::findOneBy('refereeId', $objReferee->id);
             }
 
             if (isset($objMember) && $objMember->__get('disable')) {
@@ -103,12 +103,14 @@ class BSAMember extends System
             }
 
             // Die Automatik-Grupen verwalten
-            BSAMemberGroup::handleAutomaticGroups($objSR->id);
+            BSAMemberGroup::handleAutomaticGroups($objReferee->id);
         }
     }
 
     /**
-     * Liefert das Array mit angelegten Logins.
+     * Returns the array with created logins.
+     *
+     * @return array<integer, array<string, array<mixed>|bool|string>>
      */
     public function getCreatedLogins()
     {
@@ -152,7 +154,7 @@ class BSAMember extends System
         $arrLoginNames = [];
 
         foreach ($arrSR as $sr) {
-            $this->executeSubmitSchiedsrichter($sr['id']);
+            $this->executeSubmitReferee($sr['id']);
 
             if (\is_array($this->MemberCreator->getCreatedLogins()) && \array_key_exists($sr['id'], $this->MemberCreator->getCreatedLogins())) {
                 $arrLoginNames[] = $sr['nameReverse'];
@@ -172,7 +174,9 @@ class BSAMember extends System
     /**
      * checks whether a login is needed or not.
      *
-     * @return bool
+     * @param int $intID The referee's id
+     *
+     * @return bool true if a login is needed
      */
     private function needsLogin($intID)
     {
@@ -180,32 +184,34 @@ class BSAMember extends System
     }
 
     /**
-     * Setzt Vor-, Nachname und E-Mail sowie weitere personenbezogene Daten am Login tl_member.
+     * Sets firstname, lastname and email as well as other personal data at login in tl_member.
+     *
+     * @param RefereeModel $objReferee The referee object
      */
-    private function setPersonalData($objSR): void
+    private function setPersonalData($objReferee): void
     {
-        $objMember = MemberModel::findOneBy('refereeId', $objSR->id);
+        $objMember = MemberModel::findOneBy('refereeId', $objReferee->id);
 
         if (isset($objMember)) {
             $gender = 'misc';
 
-            if ('m' === $objSR->gender) {
+            if ('m' === $objReferee->gender) {
                 $gender = 'male';
-            } elseif ('w' === $objSR->gender) {
+            } elseif ('w' === $objReferee->gender) {
                 $gender = 'female';
             }
 
-            $objMember->__set('firstname', $objSR->firstname);
-            $objMember->__set('lastname', $objSR->lastname);
-            $objMember->__set('dateOfBirth', $objSR->dateOfBirth);
+            $objMember->__set('firstname', $objReferee->firstname);
+            $objMember->__set('lastname', $objReferee->lastname);
+            $objMember->__set('dateOfBirth', $objReferee->dateOfBirth);
             $objMember->__set('gender', $gender);
-            $objMember->__set('street', $objSR->street);
-            $objMember->__set('postal', $objSR->postal);
-            $objMember->__set('city', $objSR->city);
-            $objMember->__set('phone', $objSR->phone1);
-            $objMember->__set('mobile', $objSR->mobile);
-            $objMember->__set('fax', $objSR->fax);
-            $objMember->__set('email', $objSR->getFriendlyEmail());
+            $objMember->__set('street', $objReferee->street);
+            $objMember->__set('postal', $objReferee->postal);
+            $objMember->__set('city', $objReferee->city);
+            $objMember->__set('phone', $objReferee->phone1);
+            $objMember->__set('mobile', $objReferee->mobile);
+            $objMember->__set('fax', $objReferee->fax);
+            $objMember->__set('email', $objReferee->friendlyEmail);
 
             $objMember->save();
         }

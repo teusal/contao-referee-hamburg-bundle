@@ -22,7 +22,7 @@ use Teusal\ContaoRefereeHamburgBundle\Model\ClubChairmanModel;
 use Teusal\ContaoRefereeHamburgBundle\Model\ClubModel;
 use Teusal\ContaoRefereeHamburgBundle\Model\EventModel;
 use Teusal\ContaoRefereeHamburgBundle\Model\EventParticipiantModel;
-use Teusal\ContaoRefereeHamburgBundle\Model\MemberGroupAssignmentMemberModel;
+use Teusal\ContaoRefereeHamburgBundle\Model\MemberGroupMemberAssignmentModel;
 use Teusal\ContaoRefereeHamburgBundle\Model\MemberGroupNewsletterAssignmentModel;
 use Teusal\ContaoRefereeHamburgBundle\Model\RefereeModel;
 use Teusal\ContaoRefereeHamburgBundle\Model\SeasonModel;
@@ -301,7 +301,7 @@ $GLOBALS['TL_MODELS'] = [
     // 'tl_bsa_beobachtung' => BSABeobachtungModel::class,
     // 'tl_bsa_beobachtung_ausgang' => BSABeobachtungAusgangModel::class,
     'tl_bsa_website_data_release' => WebsiteDataReleaseModel::class,
-    'tl_bsa_member_group_member_assignment' => MemberGroupAssignmentMemberModel::class,
+    'tl_bsa_member_group_member_assignment' => MemberGroupMemberAssignmentModel::class,
     'tl_bsa_member_group_newsletter_assignment' => MemberGroupNewsletterAssignmentModel::class,
     // 'tl_bsa_lehrgang' => BSALehrgangModel::class,
     // 'tl_bsa_member_group_newsletter_assignment' => BSANewsletterzuordnungModel::class,

@@ -89,7 +89,7 @@ $GLOBALS['TL_DCA']['tl_bsa_member_group_member_assignment'] = [
     // Palettes
     'palettes' => [
         '__selector__' => [],
-        'default' => 'funktion,refereeId',
+        'default' => 'function,refereeId',
     ],
 
     // Subpalettes
@@ -110,7 +110,7 @@ $GLOBALS['TL_DCA']['tl_bsa_member_group_member_assignment'] = [
         'tstamp' => [
             'sql' => "int(10) unsigned NOT NULL default '0'",
         ],
-        'funktion' => [
+        'function' => [
             'exclude' => true,
             'inputType' => 'text',
             'eval' => ['decodeEntities' => true, 'maxlength' => 255, 'tl_class' => 'w50'],
@@ -196,7 +196,7 @@ class tl_bsa_member_group_member_assignment extends Backend
      */
     public function halbautomaticButton($href, $label, $title, $class, $attributes, $table, $rootRecordIds)
     {
-        return BSAMemberGroup::isHalbautomatic($this->objMemberGroup->__get('automatik')) ? '<a href="'.$this->addToUrl($href).'" class="'.$class.'" title="'.StringUtil::specialchars($title).'"'.$attributes.'>'.$label.'</a> ' : '';
+        return BSAMemberGroup::isPartlyAutomated($this->objMemberGroup->__get('automatik')) ? '<a href="'.$this->addToUrl($href).'" class="'.$class.'" title="'.StringUtil::specialchars($title).'"'.$attributes.'>'.$label.'</a> ' : '';
     }
 
     /**
@@ -208,13 +208,13 @@ class tl_bsa_member_group_member_assignment extends Backend
      */
     public function getSchiedsrichterNotDeleted(DataContainer $dc)
     {
-        $objSR = RefereeModel::findBy('deleted', '', ['order' => 'nameReverse']);
+        $objReferee = RefereeModel::findBy('deleted', '', ['order' => 'nameReverse']);
 
         $options = [];
 
-        if (null !== $objSR) {
-            while ($objSR->next()) {
-                $options[$objSR->id] = $objSR->__get('nameReverse');
+        if (null !== $objReferee) {
+            while ($objReferee->next()) {
+                $options[$objReferee->id] = $objReferee->nameReverse;
             }
         }
 
@@ -229,9 +229,9 @@ class tl_bsa_member_group_member_assignment extends Backend
      */
     public function deleteGruppenmitglied(DataContainer $dc, $undoId): void
     {
-        BSAMemberGroup::setGroupsToMember($dc->__get('activeRecord')->refereeId, $dc->__get('activeRecord')->pid, 0);
-        SRHistory::insert($dc->__get('activeRecord')->refereeId, $dc->__get('activeRecord')->pid, ['Kader/Gruppe', 'REMOVE'], 'Der Schiedsrichter %s wurde aus der Gruppe "%s" entfernt.', __METHOD__);
-        AddressbookSynchronizer::executeSubmitSchiedsrichter($dc->__get('activeRecord')->refereeId, $dc->__get('activeRecord')->pid);
+        BSAMemberGroup::setGroupsToMember((int) $dc->__get('activeRecord')->refereeId, (int) $dc->__get('activeRecord')->pid, 0);
+        SRHistory::insert((int) $dc->__get('activeRecord')->refereeId, $dc->__get('activeRecord')->pid, ['Kader/Gruppe', 'REMOVE'], 'Der Schiedsrichter %s wurde aus der Gruppe "%s" entfernt.', __METHOD__);
+        AddressbookSynchronizer::executeSubmitReferee($dc->__get('activeRecord')->refereeId, $dc->__get('activeRecord')->pid);
     }
 
     /**
@@ -244,7 +244,7 @@ class tl_bsa_member_group_member_assignment extends Backend
         if (isset($this->addressbookSync) && !empty($this->addressbookSync) && is_array($this->addressbookSync)) {
             foreach ($this->addressbookSync as $srId) {
                 if ($srId > 0) {
-                    AddressbookSynchronizer::executeSubmitSchiedsrichter($srId);
+                    AddressbookSynchronizer::executeSubmitReferee($srId);
                 }
             }
             $this->addressbookSync = null;
@@ -262,9 +262,9 @@ class tl_bsa_member_group_member_assignment extends Backend
     public function validateDuplicate($varValue, DataContainer $dc)
     {
         if ($varValue !== $dc->__get('activeRecord')->refereeId) {
-            $objSR = RefereeModel::findReferee($varValue);
+            $objReferee = RefereeModel::findReferee($varValue);
 
-            if (isset($objSR) && $objSR->__get('deleted')) {
+            if (isset($objReferee) && $objReferee->deleted) {
                 throw new Exception('Gelöschte Schiedsrichter dürfen nicht aufgenommen werden.');
             }
 

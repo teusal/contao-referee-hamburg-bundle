@@ -45,9 +45,9 @@ $GLOBALS['TL_DCA']['tl_bsa_referee'] = [
         'notDeletable' => true,
         'onsubmit_callback' => [
             [tl_bsa_referee::class, 'submit'],
-            [BSAMember::class, 'executeSubmitSchiedsrichter'],
-            [BSANewsletter::class, 'executeSubmitSchiedsrichter'],
-            [AddressbookSynchronizer::class, 'executeSubmitSchiedsrichter'],
+            [BSAMember::class, 'executeSubmitReferee'],
+            [BSANewsletter::class, 'executeSubmitReferee'],
+            [AddressbookSynchronizer::class, 'executeSubmitReferee'],
         ],
         'sql' => [
             'keys' => [
@@ -84,7 +84,7 @@ $GLOBALS['TL_DCA']['tl_bsa_referee'] = [
             ],
             'undo' => [
                 'icon' => 'undo.gif',
-                'attributes' => 'onclick="Backend.getScrollOffset();return AjaxRequest.executeUndo(this)"',
+                'attributes' => 'onclick="Backend.getScrollOffset();return AjaxRequest.executeUndelete(this)"',
                 'button_callback' => [tl_bsa_referee::class, 'undoIcon'],
             ],
             'show' => [
@@ -364,7 +364,7 @@ class tl_bsa_referee extends Backend
     public function undoIcon($row, $href, $label, $title, $icon, $attributes, $table, $rootRecordIds, $childRecordIds, $circularReference, $previous, $next, DataContainer $dc): string
     {
         if (null !== Input::get('dud') && strlen(Input::get('dud'))) {
-            $this->executeUndo(Input::get('dud'));
+            $this->executeUndelete(Input::get('dud'));
             $this->redirect($this->getReferer());
         }
 
@@ -400,11 +400,11 @@ class tl_bsa_referee extends Backend
         SRHistory::insertByDeleteSchiedsrichter($intId);
 
         // handle member, disable login
-        $this->BSAMember->executeSubmitSchiedsrichter($intId);
+        $this->BSAMember->executeSubmitReferee($intId);
         // remove from newsletters
-        $this->BSANewsletter->synchronizeNewsletterBySchiedsrichter($intId);
+        $this->BSANewsletter->synchronizeNewsletterBySchiedsrichter((int) $intId);
         // delete from address book
-        AddressbookSynchronizer::executeSubmitSchiedsrichter($intId);
+        AddressbookSynchronizer::executeSubmitReferee((int) $intId);
     }
 
     /**
@@ -412,7 +412,7 @@ class tl_bsa_referee extends Backend
      *
      * @param mixed $intId
      */
-    public function executeUndo($intId): void
+    public function executeUndelete($intId): void
     {
         $intId = (int) $intId;
 
@@ -425,11 +425,11 @@ class tl_bsa_referee extends Backend
         SRHistory::insertByUndeleteSchiedsrichter($intId);
 
         // handle member, create or enable login
-        $this->BSAMember->executeSubmitSchiedsrichter($intId);
+        $this->BSAMember->executeSubmitReferee($intId);
         // add to newsletters
         $this->BSANewsletter->synchronizeNewsletterBySchiedsrichter($intId);
         // add to address book
-        AddressbookSynchronizer::executeSubmitSchiedsrichter($intId);
+        AddressbookSynchronizer::executeSubmitReferee($intId);
     }
 
     /**
@@ -488,7 +488,7 @@ class tl_bsa_referee extends Backend
             if (isset($freigabe)) {
                 $key = 'published';
 
-                $objDate = new Date($freigabe->__get('formular_erhalten_am'));
+                $objDate = new Date($freigabe->__get('dateOfFormReceived'));
                 $title = 'Freigaben erteilt am '.$objDate->__get('date');
             }
         }

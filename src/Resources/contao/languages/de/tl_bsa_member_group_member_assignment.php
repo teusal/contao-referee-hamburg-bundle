@@ -14,7 +14,7 @@ declare(strict_types=1);
   * Fields
   */
 $GLOBALS['TL_LANG']['tl_bsa_member_group_member_assignment']['refereeId'] = ['Schiedsrichter', 'Wählen Sie den Schiedsrichter aus, der Mitglied dieser Gruppe sein soll.'];
-$GLOBALS['TL_LANG']['tl_bsa_member_group_member_assignment']['funktion'] = ['Funktion', 'Tragen Sie (optional) die Funktion des Mitgliedes ein.'];
+$GLOBALS['TL_LANG']['tl_bsa_member_group_member_assignment']['function'] = ['Funktion', 'Tragen Sie (optional) die Funktion des Mitgliedes ein.'];
 
 /*
  * Buttons
