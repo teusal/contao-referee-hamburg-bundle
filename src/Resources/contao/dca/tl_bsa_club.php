@@ -77,10 +77,17 @@ $GLOBALS['TL_DCA']['tl_bsa_club'] = [
         'tstamp' => [
             'sql' => "int(10) unsigned NOT NULL default '0'",
         ],
+        'number' => [
+            'inputType' => 'text',
+            'sorting' => true,
+            'search' => true,
+            'eval' => ['mandatory' => true, 'maxlength' => 6, 'minlength' => 6, 'unique' => true, 'rgxp' => 'digit', 'tl_class' => 'w50'],
+            'sql' => "varchar(6) NOT NULL default ''",
+        ],
         'name' => [
             'inputType' => 'text',
             'sorting' => true,
-            'eval' => ['mandatory' => true, 'maxlength' => 100, 'tl_class' => 'w50', 'unique' => true],
+            'eval' => ['mandatory' => true, 'maxlength' => 100, 'tl_class' => 'w50 clr', 'unique' => true],
             'sql' => "varchar(50) NOT NULL default ''",
         ],
         'nameShort' => [
@@ -89,13 +96,6 @@ $GLOBALS['TL_DCA']['tl_bsa_club'] = [
             'search' => true,
             'eval' => ['mandatory' => true, 'maxlength' => 20, 'tl_class' => 'w50'],
             'sql' => "varchar(20) NOT NULL default ''",
-        ],
-        'number' => [
-            'inputType' => 'text',
-            'sorting' => true,
-            'search' => true,
-            'eval' => ['mandatory' => true, 'maxlength' => 6, 'minlength' => 6, 'unique' => true, 'rgxp' => 'digit'],
-            'sql' => "varchar(6) NOT NULL default ''",
         ],
         'nameAddition' => [
             'inputType' => 'text',

@@ -31,9 +31,9 @@ use Contao\Model\Collection;
  * @method static EventParticipiantModel|null findOneBy($col, $val, array $opt=array())
  * @method static EventParticipiantModel|null findOneByPid($val, array $opt=array())
  * @method static EventParticipiantModel|null findOneByTstamp($val, array $opt=array())
- * @method static EventParticipiantModel|null findOneByRefereeId($col, $val, array $opt=array())
- * @method static EventParticipiantModel|null findOneByRefereeNameReverse($col, $val, array $opt=array())
- * @method static EventParticipiantModel|null findOneByType($col, $val, array $opt=array())
+ * @method static EventParticipiantModel|null findOneByRefereeId($val, array $opt=array())
+ * @method static EventParticipiantModel|null findOneByRefereeNameReverse($val, array $opt=array())
+ * @method static EventParticipiantModel|null findOneByType($val, array $opt=array())
  *                                                                                                                                        -
  * @method static Collection|array<EventParticipiantModel>|EventParticipiantModel|null findByPid($val, array $opt=array())
  * @method static Collection|array<EventParticipiantModel>|EventParticipiantModel|null findByTstamp($val, array $opt=array())

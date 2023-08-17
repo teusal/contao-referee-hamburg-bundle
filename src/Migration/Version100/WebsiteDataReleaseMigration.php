@@ -56,7 +56,19 @@ class WebsiteDataReleaseMigration extends AbstractMigration
 
         if ($this->shouldModifyColumns()) {
             $query = 'ALTER TABLE tl_bsa_website_data_release ';
-            $query .= 'RENAME COLUMN schiedsrichter TO refereeId ';
+            $query .= 'RENAME COLUMN schiedsrichter TO refereeId, ';
+            $query .= 'RENAME COLUMN zeige_foto TO showPhoto, ';
+            $query .= 'RENAME COLUMN link_email TO showEmail, ';
+            $query .= 'RENAME COLUMN zeige_fax TO showFax, ';
+            $query .= 'RENAME COLUMN zeige_telefon_mobil TO showMobile, ';
+            $query .= 'RENAME COLUMN zeige_telefon2 TO showPhone2, ';
+            $query .= 'RENAME COLUMN zeige_telefon1 TO showPhone1, ';
+            $query .= 'RENAME COLUMN zeige_ort TO showCity, ';
+            $query .= 'RENAME COLUMN zeige_plz TO showPostal, ';
+            $query .= 'RENAME COLUMN zeige_strasse TO showStreet, ';
+            $query .= 'RENAME COLUMN zeige_geburtsdatum TO showDateOfBirth, ';
+            $query .= 'RENAME COLUMN formular_erhalten_am TO dateOfFormReceived';
+
             $this->connection->executeStatement($query);
             $this->resultMessages[] = 'Columns of table tl_bsa_website_data_release successfully renamed.';
         }

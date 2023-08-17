@@ -446,7 +446,7 @@ abstract class AbstractEmail extends Email
         $result = parent::sendTo($email);
 
         if ($this->refereeId && !$this->isTest) {
-            SRHistory::insert($this->refereeId, null, ['E-Mail', 'INFO'], 'Der Schiedsrichters %s wurde per E-Mail angeschrieben. Betreff: '.$this->__get('subject'), __METHOD__);
+            SRHistory::insert($this->refereeId, null, ['E-Mail', 'INFO'], 'Der Schiedsrichter %s wurde per E-Mail angeschrieben. Betreff: '.$this->__get('subject'), __METHOD__);
         }
 
         ++static::$countSentMails;

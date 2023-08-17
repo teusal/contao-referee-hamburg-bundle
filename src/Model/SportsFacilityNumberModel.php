@@ -29,7 +29,7 @@ use Contao\Model\Collection;
  * @method static SportsFacilityNumberModel|null findOneBy($col, $val, array $opt=array())
  * @method static SportsFacilityNumberModel|null findOneByPid($val, array $opt=array())
  * @method static SportsFacilityNumberModel|null findOneByTstamp($val, array $opt=array())
- * @method static SportsFacilityNumberModel|null findOneByDfbnetNumber($col, $val, array $opt=array())
+ * @method static SportsFacilityNumberModel|null findOneByDfbnetNumber($val, array $opt=array())
  *                                                                                                                                        -
  * @method static Collection|array<SportsFacilityNumberModel>|SportsFacilityNumberModel|null findByPid($val, array $opt=array())
  * @method static Collection|array<SportsFacilityNumberModel>|SportsFacilityNumberModel|null findByTstamp($val, array $opt=array())

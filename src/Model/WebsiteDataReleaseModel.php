@@ -21,7 +21,6 @@ use Contao\Model\Collection;
  * @property string|int  $id
  * @property string|int  $tstamp
  * @property string|int  $refereeId
- * @property string      $nameReverse
  * @property string|int  $dateOfFormReceived
  * @property string|bool $showDateOfBirth
  * @property string|bool $showStreet
@@ -38,24 +37,22 @@ use Contao\Model\Collection;
  * @method static WebsiteDataReleaseModel|null findByPk($id, array $opt=array())
  * @method static WebsiteDataReleaseModel|null findByIdOrAlias($val, array $opt=array())
  * @method static WebsiteDataReleaseModel|null findOneBy($col, $val, array $opt=array())
- * @method static WebsiteDataReleaseModel|null findOneByTstamp($col, $val, array $opt=array())
- * @method static WebsiteDataReleaseModel|null findOneByRefereeId($col, $val, array $opt=array())
- * @method static WebsiteDataReleaseModel|null findOneByNameReverse($col, $val, array $opt=array())
- * @method static WebsiteDataReleaseModel|null findOneByDateOfFormReceived($col, $val, array $opt=array())
- * @method static WebsiteDataReleaseModel|null findOneByShowDateOfBirth($col, $val, array $opt=array())
- * @method static WebsiteDataReleaseModel|null findOneByShowStreet($col, $val, array $opt=array())
- * @method static WebsiteDataReleaseModel|null findOneByShowPostal($col, $val, array $opt=array())
- * @method static WebsiteDataReleaseModel|null findOneByShowCity($col, $val, array $opt=array())
- * @method static WebsiteDataReleaseModel|null findOneByShowPhone1($col, $val, array $opt=array())
- * @method static WebsiteDataReleaseModel|null findOneByShowPhone2($col, $val, array $opt=array())
- * @method static WebsiteDataReleaseModel|null findOneByShowMobile($col, $val, array $opt=array())
- * @method static WebsiteDataReleaseModel|null findOneByShowFax($col, $val, array $opt=array())
- * @method static WebsiteDataReleaseModel|null findOneByShowEmail($col, $val, array $opt=array())
- * @method static WebsiteDataReleaseModel|null findOneByShowPhoto($col, $val, array $opt=array())
+ * @method static WebsiteDataReleaseModel|null findOneByTstamp($val, array $opt=array())
+ * @method static WebsiteDataReleaseModel|null findOneByRefereeId($val, array $opt=array())
+ * @method static WebsiteDataReleaseModel|null findOneByDateOfFormReceived($val, array $opt=array())
+ * @method static WebsiteDataReleaseModel|null findOneByShowDateOfBirth($val, array $opt=array())
+ * @method static WebsiteDataReleaseModel|null findOneByShowStreet($val, array $opt=array())
+ * @method static WebsiteDataReleaseModel|null findOneByShowPostal($val, array $opt=array())
+ * @method static WebsiteDataReleaseModel|null findOneByShowCity($val, array $opt=array())
+ * @method static WebsiteDataReleaseModel|null findOneByShowPhone1($val, array $opt=array())
+ * @method static WebsiteDataReleaseModel|null findOneByShowPhone2($val, array $opt=array())
+ * @method static WebsiteDataReleaseModel|null findOneByShowMobile($val, array $opt=array())
+ * @method static WebsiteDataReleaseModel|null findOneByShowFax($val, array $opt=array())
+ * @method static WebsiteDataReleaseModel|null findOneByShowEmail($val, array $opt=array())
+ * @method static WebsiteDataReleaseModel|null findOneByShowPhoto($val, array $opt=array())
  *                                                                                                                                          -
  * @method static Collection|array<WebsiteDataReleaseModel>|WebsiteDataReleaseModel|null findByTstamp($val, array $opt=array())
  * @method static Collection|array<WebsiteDataReleaseModel>|WebsiteDataReleaseModel|null findByRefereeId($val, array $opt=array())
- * @method static Collection|array<WebsiteDataReleaseModel>|WebsiteDataReleaseModel|null findByNameReverse($val, array $opt=array())
  * @method static Collection|array<WebsiteDataReleaseModel>|WebsiteDataReleaseModel|null findByDateOfFormReceived($val, array $opt=array())
  * @method static Collection|array<WebsiteDataReleaseModel>|WebsiteDataReleaseModel|null findByShowDateOfBirth($val, array $opt=array())
  * @method static Collection|array<WebsiteDataReleaseModel>|WebsiteDataReleaseModel|null findByShowStreet($val, array $opt=array())
@@ -74,7 +71,6 @@ use Contao\Model\Collection;
  * @method static integer countById($id, array $opt=array())
  * @method static integer countByTstamp($val, array $opt=array())
  * @method static integer countByRefereeId($val, array $opt=array())
- * @method static integer countByNameReverse($val, array $opt=array())
  * @method static integer countByDateOfFormReceived($val, array $opt=array())
  * @method static integer countByShowDateOfBirth($val, array $opt=array())
  * @method static integer countByShowStreet($val, array $opt=array())
@@ -95,18 +91,6 @@ class WebsiteDataReleaseModel extends Model
      * @var string
      */
     protected static $strTable = 'tl_bsa_website_data_release';
-
-    /**
-     * Freigabe anhand des Schiedsrichters finden.
-     *
-     * @param mixed $refereeId Die numerische ID aus tl_bsa_referee
-     *
-     * @return WebsiteDataReleaseModel|null Das Model oder null wenn es keine Freigabe gibt
-     */
-    public static function findFreigabe($refereeId)
-    {
-        return self::findOneBy('refereeId', $refereeId, []);
-    }
 }
 
 class_alias(WebsiteDataReleaseModel::class, 'WebsiteDataReleaseModel');

@@ -24,9 +24,6 @@ $GLOBALS['TL_DCA']['tl_bsa_website_data_release'] = [
     'config' => [
         'dataContainer' => DC_Table::class,
         'enableVersioning' => true,
-        'onsubmit_callback' => [
-            [tl_bsa_website_data_release::class, 'setRefereeNameReverse'],
-        ],
         'ondelete_callback' => [
             [tl_bsa_website_data_release::class, 'deleteFreigabe'],
         ],
@@ -41,14 +38,14 @@ $GLOBALS['TL_DCA']['tl_bsa_website_data_release'] = [
     // List
     'list' => [
         'sorting' => [
-            'mode' => DataContainer::MODE_SORTED,
-            'fields' => ['nameReverse'],
-            'flag' => DataContainer::SORT_INITIAL_LETTER_ASC,
-            'panelLayout' => 'filter;search,limit',
+            'mode' => DataContainer::MODE_SORTABLE,
+            'fields' => ['refereeId'],
+            'flag' => DataContainer::SORT_ASC,
+            'panelLayout' => 'filter;sort,search,limit',
         ],
         'label' => [
-            'fields' => ['dateOfFormReceived', 'nameReverse'],
-            'format' => '<span style="color:#b3b3b3;padding-right:3px">[%s]</span> %s',
+            'fields' => ['refereeId', 'dateOfFormReceived', 'tstamp'],
+            'showColumns' => true,
         ],
         'global_operations' => [
             'all' => [
@@ -67,13 +64,17 @@ $GLOBALS['TL_DCA']['tl_bsa_website_data_release'] = [
                 'icon' => 'delete.gif',
                 'attributes' => 'onclick="if (!confirm(\''.$GLOBALS['TL_LANG']['MSC']['deleteConfirm'].'\')) return false; Backend.getScrollOffset();"',
             ],
+            'show' => [
+                'href' => 'act=show',
+                'icon' => 'show.gif',
+            ],
         ],
     ],
 
     // Palettes
     'palettes' => [
         '__selector__' => [],
-        'default' => 'refereeId,dateOfFormReceived;showStreet,showPostal,showCity,showDateOfBirth,showPhone1,showPhone2,showMobile,showFax,showPhoto,showEmail',
+        'default' => '{form_legend},refereeId,dateOfFormReceived;{release_legend},showStreet,showPostal,showCity,showDateOfBirth,showPhone1,showPhone2,showMobile,showFax,showPhoto,showEmail',
     ],
 
     // Subpalettes
@@ -86,26 +87,30 @@ $GLOBALS['TL_DCA']['tl_bsa_website_data_release'] = [
             'sql' => 'int(10) unsigned NOT NULL auto_increment',
         ],
         'tstamp' => [
+            'label' => &$GLOBALS['TL_LANG']['MSC']['tstamp'],
+            'sorting' => true,
+            'flag' => DataContainer::SORT_DAY_DESC,
+            'eval' => ['rgxp' => 'date'],
             'sql' => "int(10) unsigned NOT NULL default '0'",
         ],
         'refereeId' => [
             'inputType' => 'select',
             'filter' => true,
+            'sorting' => true,
+            'flag' => DataContainer::SORT_ASC,
+            'search' => true,
             'eval' => ['unique' => true, 'multiple' => false, 'includeBlankOption' => true, 'blankOptionLabel' => 'Schiedsrichter wählen', 'mandatory' => true, 'tl_class' => 'w50'],
+            'options_callback' => ['teusal.referee.available_referees', 'getRefereeOptions'],
             'foreignKey' => 'tl_bsa_referee.nameReverse',
             'save_callback' => [
                 [tl_bsa_website_data_release::class, 'saveSchiedsrichter'],
             ],
             'sql' => "int(10) unsigned NOT NULL default '0'",
         ],
-        'nameReverse' => [
-            'search' => true,
-            'eval' => ['doNotShow' => true],
-            'sql' => "varchar(103) NOT NULL default ''",
-        ],
         'dateOfFormReceived' => [
             'inputType' => 'text',
-            'flag' => DataContainer::SORT_MONTH_DESC,
+            'sorting' => true,
+            'flag' => DataContainer::SORT_DAY_DESC,
             'eval' => ['mandatory' => true, 'rgxp' => 'date', 'datepicker' => true, 'tl_class' => 'clr w50 wizard'],
             'sql' => "varchar(10) NOT NULL default ''",
         ],
@@ -206,16 +211,6 @@ class tl_bsa_website_data_release extends Backend
     {
         parent::__construct();
         $this->import(BackendUser::class, 'User');
-    }
-
-    /**
-     * updating the active record with the referees name revers.
-     *
-     * @param DataContainer $dc Data Container object
-     */
-    public function setRefereeNameReverse(DataContainer $dc): void
-    {
-        $this->Database->execute('UPDATE tl_bsa_website_data_release AS f, tl_bsa_referee AS sr SET f.nameReverse=sr.nameReverse WHERE f.refereeId=sr.id AND f.id='.$dc->id);
     }
 
     /**

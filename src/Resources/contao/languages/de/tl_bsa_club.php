@@ -13,7 +13,7 @@ declare(strict_types=1);
 /*
  * Legends
  */
-$GLOBALS['TL_LANG']['tl_bsa_club']['club_data_legend'] = 'Veröffentlichung';
+$GLOBALS['TL_LANG']['tl_bsa_club']['club_data_legend'] = 'Vereinsdaten';
 $GLOBALS['TL_LANG']['tl_bsa_club']['address_legend'] = 'Adressdaten';
 $GLOBALS['TL_LANG']['tl_bsa_club']['contact_legend'] = 'Kontaktdaten';
 $GLOBALS['TL_LANG']['tl_bsa_club']['image_legend'] = 'Bilder';

@@ -11,6 +11,7 @@ declare(strict_types=1);
  */
 
 namespace Teusal\ContaoRefereeHamburgBundle\Library\Options;
+
 use Contao\DataContainer;
 use Contao\StringUtil;
 use Teusal\ContaoRefereeHamburgBundle\Model\ClubModel;
@@ -29,7 +30,7 @@ class RefereeOptions
     private $arrClubs = [];
 
     /**
-     * @var boolean $includeDeleted
+     * @var bool
      */
     private $includeDeleted;
 
@@ -66,7 +67,7 @@ class RefereeOptions
      *
      * @return array<int, array<string, string>> the list of selectable options
      */
-    public function getRefereeOptions(DataContainer $dc): array
+    public function getRefereeOptions($dc): array
     {
         $arrRecipientOptions = [];
 
@@ -75,17 +76,18 @@ class RefereeOptions
             $arrRecipientOptions[$club['nameShort']] = [];
         }
 
-        if(isset($dc)) {
+        if (isset($dc)) {
             $strField = $dc->field;
             // as first add an option, if the selected referee is deleted
             $objReferee = RefereeModel::findByPk($dc->activeRecord->$strField);
-            if(isset($objReferee) && $objReferee->deleted) {
-                $arrRecipientOptions[$this->arrClubs[($objReferee->deleted ? -1 : $objReferee->clubId)]['nameShort']][$objReferee->id] = StringUtil::specialchars($objReferee->nameReverse);
+
+            if (isset($objReferee) && $objReferee->deleted) {
+                $arrRecipientOptions[$this->arrClubs[-1]['nameShort']][$objReferee->id] = StringUtil::specialchars($objReferee->nameReverse);
             }
         }
 
         // loading referees
-        if($this->includeDeleted) {
+        if ($this->includeDeleted) {
             $objReferee = RefereeModel::findAll(['order' => 'nameReverse']);
         } else {
             $objReferee = RefereeModel::findByDeleted('', ['order' => 'nameReverse']);

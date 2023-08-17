@@ -31,7 +31,7 @@ use Contao\Model\Collection;
  * @method static MemberGroupNewsletterAssignmentModel|null findOneByPid($val, array $opt=array())
  * @method static MemberGroupNewsletterAssignmentModel|null findOneBySorting($val, array $opt=array())
  * @method static MemberGroupNewsletterAssignmentModel|null findOneByTstamp($val, array $opt=array())
- * @method static MemberGroupNewsletterAssignmentModel|null findOneByNewsletterChannelId($col, $val, array $opt=array())
+ * @method static MemberGroupNewsletterAssignmentModel|null findOneByNewsletterChannelId($val, array $opt=array())
  *                                                                                                                                                                     -
  * @method static Collection|array<MemberGroupNewsletterAssignmentModel>|MemberGroupNewsletterAssignmentModel|null findByPid($val, array $opt=array())
  * @method static Collection|array<MemberGroupNewsletterAssignmentModel>|MemberGroupNewsletterAssignmentModel|null findBySorting($val, array $opt=array())

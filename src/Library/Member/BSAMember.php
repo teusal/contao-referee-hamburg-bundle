@@ -193,18 +193,10 @@ class BSAMember extends System
         $objMember = MemberModel::findOneBy('refereeId', $objReferee->id);
 
         if (isset($objMember)) {
-            $gender = 'misc';
-
-            if ('m' === $objReferee->gender) {
-                $gender = 'male';
-            } elseif ('w' === $objReferee->gender) {
-                $gender = 'female';
-            }
-
             $objMember->__set('firstname', $objReferee->firstname);
             $objMember->__set('lastname', $objReferee->lastname);
             $objMember->__set('dateOfBirth', $objReferee->dateOfBirth);
-            $objMember->__set('gender', $gender);
+            $objMember->__set('gender', $objReferee->gender);
             $objMember->__set('street', $objReferee->street);
             $objMember->__set('postal', $objReferee->postal);
             $objMember->__set('city', $objReferee->city);

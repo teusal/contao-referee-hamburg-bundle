@@ -178,7 +178,8 @@ class Newsletter extends \Contao\Newsletter
                 $arrRecipient['$salutationPersonnel'] = 'Liebe';
                 break;
 
-            case 'misc':
+            case '':
+            case 'other':
             default:
                 $arrRecipient['$salutationPersonnel'] = 'Liebe/Lieber';
                 break;
@@ -226,7 +227,7 @@ class Newsletter extends \Contao\Newsletter
 
         // writing the referee history if the option is activated
         if ($objNewsletterChannel->__get('writeRefereeHistory') && $arrRecipient['refereeId'] && (!\is_array($_SESSION['REJECTED_RECIPIENTS']) || !\in_array($arrRecipient['email'], $_SESSION['REJECTED_RECIPIENTS'], true))) {
-            SRHistory::insert($arrRecipient['refereeId'], $objNewsletter->__get('pid'), ['E-Mail', 'INFO'], 'Der Schiedsrichters %s wurde via E-Mail-Verteiler "%s" angeschrieben. Betreff: '.$objEmail->__get('subject'), __METHOD__);
+            SRHistory::insert($arrRecipient['refereeId'], $objNewsletter->__get('pid'), ['E-Mail', 'INFO'], 'Der Schiedsrichter %s wurde via E-Mail-Verteiler "%s" angeschrieben. Betreff: '.$objEmail->__get('subject'), __METHOD__);
         }
 
         return $return;
@@ -306,7 +307,7 @@ class Newsletter extends \Contao\Newsletter
                 'firstname' => 'VORNAME',
                 'lastname' => 'NACHNAME',
                 'dateOfBirth' => '946677600',
-                'gender' => 'misc',
+                'gender' => '',
                 'street' => 'Musterstraße 42',
                 'postal' => '42042',
                 'city' => 'Musterstadt',

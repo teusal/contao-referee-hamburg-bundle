@@ -38,7 +38,7 @@ class RefereeMigration extends AbstractMigration
 
     public function getName(): string
     {
-        return 'Referee Bundle 1.0.0 Referee History Update';
+        return 'Referee Bundle 1.0.0 Referee Update';
     }
 
     public function shouldRun(): bool
@@ -72,7 +72,7 @@ class RefereeMigration extends AbstractMigration
             $query .= 'RENAME COLUMN vorname TO firstname, ';
             $query .= 'RENAME COLUMN nachname TO lastname, ';
             $query .= 'RENAME COLUMN ausweisnummer TO cardNumber, ';
-            $query .= 'RENAME COLUMN geschlecht TO gender, ';
+            $query .= 'CHANGE geschlecht gender VARCHAR(32) DEFAULT \'\' NOT NULL, ';
             $query .= 'RENAME COLUMN name_rev TO nameReverse, ';
             $query .= 'RENAME COLUMN verein TO clubId, ';
             $query .= 'RENAME COLUMN plz TO postal, ';
@@ -83,6 +83,92 @@ class RefereeMigration extends AbstractMigration
             $query .= 'RENAME COLUMN addressbook_vcards TO addressbookVcards';
             $this->connection->executeStatement($query);
             $this->resultMessages[] = 'Columns of table tl_bsa_referee successfully renamed.';
+
+            $query = 'DROP TRIGGER `schiedsrichter_insert_set_name_rev`';
+            $this->connection->executeStatement($query);
+            $this->resultMessages[] = 'Trigger schiedsrichter_insert_set_name_rev successfully dropped.';
+
+            $query = 'DROP TRIGGER `schiedsrichter_insert_update_verein_anzahl_sr`';
+            $this->connection->executeStatement($query);
+            $this->resultMessages[] = 'Trigger schiedsrichter_insert_update_verein_anzahl_sr successfully dropped.';
+
+            $query = 'DROP TRIGGER `schiedsrichter_update_set_name_rev`';
+            $this->connection->executeStatement($query);
+            $this->resultMessages[] = 'Trigger schiedsrichter_update_set_name_rev successfully dropped.';
+
+            $query = 'DROP TRIGGER `schiedsrichter_update_update_verein_anzahl_sr`';
+            $this->connection->executeStatement($query);
+            $this->resultMessages[] = 'Trigger schiedsrichter_update_update_verein_anzahl_sr successfully dropped.';
+
+            $query = 'DROP TRIGGER `schiedsrichter_delete_update_verein_anzahl_sr`';
+            $this->connection->executeStatement($query);
+            $this->resultMessages[] = 'Trigger schiedsrichter_delete_update_verein_anzahl_sr successfully dropped.';
+
+            $query =
+'CREATE TRIGGER `referee_insert_set_name_reverse` BEFORE INSERT ON `tl_bsa_referee` FOR EACH ROW
+BEGIN
+	SET NEW.nameReverse= CONCAT_WS(\', \', NEW.lastname, NEW.firstname);
+END';
+            $this->connection->executeStatement($query);
+            $this->resultMessages[] = 'Trigger referee_insert_set_name_reverse successfully created.';
+
+            $query =
+'CREATE TRIGGER `referee_insert_quantitiy_to_club` AFTER INSERT ON `tl_bsa_referee` FOR EACH ROW
+BEGIN
+        UPDATE tl_bsa_club
+                SET refereesActiveQuantity = (SELECT count(*) FROM tl_bsa_referee WHERE clubId = NEW.clubId AND state = \'aktiv\' AND deleted = \'\'),
+                    refereesPassiveQuantity = (SELECT count(*) FROM tl_bsa_referee WHERE clubId = NEW.clubId AND state = \'passiv\' AND deleted = \'\')
+        WHERE id = NEW.clubId;
+END';
+            $this->connection->executeStatement($query);
+            $this->resultMessages[] = 'Trigger referee_insert_quantitiy_to_club successfully created.';
+
+            $query =
+'CREATE TRIGGER `referee_update_set_name_reverse` BEFORE UPDATE ON `tl_bsa_referee` FOR EACH ROW
+BEGIN
+	SET NEW.nameReverse = CONCAT_WS(\', \', NEW.lastname, NEW.firstname);
+END';
+            $this->connection->executeStatement($query);
+            $this->resultMessages[] = 'Trigger referee_update_set_name_reverse successfully created.';
+
+            $query =
+'CREATE TRIGGER `referee_update_quantitiy_to_club` AFTER UPDATE ON `tl_bsa_referee` FOR EACH ROW
+BEGIN
+    IF OLD.clubId<>NEW.clubId THEN
+        UPDATE tl_bsa_club
+            SET refereesActiveQuantity = (SELECT count(*) FROM tl_bsa_referee WHERE clubId = NEW.clubId AND state = \'aktiv\' AND deleted = \'\'),
+                refereesPassiveQuantity = (SELECT count(*) FROM tl_bsa_referee WHERE clubId = NEW.clubId AND state = \'passiv\' AND deleted = \'\')
+            WHERE id = NEW.clubId;
+        UPDATE tl_bsa_club
+            SET refereesActiveQuantity = (SELECT count(*) FROM tl_bsa_referee WHERE clubId = OLD.clubId AND state = \'aktiv\' AND deleted = \'\'),
+                refereesPassiveQuantity = (SELECT count(*) FROM tl_bsa_referee WHERE clubId = OLD.clubId AND state = \'passiv\' AND deleted = \'\')
+            WHERE id = OLD.clubId;
+    ELSEIF OLD.deleted<>NEW.deleted OR OLD.state<>NEW.state THEN
+        UPDATE tl_bsa_club
+            SET refereesActiveQuantity = (SELECT count(*) FROM tl_bsa_referee WHERE clubId = NEW.clubId AND state = \'aktiv\' AND deleted = \'\'),
+                refereesPassiveQuantity = (SELECT count(*) FROM tl_bsa_referee WHERE clubId = NEW.clubId AND state = \'passiv\' AND deleted = \'\')
+            WHERE id = NEW.clubId;
+    END IF;
+END';
+            $this->connection->executeStatement($query);
+            $this->resultMessages[] = 'Trigger referee_update_quantitiy_to_club successfully created.';
+
+            $query =
+'CREATE TRIGGER `referee_delete_quantitiy_to_club` AFTER DELETE ON `tl_bsa_referee` FOR EACH ROW
+BEGIN
+    UPDATE tl_bsa_club
+        SET refereesActiveQuantity = (SELECT count(*) FROM tl_bsa_referee WHERE clubId = OLD.clubId AND state = \'aktiv\' AND deleted = \'\'),
+            refereesPassiveQuantity = (SELECT count(*) FROM tl_bsa_referee WHERE clubId = OLD.clubId AND state = \'passiv\' AND deleted = \'\')
+        WHERE id = OLD.clubId;
+END';
+            $this->connection->executeStatement($query);
+            $this->resultMessages[] = 'Trigger referee_delete_quantitiy_to_club successfully created.';
+
+            $query = 'UPDATE tl_bsa_referee SET gender=\'male\' WHERE gender=\'m\'';
+            $this->connection->executeStatement($query);
+            $query = 'UPDATE tl_bsa_referee SET gender=\'female\' WHERE gender=\'w\'';
+            $this->connection->executeStatement($query);
+            $this->resultMessages[] = 'Gender of tl_bsa_referee is updated.';
         }
 
         if ($this->shouldRenameRefereeHistoryTable()) {

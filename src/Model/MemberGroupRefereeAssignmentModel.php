@@ -33,8 +33,8 @@ use Contao\Model\Collection;
  * @method static MemberGroupRefereeAssignmentModel|null findOneByPid($val, array $opt=array())
  * @method static MemberGroupRefereeAssignmentModel|null findOneBySorting($val, array $opt=array())
  * @method static MemberGroupRefereeAssignmentModel|null findOneByTstamp($val, array $opt=array())
- * @method static MemberGroupRefereeAssignmentModel|null findOneByRefereeId($col, $val, array $opt=array())
- * @method static MemberGroupRefereeAssignmentModel|null findOneByFunction($col, $val, array $opt=array())
+ * @method static MemberGroupRefereeAssignmentModel|null findOneByRefereeId($val, array $opt=array())
+ * @method static MemberGroupRefereeAssignmentModel|null findOneByFunction($val, array $opt=array())
  *                                                                                                                                                       -
  * @method static Collection|array<MemberGroupRefereeAssignmentModel>|MemberGroupRefereeAssignmentModel|null findByPid($val, array $opt=array())
  * @method static Collection|array<MemberGroupRefereeAssignmentModel>|MemberGroupRefereeAssignmentModel|null findBySorting($val, array $opt=array())

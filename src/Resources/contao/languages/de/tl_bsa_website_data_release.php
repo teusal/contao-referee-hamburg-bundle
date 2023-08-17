@@ -11,10 +11,15 @@ declare(strict_types=1);
  */
 
 /*
+ * Legends
+ */
+$GLOBALS['TL_LANG']['tl_bsa_website_data_release']['form_legend'] = 'Formulardaten';
+$GLOBALS['TL_LANG']['tl_bsa_website_data_release']['release_legend'] = 'Freigaben';
+
+/*
  * Fields
  */
 $GLOBALS['TL_LANG']['tl_bsa_website_data_release']['refereeId'] = ['Schiedsrichter', 'Der Schiedsrichter, dem diese Freigaben zugeordnet sind.'];
-$GLOBALS['TL_LANG']['tl_bsa_website_data_release']['nameReverse'] = ['Name', ''];
 $GLOBALS['TL_LANG']['tl_bsa_website_data_release']['dateOfFormReceived'] = ['Erfassungsdatum des Freigabeformulars', 'Zur Information, wann diese Freigabe eingegangen ist.'];
 $GLOBALS['TL_LANG']['tl_bsa_website_data_release']['showDateOfBirth'] = [
     'Geburtsdatum im Web anzeigen?',

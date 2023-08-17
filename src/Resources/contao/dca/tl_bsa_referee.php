@@ -12,6 +12,7 @@ declare(strict_types=1);
 
 use Contao\Backend;
 use Contao\BackendUser;
+use Contao\Config;
 use Contao\DataContainer;
 use Contao\Date;
 use Contao\DC_Table;
@@ -26,12 +27,12 @@ use Teusal\ContaoRefereeHamburgBundle\Library\SRHistory;
 use Teusal\ContaoRefereeHamburgBundle\Model\WebsiteDataReleaseModel;
 
 if ('schiedsrichter' === Input::get('do')) {
-    $palette = 'firstname,lastname,cardNumber,clubId;gender;dateOfBirth,dateOfBirthAsDate;street,postal,city;phone1,phone2,mobile,fax,email,emailContactForm;dateOfRefereeExamination,dateOfRefereeExaminationAsDate,state;image,imagePrint,imageExempted;searchable,deleted';
+    $palette = '{personal_legend},firstname,lastname,dateOfBirth,gender;{club_legend},clubId;{referee_legend},cardNumber,state,dateOfRefereeExamination;{address_legend},street,postal,city;{contact_legend},phone1,phone2,mobile,fax,email,emailContactForm;{image_legend},image,imagePrint,imageExempted;{publishing_legend},searchable,deleted';
     $sortingFilter = [['clubId IS NOT NULL AND clubId>?', '0']];
     $sortingPanelLayout = 'filter;search,limit';
     $sortingFields = ['clubId', 'nameReverse'];
 } else {
-    $palette = 'firstname,lastname;gender;street,postal,city;phone1,phone2,mobile,fax;email;deleted';
+    $palette = '{personal_legend},firstname,lastname,gender;{address_legend},street,postal,city;{contact_legend}phone1,phone2,mobile,fax,email;{publishing_legend},deleted';
     $sortingFilter = [['clubId IS NULL OR clubId=?', '0']];
     $sortingPanelLayout = 'search,limit';
     $sortingFields = ['nameReverse'];
@@ -68,7 +69,7 @@ $GLOBALS['TL_DCA']['tl_bsa_referee'] = [
         ],
         'label' => [
             'fields' => ['nameReverse'],
-            'label_callback' => [tl_bsa_referee::class, 'listSchiedsrichter'],
+            'label_callback' => [tl_bsa_referee::class, 'getLabel'],
         ],
         'global_operations' => [
         ],
@@ -122,10 +123,10 @@ $GLOBALS['TL_DCA']['tl_bsa_referee'] = [
         'gender' => [
             'inputType' => 'select',
             'filter' => true,
-            'options' => ['male', 'female', 'misc'],
-            'reference' => &$GLOBALS['TL_LANG']['genders'],
-            'eval' => ['mandatory' => false, 'includeBlankOption' => true, 'blankOptionLabel' => 'keine Angabe', 'maxlength' => 50, 'tl_class' => 'w50'],
-            'sql' => "varchar(1) NOT NULL default ''",
+            'options' => ['male', 'female', 'other'],
+            'reference' => &$GLOBALS['TL_LANG']['MSC'],
+            'eval' => ['mandatory' => false, 'includeBlankOption' => true, 'maxlength' => 50, 'tl_class' => 'w50'],
+            'sql' => "varchar(32) NOT NULL default ''",
         ],
         'lastname' => [
             'inputType' => 'text',
@@ -200,13 +201,13 @@ $GLOBALS['TL_DCA']['tl_bsa_referee'] = [
         'email' => [
             'inputType' => 'text',
             'search' => true,
-            'eval' => ['maxlength' => 100, 'rgxp' => 'email', 'tl_class' => 'long clr'],
+            'eval' => ['maxlength' => 100, 'rgxp' => 'email', 'tl_class' => 'w50'],
             'sql' => "varchar(150) NOT NULL default ''",
         ],
         'emailContactForm' => [
             'inputType' => 'text',
             'search' => true,
-            'eval' => ['maxlength' => 100, 'rgxp' => 'email', 'tl_class' => 'long'],
+            'eval' => ['maxlength' => 100, 'rgxp' => 'email', 'tl_class' => 'w50'],
             'sql' => "varchar(150) NOT NULL default ''",
         ],
         'dateOfBirth' => [
@@ -222,31 +223,10 @@ $GLOBALS['TL_DCA']['tl_bsa_referee'] = [
         ],
         'state' => [
             'filter' => true,
-            'inputType' => 'text',
+            'inputType' => 'select',
+            'options' => ['aktiv', 'Gesundheitliche Gründe', 'Persönliche Gründe', 'pensioniert', 'Adresse unbekannt', 'entlassen', 'Neuzugang', 'gestorben', 'passiv', 'Berufliche Gründe', 'Vorfälle bei Spielleitungen', 'Interessenlosigkeit'],
             'eval' => ['maxlength' => 25, 'tl_class' => 'w50'],
             'sql' => "varchar(25) NOT NULL default ''",
-        ],
-        'deleted' => [
-            'filter' => true,
-            'inputType' => 'checkbox',
-            'eval' => ['disabled' => true],
-            'sql' => "char(1) NOT NULL default ''",
-        ],
-        'dateOfBirthAsDate' => [
-            'inputType' => 'text',
-            'eval' => ['readonly' => true, 'maxlength' => 10, 'minlength' => 10, 'tl_class' => 'w50'],
-            'save_callback' => [
-                [tl_bsa_referee::class, 'setDBGeburtsdatum'],
-            ],
-            'sql' => 'date NULL',
-        ],
-        'dateOfRefereeExaminationAsDate' => [
-            'inputType' => 'text',
-            'eval' => ['readonly' => true, 'maxlength' => 10, 'minlength' => 10, 'tl_class' => 'w50'],
-            'save_callback' => [
-                [tl_bsa_referee::class, 'setSRSeitDatum'],
-            ],
-            'sql' => 'date NULL',
         ],
         'image' => [
             'inputType' => 'fileTree',
@@ -269,17 +249,30 @@ $GLOBALS['TL_DCA']['tl_bsa_referee'] = [
             'eval' => [],
             'sql' => "char(1) NOT NULL default '1'",
         ],
+        'deleted' => [
+            'filter' => true,
+            'inputType' => 'checkbox',
+            'eval' => ['disabled' => true],
+            'sql' => "char(1) NOT NULL default ''",
+        ],
+        'dateOfBirthAsDate' => [
+            'eval' => ['doNotShow' => true],
+            'sql' => 'date NULL',
+        ],
+        'dateOfRefereeExaminationAsDate' => [
+            'eval' => ['doNotShow' => true],
+            'sql' => 'date NULL',
+        ],
         'isNew' => [
-            'exclude' => true,
+            'eval' => ['doNotShow' => true],
             'sql' => "char(1) NOT NULL default '1'",
         ],
         'importKey' => [
-            'exclude' => true,
             'eval' => ['doNotShow' => true],
             'sql' => 'varchar(6) NULL',
         ],
         'addressbookVcards' => [
-            'exclude' => true,
+            'eval' => ['doNotShow' => true],
             'sql' => 'blob NULL',
         ],
     ],
@@ -433,37 +426,7 @@ class tl_bsa_referee extends Backend
     }
 
     /**
-     * sets the date of birth in format 'Y-m-d' into this field.
-     *
-     * @param mixed         $varValue Value to be saved
-     * @param DataContainer $dc       Data Container object
-     *
-     * @return mixed
-     */
-    public function setDBGeburtsdatum($varValue, DataContainer $dc)
-    {
-        $dateOfBirth = new Date($this->Input->post('dateOfBirth'));
-
-        return date('Y-m-d', $dateOfBirth->__get('tstamp'));
-    }
-
-    /**
-     * sets the referee since date in format 'Y-m-d' into this field.
-     *
-     * @param mixed         $varValue Value to be saved
-     * @param DataContainer $dc       Data Container object
-     *
-     * @return mixed
-     */
-    public function setSRSeitDatum($varValue, DataContainer $dc)
-    {
-        $srSeit = new Date($this->Input->post('dateOfRefereeExamination'));
-
-        return date('Y-m-d', $srSeit->__get('tstamp'));
-    }
-
-    /**
-     * Add the type of input field.
+     * Getting the referee as a label.
      *
      * @param array         $arrRow  Record data
      * @param string        $label   Current label
@@ -472,7 +435,7 @@ class tl_bsa_referee extends Backend
      *
      * @return string
      */
-    public function listSchiedsrichter($arrRow, $label, $dc, $columns)
+    public function getLabel($arrRow, $label, $dc, $columns)
     {
         if ($arrRow['deleted']) {
             $style = 'text-decoration:line-through;';
@@ -483,13 +446,11 @@ class tl_bsa_referee extends Backend
             $title = 'Keine Freigaben für die Website.';
             $bold = true;
 
-            $freigabe = WebsiteDataReleaseModel::findFreigabe($arrRow['id']);
+            $objWebsiteDataRelease = WebsiteDataReleaseModel::findOneByRefereeId(461);
 
-            if (isset($freigabe)) {
+            if (isset($objWebsiteDataRelease)) {
                 $key = 'published';
-
-                $objDate = new Date($freigabe->__get('dateOfFormReceived'));
-                $title = 'Freigaben erteilt am '.$objDate->__get('date');
+                $title = 'Freigaben erteilt am '.Date::parse(Config::get('dateFormat'), $objWebsiteDataRelease->dateOfFormReceived);
             }
         }
 
@@ -509,7 +470,11 @@ class tl_bsa_referee extends Backend
      */
     public function submit(DataContainer $dc): void
     {
-        if ($dc->__get('activeRecord')->isNew) {
+        $this->Database->prepare('UPDATE tl_bsa_referee SET dateOfBirthAsDate=?, dateOfRefereeExaminationAsDate=? WHERE id=?')
+            ->execute(Date::parse('Y-m-d', $dc->activeRecord->dateOfBirth), Date::parse('Y-m-d', $dc->activeRecord->dateOfRefereeExamination), $dc->id)
+        ;
+
+        if ($dc->activeRecord->isNew) {
             SRHistory::insert($dc->id, null, ['Schiedsrichter', 'ADD'], 'Der Schiedsrichter %s wurde manuell angelegt.', __METHOD__);
             $this->Database->prepare('UPDATE tl_bsa_referee SET isNew=? WHERE id=?')
                 ->execute('', $dc->id)

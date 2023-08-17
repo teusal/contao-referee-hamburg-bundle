@@ -16,10 +16,6 @@ use Contao\DataContainer;
 use Contao\DC_Table;
 use Teusal\ContaoRefereeHamburgBundle\Library\Member\BSAMemberGroup;
 use Teusal\ContaoRefereeHamburgBundle\Library\Newsletter\BSANewsletter;
-use Teusal\ContaoRefereeHamburgBundle\Model\ClubModel;
-use Contao\StringUtil;
-use Teusal\ContaoRefereeHamburgBundle\Model\RefereeModel;
-use Teusal\ContaoRefereeHamburgBundle\Model\ClubChairmanModel;
 
 /*
  * This file is part of Contao Referee Hamburg Bundle.
@@ -55,7 +51,7 @@ $GLOBALS['TL_DCA']['tl_bsa_club_chairman'] = [
             'disableGrouping' => true,
         ],
         'label' => [
-            'fields' => ['clubId', 'chairman', 'viceChairman1', 'viceChairman2'],
+            'fields' => ['clubId', 'chairman', 'viceChairman1', 'viceChairman2', 'tstamp'],
             'showColumns' => true,
         ],
         'global_operations' => [
@@ -89,6 +85,10 @@ $GLOBALS['TL_DCA']['tl_bsa_club_chairman'] = [
             'sql' => 'int(10) unsigned NOT NULL auto_increment',
         ],
         'tstamp' => [
+            'label' => &$GLOBALS['TL_LANG']['MSC']['tstamp'],
+            'sorting' => true,
+            'flag' => DataContainer::SORT_DAY_DESC,
+            'eval' => ['rgxp' => 'date'],
             'sql' => "int(10) unsigned NOT NULL default '0'",
         ],
         'clubId' => [
@@ -104,7 +104,7 @@ $GLOBALS['TL_DCA']['tl_bsa_club_chairman'] = [
             'sorting' => true,
             'search' => true,
             'eval' => ['multiple' => false, 'chosen' => true, 'includeBlankOption' => true, 'blankOptionLabel' => 'kein Obmann', 'tl_class' => 'w50'],
-            'options_callback' => [tl_bsa_club_chairman::class, 'getRefereeOptions'],
+            'options_callback' => ['teusal.referee.available_referees', 'getRefereeOptions'],
             'foreignKey' => 'tl_bsa_referee.nameReverse',
             'save_callback' => [
                 [tl_bsa_club_chairman::class, 'saveObmann'],
@@ -116,7 +116,7 @@ $GLOBALS['TL_DCA']['tl_bsa_club_chairman'] = [
             'sorting' => true,
             'search' => true,
             'eval' => ['multiple' => false, 'chosen' => true, 'includeBlankOption' => true, 'blankOptionLabel' => 'kein stellv. Obmann', 'tl_class' => 'w50 clr'],
-           'options_callback' => ['teusal.referee.available_referees.include_deleted', 'getRefereeOptions'],
+            'options_callback' => ['teusal.referee.available_referees.include_deleted', 'getRefereeOptions'],
             'foreignKey' => 'tl_bsa_referee.nameReverse',
             'save_callback' => [
                 [tl_bsa_club_chairman::class, 'saveStellv1'],
@@ -148,13 +148,6 @@ $GLOBALS['TL_DCA']['tl_bsa_club_chairman'] = [
 class tl_bsa_club_chairman extends Backend
 {
     /**
-     * clubs.
-     *
-     * @var array<int, array<string, mixed>>
-     */
-    protected $arrClubs = [];
-
-    /**
      * Import the back end user object.
      */
     public function __construct()
@@ -162,63 +155,6 @@ class tl_bsa_club_chairman extends Backend
         parent::__construct();
         $this->import(BackendUser::class, 'User');
         $this->import(BSANewsletter::class, 'BSANewsletter');
-
-        // load the clubs in an array. the key is set by the id, the value is by nameShort.
-        $objClub = ClubModel::findAll(['order' => 'nameShort']);
-
-        if (isset($objClub)) {
-            while ($objClub->next()) {
-                $this->arrClubs[$objClub->id] = [
-                    'number' => $objClub->number,
-                    'nameShort' => StringUtil::specialchars($objClub->nameShort),
-                    'visible' => $objClub->published,
-                ];
-            }
-        }
-        $this->arrClubs[0] = ['number' => '', 'nameShort' => 'vereinslos', 'visible' => false];
-    }
-
-    /**
-     * returns all possible recipient options.
-     *
-     * @param DataContainer|null $dc Data Container object
-     * @return array<int, array<string, string>> the list of selectable options
-     */
-    public function getRefereeOptions(DataContainer $dc): array
-    {
-        $arrRecipientOptions = [];
-
-        if(isset($dc)) {
-            $strField = $dc->field;
-            // as first add an option, if the selected referee is deleted
-            $objReferee = RefereeModel::findByPk($dc->activeRecord->$strField);
-            if(isset($objReferee) && $objReferee->deleted) {
-                $arrRecipientOptions['gelöscht'][$objReferee->id] = StringUtil::specialchars($objReferee->nameReverse);
-            }
-        }
-
-        // add empty containers for all clubs
-        foreach ($this->arrClubs as $club) {
-            $arrRecipientOptions[$club['nameShort']] = [];
-        }
-
-        // loading all referees and sort each to his club
-        $objReferee = RefereeModel::findByDeleted('', ['order' => 'nameReverse']);
-
-        if (isset($objReferee)) {
-            while ($objReferee->next()) {
-                $arrRecipientOptions[$this->arrClubs[$objReferee->clubId]['nameShort']][$objReferee->id] = StringUtil::specialchars($objReferee->nameReverse);
-            }
-        }
-
-        // remove empty clubs
-        foreach ($arrRecipientOptions as $clubName => $arrReferees) {
-            if (empty($arrReferees)) {
-                unset($arrRecipientOptions[$clubName]);
-            }
-        }
-
-        return $arrRecipientOptions;
     }
 
     /**

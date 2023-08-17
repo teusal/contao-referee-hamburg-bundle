@@ -79,9 +79,12 @@ class MemberMigration extends AbstractMigration
                     case 'female':
                         $row['gender'] = 'female';
                         break;
+                    case 'other':
+                        $row['gender'] = 'other';
+                        break;
 
                     default:
-                        $row['gender'] = 'misc';
+                        $row['gender'] = '';
                         break;
                 }
                 $this->connection->executeStatement('UPDATE tl_member SET firstname=?, lastname=?, dateOfBirth=IFNULL(?,""), gender=?, street=?, postal=?, city=?, phone=?, mobile=?, fax=?, email=? WHERE refereeId=?', array_values($row));
@@ -98,6 +101,7 @@ class MemberMigration extends AbstractMigration
         if ($this->shouldModifyMemberGroupRefereeAssignmentColumns()) {
             $query = 'ALTER TABLE tl_bsa_member_group_referee_assignment ';
             $query .= 'RENAME COLUMN schiedsrichter TO refereeId ';
+            $query .= 'RENAME COLUMN funktion TO function ';
             $this->connection->executeStatement($query);
             $this->resultMessages[] = 'Columns of table tl_bsa_member_group_referee_assignment successfully renamed.';
         }

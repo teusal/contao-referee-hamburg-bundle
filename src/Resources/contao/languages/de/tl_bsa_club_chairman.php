@@ -13,6 +13,7 @@ declare(strict_types=1);
 /*
  * Fields
  */
+$GLOBALS['TL_LANG']['tl_bsa_club_chairman']['tstamp'] = ['Änderungsdatum', ''];
 $GLOBALS['TL_LANG']['tl_bsa_club_chairman']['clubId'] = ['Verein', 'Der Verein, dem die Obleute zugeordnet sind.'];
 $GLOBALS['TL_LANG']['tl_bsa_club_chairman']['chairman'] = ['Obmann', 'Wählen Sie den Obmann des Vereins aus.'];
 $GLOBALS['TL_LANG']['tl_bsa_club_chairman']['viceChairman1'] = ['stellv. Obmann 1', 'Wählen Sie den stellvertretenden Obmann des Vereins aus.'];
