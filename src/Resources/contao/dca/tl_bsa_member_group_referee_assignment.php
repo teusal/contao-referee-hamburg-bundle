@@ -121,7 +121,7 @@ $GLOBALS['TL_DCA']['tl_bsa_member_group_referee_assignment'] = [
             'eval' => ['mandatory' => true, 'multiple' => false, 'includeBlankOption' => true, 'blankOptionLabel' => 'bitte wählen', 'tl_class' => 'w50 clr'],
             'foreignKey' => 'tl_bsa_referee.nameReverse',
             'relation' => ['type' => 'belongsTo', 'load' => 'eager'],
-            'options_callback' => [tl_bsa_member_group_referee_assignment::class, 'getSchiedsrichterNotDeleted'],
+            'options_callback' => ['teusal.referee.available_referees', 'getRefereeOptions'],
             'save_callback' => [
                 [tl_bsa_member_group_referee_assignment::class, 'validateDuplicate'],
                 [tl_bsa_member_group_referee_assignment::class, 'saveSchiedsrichter'],
@@ -202,36 +202,14 @@ class tl_bsa_member_group_referee_assignment extends Backend
     /**
      * Add the type of content element.
      *
-     * @param DataContainer|null $dc Data Container object or null
-     *
-     * @return array
-     */
-    public function getSchiedsrichterNotDeleted(DataContainer $dc)
-    {
-        $objReferee = RefereeModel::findBy('deleted', '', ['order' => 'nameReverse']);
-
-        $options = [];
-
-        if (null !== $objReferee) {
-            while ($objReferee->next()) {
-                $options[$objReferee->id] = $objReferee->nameReverse;
-            }
-        }
-
-        return $options;
-    }
-
-    /**
-     * Add the type of content element.
-     *
      * @param DataContainer $dc     Data Container object
      * @param int           $undoId The ID of the tl_undo database record
      */
     public function deleteGruppenmitglied(DataContainer $dc, $undoId): void
     {
-        BSAMemberGroup::setGroupsToMember((int) $dc->__get('activeRecord')->refereeId, (int) $dc->__get('activeRecord')->pid, 0);
-        SRHistory::insert((int) $dc->__get('activeRecord')->refereeId, $dc->__get('activeRecord')->pid, ['Kader/Gruppe', 'REMOVE'], 'Der Schiedsrichter %s wurde aus der Gruppe "%s" entfernt.', __METHOD__);
-        AddressbookSynchronizer::executeSubmitReferee($dc->__get('activeRecord')->refereeId, $dc->__get('activeRecord')->pid);
+        BSAMemberGroup::setGroupsToMember((int) $dc->activeRecord->refereeId, (int) $dc->activeRecord->pid, 0);
+        SRHistory::insert((int) $dc->activeRecord->refereeId, $dc->activeRecord->pid, ['Kader/Gruppe', 'REMOVE'], 'Der Schiedsrichter %s wurde aus der Gruppe "%s" entfernt.', __METHOD__);
+        AddressbookSynchronizer::executeSubmitReferee($dc->activeRecord->refereeId, $dc->activeRecord->pid);
     }
 
     /**
@@ -261,7 +239,7 @@ class tl_bsa_member_group_referee_assignment extends Backend
      */
     public function validateDuplicate($varValue, DataContainer $dc)
     {
-        if ($varValue !== $dc->__get('activeRecord')->refereeId) {
+        if ($varValue !== $dc->activeRecord->refereeId) {
             $objReferee = RefereeModel::findReferee($varValue);
 
             if (isset($objReferee) && $objReferee->deleted) {
@@ -269,7 +247,7 @@ class tl_bsa_member_group_referee_assignment extends Backend
             }
 
             $ids = $this->Database->prepare('SELECT id FROM tl_bsa_member_group_referee_assignment WHERE id!=? AND pid=? AND refereeId=?')
-                ->execute($dc->id, $dc->__get('activeRecord')->pid, $varValue)
+                ->execute($dc->id, $dc->activeRecord->pid, $varValue)
                 ->fetchEach('id')
             ;
 
@@ -291,17 +269,17 @@ class tl_bsa_member_group_referee_assignment extends Backend
      */
     public function saveSchiedsrichter($varValue, DataContainer $dc)
     {
-        if ($varValue !== $dc->__get('activeRecord')->refereeId) {
-            BSAMemberGroup::setGroupsToMember($varValue, 0, $dc->__get('activeRecord')->pid);
-            BSAMemberGroup::setGroupsToMember($dc->__get('activeRecord')->refereeId, $dc->__get('activeRecord')->pid, 0);
+        if ($varValue !== $dc->activeRecord->refereeId) {
+            BSAMemberGroup::setGroupsToMember($varValue, 0, $dc->activeRecord->pid);
+            BSAMemberGroup::setGroupsToMember($dc->activeRecord->refereeId, $dc->activeRecord->pid, 0);
 
-            SRHistory::insert($varValue, $dc->__get('activeRecord')->pid, ['Kader/Gruppe', 'ADD'], 'Der Schiedsrichter %s wurde in der Gruppe "%s" aufgenommen.', __METHOD__);
+            SRHistory::insert($varValue, $dc->activeRecord->pid, ['Kader/Gruppe', 'ADD'], 'Der Schiedsrichter %s wurde in der Gruppe "%s" aufgenommen.', __METHOD__);
 
-            if (0 !== $dc->__get('activeRecord')->refereeId) {
-                SRHistory::insert($dc->__get('activeRecord')->refereeId, $dc->__get('activeRecord')->pid, ['Kader/Gruppe', 'REMOVE'], 'Der Schiedsrichter %s wurde aus der Gruppe "%s" entfernt.', __METHOD__);
+            if (0 !== $dc->activeRecord->refereeId) {
+                SRHistory::insert($dc->activeRecord->refereeId, $dc->activeRecord->pid, ['Kader/Gruppe', 'REMOVE'], 'Der Schiedsrichter %s wurde aus der Gruppe "%s" entfernt.', __METHOD__);
             }
 
-            $this->addressbookSync = [$varValue, $dc->__get('activeRecord')->refereeId];
+            $this->addressbookSync = [$varValue, $dc->activeRecord->refereeId];
         }
 
         return $varValue;

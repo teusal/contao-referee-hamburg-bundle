@@ -127,9 +127,9 @@ class tl_bsa_member_group_newsletter_assignment extends Backend
      */
     public function validateDuplicate($varValue, DataContainer $dc)
     {
-        if ($varValue !== $dc->__get('activeRecord')->newsletterChannelId) {
+        if ($varValue !== $dc->activeRecord->newsletterChannelId) {
             $ids = $this->Database->prepare('SELECT id FROM tl_bsa_member_group_newsletter_assignment WHERE id!=? AND pid=? AND newsletterChannelId=?')
-                ->execute($dc->id, $dc->__get('activeRecord')->pid, $varValue)
+                ->execute($dc->id, $dc->activeRecord->pid, $varValue)
                 ->fetchEach('id')
             ;
 
@@ -149,10 +149,10 @@ class tl_bsa_member_group_newsletter_assignment extends Backend
     public function doSorting(DataContainer $dc): void
     {
         $arrIds = $this->Database->prepare('SELECT assignment.id '.
-                                           'FROM tl_bsa_member_group_newsletter_assignment AS assignemnt, tl_newsletter_channel AS channel '.
-                                           'WHERE channel.id=assignment.newsletterChannelId AND zassignment.pid=? '.
-                                           'ORDER BY c.title')
-            ->execute($dc->__get('activeRecord')->pid)
+                                           'FROM tl_bsa_member_group_newsletter_assignment AS assignment, tl_newsletter_channel AS channel '.
+                                           'WHERE channel.id=assignment.newsletterChannelId AND assignment.pid=? '.
+                                           'ORDER BY channel.title')
+            ->execute($dc->activeRecord->pid)
             ->fetchEach('id')
         ;
 

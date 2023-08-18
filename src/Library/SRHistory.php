@@ -92,8 +92,8 @@ class SRHistory extends System
      */
     public function insertByDeleteMember(DataContainer $dc, $undoId): void
     {
-        if ($dc->__get('activeRecord')->refereeId) {
-            static::insert($dc->__get('activeRecord')->refereeId, $dc->id, ['Login', 'REMOVE'], 'Der Login des Schiedsrichter %s mit dem Benutzernamen "%s" wurde gelöscht.', __METHOD__);
+        if ($dc->activeRecord->refereeId) {
+            static::insert($dc->activeRecord->refereeId, $dc->id, ['Login', 'REMOVE'], 'Der Login des Schiedsrichter %s mit dem Benutzernamen "%s" wurde gelöscht.', __METHOD__);
         }
     }
 
@@ -110,8 +110,8 @@ class SRHistory extends System
         $intSR = 0;
         $intMember = 0;
 
-        if (isset($dc->__get('activeRecord')->refereeId)) {
-            $intSR = $dc->__get('activeRecord')->refereeId;
+        if (isset($dc->activeRecord->refereeId)) {
+            $intSR = $dc->activeRecord->refereeId;
             $intMember = $dc->id;
         } elseif ('schiedsrichter' === Input::get('do')) {
             if (Input::get('did')) {

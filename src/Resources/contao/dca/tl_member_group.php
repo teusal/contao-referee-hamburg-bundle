@@ -229,11 +229,11 @@ class tl_bsa_member_group extends tl_member_group
      */
     public function changeAutomatik($varValue, DataContainer $dc)
     {
-        if ($varValue !== $dc->__get('activeRecord')->automatik) {
+        if ($varValue !== $dc->activeRecord->automatik) {
             BSAMemberGroup::clearCachedGroups($varValue);
-            BSAMemberGroup::clearCachedGroups($dc->__get('activeRecord')->automatik);
+            BSAMemberGroup::clearCachedGroups($dc->activeRecord->automatik);
 
-            if (BSAMemberGroup::isFullyAutomated($varValue) || BSAMemberGroup::isFullyAutomated($dc->__get('activeRecord')->automatik)) {
+            if (BSAMemberGroup::isFullyAutomated($varValue) || BSAMemberGroup::isFullyAutomated($dc->activeRecord->automatik)) {
                 $objReferee = RefereeModel::findAll();
 
                 if (isset($objReferee)) {

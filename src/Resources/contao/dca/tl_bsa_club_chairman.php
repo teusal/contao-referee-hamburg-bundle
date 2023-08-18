@@ -204,19 +204,19 @@ class tl_bsa_club_chairman extends Backend
      */
     public function doDelete(DataContainer $dc, $undoId): void
     {
-        if (0 !== (int) $dc->__get('activeRecord')->chairman) {
-            BSAMemberGroup::removeFromChairmansGroup((int) $dc->__get('activeRecord')->chairman);
-            $this->BSANewsletter->synchronizeNewsletterBySchiedsrichter((int) $dc->__get('activeRecord')->chairman);
+        if (0 !== (int) $dc->activeRecord->chairman) {
+            BSAMemberGroup::removeFromChairmansGroup((int) $dc->activeRecord->chairman);
+            $this->BSANewsletter->synchronizeNewsletterBySchiedsrichter((int) $dc->activeRecord->chairman);
         }
 
-        if (0 !== (int) $dc->__get('activeRecord')->viceChairman1) {
-            BSAMemberGroup::removeFromChairmansGroup((int) $dc->__get('activeRecord')->viceChairman1);
-            $this->BSANewsletter->synchronizeNewsletterBySchiedsrichter((int) $dc->__get('activeRecord')->viceChairman1);
+        if (0 !== (int) $dc->activeRecord->viceChairman1) {
+            BSAMemberGroup::removeFromChairmansGroup((int) $dc->activeRecord->viceChairman1);
+            $this->BSANewsletter->synchronizeNewsletterBySchiedsrichter((int) $dc->activeRecord->viceChairman1);
         }
 
-        if (0 !== (int) $dc->__get('activeRecord')->viceChairman2) {
-            BSAMemberGroup::removeFromChairmansGroup((int) $dc->__get('activeRecord')->viceChairman2);
-            $this->BSANewsletter->synchronizeNewsletterBySchiedsrichter((int) $dc->__get('activeRecord')->viceChairman2);
+        if (0 !== (int) $dc->activeRecord->viceChairman2) {
+            BSAMemberGroup::removeFromChairmansGroup((int) $dc->activeRecord->viceChairman2);
+            $this->BSANewsletter->synchronizeNewsletterBySchiedsrichter((int) $dc->activeRecord->viceChairman2);
         }
     }
 
@@ -230,15 +230,15 @@ class tl_bsa_club_chairman extends Backend
      */
     private function updateChairmansGroup($varValue, DataContainer $dc, $field)
     {
-        if ($varValue !== $dc->__get('activeRecord')->$field) {
+        if ($dc->activeRecord->$field !== $varValue) {
             if (0 !== (int) $varValue) {
                 BSAMemberGroup::addToChairmansGroup((int) $varValue);
                 $this->BSANewsletter->synchronizeNewsletterBySchiedsrichter((int) $varValue);
             }
 
-            if (0 !== (int) $dc->__get('activeRecord')->$field) {
-                BSAMemberGroup::removeFromChairmansGroup((int) $dc->__get('activeRecord')->$field);
-                $this->BSANewsletter->synchronizeNewsletterBySchiedsrichter((int) $dc->__get('activeRecord')->$field);
+            if (0 !== (int) $dc->activeRecord->$field) {
+                BSAMemberGroup::removeFromChairmansGroup((int) $dc->activeRecord->$field);
+                $this->BSANewsletter->synchronizeNewsletterBySchiedsrichter((int) $dc->activeRecord->$field);
             }
         }
 

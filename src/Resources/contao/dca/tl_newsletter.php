@@ -87,9 +87,9 @@ class tl_bsa_newsletter extends Backend
      */
     public function setDefaultMailerTransport($varValue, DataContainer $dc)
     {
-        if (empty($varValue) && $dc->__get('activeRecord') && $dc->__get('activeRecord')->pid) {
+        if (empty($varValue) && $dc->__get('activeRecord') && $dc->activeRecord->pid) {
             $objChannel = $this->Database->prepare('SELECT mailerTransport FROM tl_newsletter_channel WHERE id=?')
-                ->execute($dc->__get('activeRecord')->pid)
+                ->execute($dc->activeRecord->pid)
             ;
 
             $varValue = $objChannel->__get('mailerTransport') ?: $this->User->email;

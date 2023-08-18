@@ -23,9 +23,12 @@ $GLOBALS['TL_DCA']['tl_bsa_website_data_release'] = [
     // Config
     'config' => [
         'dataContainer' => DC_Table::class,
-        'enableVersioning' => true,
+        'enableVersioning' => false,
         'ondelete_callback' => [
-            [tl_bsa_website_data_release::class, 'deleteFreigabe'],
+            [tl_bsa_website_data_release::class, 'delete'],
+        ],
+        'onundo_callback' => [
+            [tl_bsa_website_data_release::class, 'undoDelete'],
         ],
         'sql' => [
             'keys' => [
@@ -219,9 +222,21 @@ class tl_bsa_website_data_release extends Backend
      * @param DataContainer $dc     Data Container object
      * @param int           $undoId The ID of the tl_undo database record
      */
-    public function deleteFreigabe(DataContainer $dc, $undoId): void
+    public function delete(DataContainer $dc, $undoId): void
     {
-        SRHistory::insert($dc->__get('activeRecord')->refereeId, null, ['Web-Freigabe', 'REMOVE'], 'Die Freigaben des Schiedsrichters %s wurden gelöscht.', __METHOD__);
+        SRHistory::insert($dc->activeRecord->refereeId, null, ['Web-Freigabe', 'REMOVE'], 'Die Freigaben des Schiedsrichters %s wurden gelöscht.', __METHOD__);
+    }
+
+    /**
+     * adding an entry into the referees history.
+     *
+     * @param string        $table Table
+     * @param array<mixed>  $row   Record data
+     * @param DataContainer $dc    Data Container object
+     */
+    public function undoDelete($table, $row, DataContainer $dc): void
+    {
+        SRHistory::insert($row['refereeId'], null, ['Web-Freigabe', 'ADD'], 'Die Freigaben des Schiedsrichters %s wurden wiederhergestellt.', __METHOD__);
     }
 
     /**
@@ -234,11 +249,11 @@ class tl_bsa_website_data_release extends Backend
      */
     public function saveSchiedsrichter($varValue, DataContainer $dc)
     {
-        if ($varValue !== $dc->__get('activeRecord')->refereeId) {
+        if ($varValue !== $dc->activeRecord->refereeId) {
             SRHistory::insert($varValue, null, ['Web-Freigabe', 'ADD'], 'Die Freigaben des Schiedsrichters %s wurden angelegt.', __METHOD__);
 
-            if (0 !== $dc->__get('activeRecord')->refereeId) {
-                SRHistory::insert($dc->__get('activeRecord')->refereeId, null, ['Web-Freigabe', 'REMOVE'], 'Die Freigaben des Schiedsrichters %s wurden gelöscht.', __METHOD__);
+            if (0 !== $dc->activeRecord->refereeId) {
+                SRHistory::insert($dc->activeRecord->refereeId, null, ['Web-Freigabe', 'REMOVE'], 'Die Freigaben des Schiedsrichters %s wurden gelöscht.', __METHOD__);
             }
         }
 
@@ -255,8 +270,8 @@ class tl_bsa_website_data_release extends Backend
      */
     public function switchDateOfBirth($varValue, DataContainer $dc)
     {
-        if ($dc->__get('activeRecord')->showDateOfBirth !== $varValue) {
-            $this->insertRefereeHistory($dc->__get('activeRecord')->refereeId, 'showDateOfBirth', $varValue);
+        if ($dc->activeRecord->showDateOfBirth !== $varValue) {
+            $this->insertRefereeHistory($dc->activeRecord->refereeId, 'showDateOfBirth', $varValue);
         }
 
         return $varValue;
@@ -272,8 +287,8 @@ class tl_bsa_website_data_release extends Backend
      */
     public function switchStreet($varValue, DataContainer $dc)
     {
-        if ($dc->__get('activeRecord')->showStreet !== $varValue) {
-            $this->insertRefereeHistory($dc->__get('activeRecord')->refereeId, 'showStreet', $varValue);
+        if ($dc->activeRecord->showStreet !== $varValue) {
+            $this->insertRefereeHistory($dc->activeRecord->refereeId, 'showStreet', $varValue);
         }
 
         return $varValue;
@@ -289,8 +304,8 @@ class tl_bsa_website_data_release extends Backend
      */
     public function switchZipcode($varValue, DataContainer $dc)
     {
-        if ($dc->__get('activeRecord')->showPostal !== $varValue) {
-            $this->insertRefereeHistory($dc->__get('activeRecord')->refereeId, 'showPostal', $varValue);
+        if ($dc->activeRecord->showPostal !== $varValue) {
+            $this->insertRefereeHistory($dc->activeRecord->refereeId, 'showPostal', $varValue);
         }
 
         return $varValue;
@@ -306,8 +321,8 @@ class tl_bsa_website_data_release extends Backend
      */
     public function switchCity($varValue, DataContainer $dc)
     {
-        if ($dc->__get('activeRecord')->showCity !== $varValue) {
-            $this->insertRefereeHistory($dc->__get('activeRecord')->refereeId, 'showCity', $varValue);
+        if ($dc->activeRecord->showCity !== $varValue) {
+            $this->insertRefereeHistory($dc->activeRecord->refereeId, 'showCity', $varValue);
         }
 
         return $varValue;
@@ -323,8 +338,8 @@ class tl_bsa_website_data_release extends Backend
      */
     public function switchPhone1($varValue, DataContainer $dc)
     {
-        if ($dc->__get('activeRecord')->showPhone1 !== $varValue) {
-            $this->insertRefereeHistory($dc->__get('activeRecord')->refereeId, 'showPhone1', $varValue);
+        if ($dc->activeRecord->showPhone1 !== $varValue) {
+            $this->insertRefereeHistory($dc->activeRecord->refereeId, 'showPhone1', $varValue);
         }
 
         return $varValue;
@@ -340,8 +355,8 @@ class tl_bsa_website_data_release extends Backend
      */
     public function switchPhone2($varValue, DataContainer $dc)
     {
-        if ($dc->__get('activeRecord')->showPhone2 !== $varValue) {
-            $this->insertRefereeHistory($dc->__get('activeRecord')->refereeId, 'showPhone2', $varValue);
+        if ($dc->activeRecord->showPhone2 !== $varValue) {
+            $this->insertRefereeHistory($dc->activeRecord->refereeId, 'showPhone2', $varValue);
         }
 
         return $varValue;
@@ -357,8 +372,8 @@ class tl_bsa_website_data_release extends Backend
      */
     public function switchPhoneMobile($varValue, DataContainer $dc)
     {
-        if ($dc->__get('activeRecord')->showMobile !== $varValue) {
-            $this->insertRefereeHistory($dc->__get('activeRecord')->refereeId, 'showMobile', $varValue);
+        if ($dc->activeRecord->showMobile !== $varValue) {
+            $this->insertRefereeHistory($dc->activeRecord->refereeId, 'showMobile', $varValue);
         }
 
         return $varValue;
@@ -374,8 +389,8 @@ class tl_bsa_website_data_release extends Backend
      */
     public function switchFax($varValue, DataContainer $dc)
     {
-        if ($dc->__get('activeRecord')->showFax !== $varValue) {
-            $this->insertRefereeHistory($dc->__get('activeRecord')->refereeId, 'showFax', $varValue);
+        if ($dc->activeRecord->showFax !== $varValue) {
+            $this->insertRefereeHistory($dc->activeRecord->refereeId, 'showFax', $varValue);
         }
 
         return $varValue;
@@ -391,8 +406,8 @@ class tl_bsa_website_data_release extends Backend
      */
     public function switchEmail($varValue, DataContainer $dc)
     {
-        if ($dc->__get('activeRecord')->showEmail !== $varValue) {
-            $this->insertRefereeHistory($dc->__get('activeRecord')->refereeId, 'showEmail', $varValue);
+        if ($dc->activeRecord->showEmail !== $varValue) {
+            $this->insertRefereeHistory($dc->activeRecord->refereeId, 'showEmail', $varValue);
         }
 
         return $varValue;
@@ -408,8 +423,8 @@ class tl_bsa_website_data_release extends Backend
      */
     public function switchPhoto($varValue, DataContainer $dc)
     {
-        if ($dc->__get('activeRecord')->showPhoto !== $varValue) {
-            $this->insertRefereeHistory($dc->__get('activeRecord')->refereeId, 'showPhoto', $varValue);
+        if ($dc->activeRecord->showPhoto !== $varValue) {
+            $this->insertRefereeHistory($dc->activeRecord->refereeId, 'showPhoto', $varValue);
         }
 
         return $varValue;

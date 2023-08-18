@@ -47,14 +47,14 @@ class BSANewsletter extends System
     /**
      * Synchronisiert die Einträge der Newsletterempfänger für einen Schiedsrichter.
      *
-     * @param int                             $intSR
+     * @param int                             $intSR       The id of the referee
      * @param array<string, integer>|int|null $idsToRemove
      * @param array<string, integer>|int|null $idsToAdd
      */
-    public function synchronizeNewsletterBySchiedsrichter($intSR, $idsToRemove = null, $idsToAdd = null): void
+    public function synchronizeNewsletterBySchiedsrichter(int $intSR, $idsToRemove = null, $idsToAdd = null): void
     {
         if (!\is_int($intSR) || 0 === $intSR) {
-            throw new \Exception('wrong datatype or zero given :'.$intSR);
+            throw new \Exception('wrong datatype or zero given:'.$intSR.' / '.\gettype($intSR));
         }
 
         $objReferee = RefereeModel::findReferee($intSR);
@@ -174,8 +174,8 @@ class BSANewsletter extends System
      */
     public function deleteGruppenmitglied(DataContainer $dc, $undoId): void
     {
-        if ((int) ($dc->__get('activeRecord')->refereeId)) {
-            $this->synchronizeNewsletterBySchiedsrichter((int) $dc->__get('activeRecord')->refereeId, (int) $dc->__get('activeRecord')->pid, null);
+        if ((int) ($dc->activeRecord->refereeId)) {
+            $this->synchronizeNewsletterBySchiedsrichter((int) $dc->activeRecord->refereeId, (int) $dc->activeRecord->pid, null);
         }
     }
 
@@ -188,11 +188,11 @@ class BSANewsletter extends System
     public function deleteNewsletterAssignment(DataContainer $dc, $undoId): void
     {
         $toDelete = [
-            'newsletter_channel_id' => (int) $dc->__get('activeRecord')->newsletterChannelId,
-            'member_group_id' => (int) $dc->__get('activeRecord')->pid,
+            'newsletter_channel_id' => (int) $dc->activeRecord->newsletterChannelId,
+            'member_group_id' => (int) $dc->activeRecord->pid,
         ];
 
-        $arrSR = $this->getRefereesOfGroup((int) $dc->__get('activeRecord')->pid);
+        $arrSR = $this->getRefereesOfGroup((int) $dc->activeRecord->pid);
 
         foreach ($arrSR as $intSR) {
             $this->synchronizeNewsletterBySchiedsrichter($intSR, $toDelete, null);
@@ -209,13 +209,13 @@ class BSANewsletter extends System
      */
     public function saveSchiedsrichterWhileUpdateGruppenmitglied($varValue, DataContainer $dc)
     {
-        if ($varValue !== $dc->__get('activeRecord')->refereeId) {
+        if ($varValue !== $dc->activeRecord->refereeId) {
             if ((int) $varValue) {
-                $this->synchronizeNewsletterBySchiedsrichter((int) $varValue, null, (int) $dc->__get('activeRecord')->pid);
+                $this->synchronizeNewsletterBySchiedsrichter((int) $varValue, null, (int) $dc->activeRecord->pid);
             }
 
-            if ((int) ($dc->__get('activeRecord')->refereeId)) {
-                $this->synchronizeNewsletterBySchiedsrichter($dc->__get('activeRecord')->refereeId, (int) $dc->__get('activeRecord')->pid, null);
+            if ((int) ($dc->activeRecord->refereeId)) {
+                $this->synchronizeNewsletterBySchiedsrichter($dc->activeRecord->refereeId, (int) $dc->activeRecord->pid, null);
             }
         }
 
@@ -232,17 +232,17 @@ class BSANewsletter extends System
      */
     public function saveNewsletterAssignment($varValue, DataContainer $dc)
     {
-        if ($varValue !== $dc->__get('activeRecord')->newsletterChannelId) {
+        if ($varValue !== $dc->activeRecord->newsletterChannelId) {
             $toDelete = [
-                'newsletter_channel_id' => (int) $dc->__get('activeRecord')->newsletterChannelId,
-                'member_group_id' => (int) $dc->__get('activeRecord')->pid,
+                'newsletter_channel_id' => (int) $dc->activeRecord->newsletterChannelId,
+                'member_group_id' => (int) $dc->activeRecord->pid,
             ];
             $toAdd = [
                 'newsletter_channel_id' => (int) $varValue,
-                'member_group_id' => (int) $dc->__get('activeRecord')->pid,
+                'member_group_id' => (int) $dc->activeRecord->pid,
             ];
 
-            $arrSR = $this->getRefereesOfGroup((int) $dc->__get('activeRecord')->pid);
+            $arrSR = $this->getRefereesOfGroup((int) $dc->activeRecord->pid);
 
             foreach ($arrSR as $intSR) {
                 $this->synchronizeNewsletterBySchiedsrichter($intSR, $toDelete, $toAdd);
@@ -312,13 +312,15 @@ class BSANewsletter extends System
      *
      * @param int $groupId The id of the specified group
      *
-     * @return array<integer> list of referee ids
+     * @return array<int> list of referee ids
      */
     private function getRefereesOfGroup($groupId): array
     {
-        return $this->Database->prepare('SELECT refereeId FROM tl_bsa_member_group_referee_assignment WHERE pid=?')
+        $arrRefereeIds = $this->Database->prepare('SELECT refereeId FROM tl_bsa_member_group_referee_assignment WHERE pid=?')
             ->execute($groupId)
             ->fetchEach('refereeId')
         ;
+
+        return array_map('intval', $arrRefereeIds);
     }
 }
