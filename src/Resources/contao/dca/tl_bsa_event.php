@@ -20,24 +20,24 @@ use Teusal\ContaoRefereeHamburgBundle\Model\SeasonModel;
 
 $typs = [];
 
-$typs['']['palettes'] = 'date,seasonId';
-$typs['sitzung']['palettes'] = 'date,seasonId,type';
-$typs['obleute']['palettes'] = 'date,seasonId';
-$typs['training']['palettes'] = 'date,seasonId';
-$typs['regelarbeit']['palettes'] = 'date,seasonId,name,type';
-$typs['coaching']['palettes'] = 'date,seasonId,type';
-$typs['lehrgang']['palettes'] = 'date,seasonId,name';
-$typs['helsen']['palettes'] = 'date,seasonId';
-$typs['sonstige']['palettes'] = 'date,seasonId,name';
+$typs['']['palettes'] = 'seasonId,date';
+$typs['sitzung']['palettes'] = 'seasonId,date,type';
+$typs['obleute']['palettes'] = 'seasonId,date';
+$typs['training']['palettes'] = 'seasonId,date';
+$typs['regelarbeit']['palettes'] = 'seasonId,date,name,type';
+$typs['coaching']['palettes'] = 'seasonId,date,type';
+$typs['lehrgang']['palettes'] = 'seasonId,date,name';
+$typs['helsen']['palettes'] = 'seasonId,date';
+$typs['sonstige']['palettes'] = 'seasonId,date,name';
 
-$typs['']['eval'] = [];
-$typs['sitzung']['eval'] = [];
-$typs['obleute']['eval'] = [];
-$typs['training']['eval'] = [];
-$typs['regelarbeit']['eval'] = ['rgxp' => 'digit', 'mandatory' => true, 'includeBlankOption' => true, 'blankOptionLabel' => 'maximale Punkte wählen'];
-$typs['coaching']['eval'] = [];
-$typs['lehrgang']['eval'] = [];
-$typs['sonstige']['eval'] = [];
+$typs['']['eval'] = ['tl_class' => 'w50 clr'];
+$typs['sitzung']['eval'] = ['tl_class' => 'w50 clr'];
+$typs['obleute']['eval'] = ['tl_class' => 'w50 clr'];
+$typs['training']['eval'] = ['tl_class' => 'w50 clr'];
+$typs['regelarbeit']['eval'] = ['rgxp' => 'digit', 'mandatory' => true, 'includeBlankOption' => true, 'blankOptionLabel' => 'maximale Punkte wählen', 'tl_class' => 'w50 clr'];
+$typs['coaching']['eval'] = ['tl_class' => 'w50 clr'];
+$typs['lehrgang']['eval'] = ['tl_class' => 'w50 clr'];
+$typs['sonstige']['eval'] = ['tl_class' => 'w50 clr'];
 
 $typs['']['values'] = [];
 $typs['sitzung']['values'] = ['n', 'p'];
@@ -124,13 +124,13 @@ $GLOBALS['TL_DCA']['tl_bsa_event'] = [
             'inputType' => 'text',
             'default' => time(),
             'flag' => DataContainer::SORT_MONTH_DESC,
-            'eval' => ['maxlength' => 10, 'rgxp' => 'date', 'mandatory' => true, 'datepicker' => true],
+            'eval' => ['maxlength' => 10, 'rgxp' => 'date', 'mandatory' => true, 'datepicker' => true, 'tl_class' => 'w50 clr'],
             'sql' => "int(10) unsigned NOT NULL default '0'",
         ],
         'seasonId' => [
             'filter' => true,
             'inputType' => 'select',
-            'eval' => ['alwaysSave' => true, 'mandatory' => true, 'multiple' => false, 'includeBlankOption' => true, 'blankOptionLabel' => 'Saison wählen'],
+            'eval' => ['alwaysSave' => true, 'mandatory' => true, 'multiple' => false, 'includeBlankOption' => true, 'blankOptionLabel' => 'Saison wählen', 'tl_class' => 'w50 clr'],
             'foreignKey' => 'tl_bsa_season.name',
             'default' => SeasonModel::getCurrentSeasonId(),
             'sql' => "int(10) unsigned NOT NULL default '0'",
@@ -145,7 +145,7 @@ $GLOBALS['TL_DCA']['tl_bsa_event'] = [
         ],
         'name' => [
             'inputType' => 'text',
-            'eval' => ['mandatory' => true, 'maxlength' => 50],
+            'eval' => ['mandatory' => true, 'maxlength' => 50, 'tl_class' => 'w50 clr'],
             'sql' => "varchar(50) NOT NULL default ''",
         ],
     ],

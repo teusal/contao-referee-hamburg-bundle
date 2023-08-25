@@ -149,7 +149,7 @@ abstract class AbstractEmail extends Email
             $this->isDevEnvironment = true;
         }
 
-        if (\defined('TL_MODE') && TL_MODE === 'BE') {
+        if (\defined('TL_MODE') && TL_MODE === 'BE' && \defined('BE_USER_LOGGED_IN') && BE_USER_LOGGED_IN) {
             $this->setBackendUser(BackendUser::getInstance());
         }
 

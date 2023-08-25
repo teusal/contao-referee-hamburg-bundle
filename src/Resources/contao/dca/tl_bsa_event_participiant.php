@@ -61,15 +61,15 @@ $typs['lehrgang']['values'] = ['a', 'e', 's', 'v'];
 $typs['helsen']['values'] = ['best', '9,5r', '9,0r', '8,5r', '8,0r', '7,5r', '7,0r', '6,5r', '6,0r', '5,5r', '5,0r', '4,5r', '4,0r', '3,5r', '3,0r', '2,5r', '2,0r', '1,5r', '1,0r', '0,5r'];
 $typs['sonstige']['values'] = ['a', 'e', 's', 'v'];
 
-$typs['']['eval'] = [];
-$typs['sitzung']['eval'] = [];
-$typs['obleute']['eval'] = [];
-$typs['training']['eval'] = [];
-$typs['regelarbeit']['eval'] = ['rgxp' => 'digit', 'mandatory' => true];
-$typs['coaching']['eval'] = [];
-$typs['lehrgang']['eval'] = [];
-$typs['helsen']['eval'] = [];
-$typs['sonstige']['eval'] = [];
+$typs['']['eval'] = ['tl_class' => 'w50 clr'];
+$typs['sitzung']['eval'] = ['tl_class' => 'w50 clr'];
+$typs['obleute']['eval'] = ['tl_class' => 'w50 clr'];
+$typs['training']['eval'] = ['tl_class' => 'w50 clr'];
+$typs['regelarbeit']['eval'] = ['rgxp' => 'digit', 'mandatory' => true, 'tl_class' => 'w50 clr'];
+$typs['coaching']['eval'] = ['tl_class' => 'w50 clr'];
+$typs['lehrgang']['eval'] = ['tl_class' => 'w50 clr'];
+$typs['helsen']['eval'] = ['tl_class' => 'w50 clr'];
+$typs['sonstige']['eval'] = ['tl_class' => 'w50 clr'];
 
 $typs['']['global_operations'] = [];
 $typs['sitzung']['global_operations'] = $globalOperations;
@@ -152,7 +152,8 @@ $GLOBALS['TL_DCA']['tl_bsa_event_participiant'] = [
         ],
         'refereeId' => [
             'inputType' => 'select',
-            'eval' => ['multiple' => false, 'mandatory' => true, 'includeBlankOption' => true, 'blankOptionLabel' => 'Schiedsrichter wählen'],
+            'eval' => ['multiple' => false, 'mandatory' => true, 'chosen' => true, 'includeBlankOption' => true, 'blankOptionLabel' => 'Schiedsrichter wählen', 'tl_class' => 'w50'],
+            'options_callback' => ['teusal.referee.available_referees', 'getRefereeOptions'],
             'foreignKey' => 'tl_bsa_referee.nameReverse',
             'sql' => "int(10) unsigned NOT NULL default '0'",
         ],
