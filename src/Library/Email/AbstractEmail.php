@@ -221,7 +221,6 @@ abstract class AbstractEmail extends Email
     {
         return [
             'label' => &$GLOBALS['TL_LANG']['mail_config']['mailerTransport'],
-            'exclude' => true,
             'inputType' => 'select',
             'eval' => ['tl_class' => 'w50', 'includeBlankOption' => true, 'mandatory' => true],
             'options_callback' => ['contao.mailer.available_transports', 'getTransportOptions'],

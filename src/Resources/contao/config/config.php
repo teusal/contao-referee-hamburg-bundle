@@ -144,14 +144,14 @@ ArrayUtil::arrayInsert($GLOBALS['BE_MOD'], 0, [
         'bsa_newsletter' => &$GLOBALS['BE_MOD']['content']['newsletter'],
     ],
     'bsa_ansetzungen' => [
-        'bsa_tauschboerse_settings' => [
-            'tables' => ['tl_bsa_tauschboerse_settings'],
+        'swap_meet_settings' => [
+            'tables' => ['tl_bsa_swap_meet_settings'],
         ],
-        'bsa_export_ansetzungen_settings' => [
+        'export_ansetzungen_settings' => [
             'tables' => ['tl_bsa_export_ansetzungen_settings'],
         ],
-        'bsa_spiele' => [
-            'tables' => ['tl_bsa_spiel'],
+        'spiele' => [
+            'tables' => ['tl_bsa_match'],
         ],
         'edit_vereinsansetzungen' => [
             'callback' => 'ModuleEditVereinsansetzungen',
@@ -251,9 +251,9 @@ ArrayUtil::arrayInsert(
             'bsa_kontakt' => 'ModuleBSAKontakt',
             'bsa_member_group' => 'ModuleMemberGroup',
             'bsa_newsletter_send' => 'ModuleSendNewsletter',
-            'bsa_tauschboerse_add' => 'ModuleBSATauschboerseAdd',
-            'bsa_tauschboerse_edit' => 'ModuleBSATauschboerseEdit',
-            'bsa_tauschboerse_show' => 'ModuleBSATauschboerseShow',
+            'bsa_swap_meet_add' => 'ModuleBSATauschboerseAdd',
+            'bsa_swap_meet_edit' => 'ModuleBSATauschboerseEdit',
+            'bsa_swap_meet_show' => 'ModuleBSATauschboerseShow',
             'veranstaltung_export' => 'ModuleExportVeranstaltungenObleute',
             'bsa_schiedsrichter' => 'ModuleSchiedsrichter',
             'bsa_vereine' => 'ModuleVerein',
