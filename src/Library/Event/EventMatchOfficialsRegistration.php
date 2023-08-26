@@ -61,7 +61,7 @@ class EventMatchOfficialsRegistration extends AbstractEventParticipiantHandler
         $startDate = $this->objEvent->date;
         $endDate = strtotime('+1 DAY', (int) $startDate);
 
-        $arrMatches = $this->Database->prepare("SELECT * FROM tl_bsa_spiel WHERE datum>? AND datum<? AND abgesetzt='' AND (refereeId<>0 OR sra1_id<>0 OR sra2_id<>0 OR 4off_id<>0 OR pate_id<>0)")
+        $arrMatches = $this->Database->prepare("SELECT * FROM tl_bsa_match WHERE datum>? AND datum<? AND abgesetzt='' AND (refereeId<>0 OR sra1_id<>0 OR sra2_id<>0 OR 4off_id<>0 OR pate_id<>0)")
             ->execute($startDate, $endDate)
             ->fetchAllAssoc()
         ;

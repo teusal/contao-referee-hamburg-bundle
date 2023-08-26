@@ -46,7 +46,7 @@ $GLOBALS['TL_LANG']['MOD']['coaching'] = ['Coaching', 'Verwaltung des Coachings'
 $GLOBALS['TL_LANG']['MOD']['lehrgang'] = ['Lehrgänge', 'Verwaltung von Lehrgängen', 'Lehrgang'];
 $GLOBALS['TL_LANG']['MOD']['helsen'] = ['Helsen-Test', 'Verwaltung von Helsen-Tests', 'Helsen-Test'];
 $GLOBALS['TL_LANG']['MOD']['sonstige'] = ['Sonstige', 'Verwaltung von weiteren Veranstaltungen', 'Sonstiges'];
-$GLOBALS['TL_LANG']['MOD']['export_veranstaltungen'] = ['XLS-Export', 'Export der Auswertung über Veranstaltungen'];
+$GLOBALS['TL_LANG']['MOD']['export_veranstaltungen'] = ['TODO | XLS-Export', 'Export der Auswertung über Veranstaltungen'];
 // group bsa_newsletter
 $GLOBALS['TL_LANG']['MOD']['bsa_mailing'] = 'Mailings';
 $GLOBALS['TL_LANG']['MOD']['geburtstagsmail_settings'] = ['Geburtstags-Mail', 'Einstellungen für die E-Mail zum Geburtstag bearbeiten.'];
@@ -57,10 +57,10 @@ $GLOBALS['TL_LANG']['MOD']['bsa_newsletter'] = ['Mail an Verteilerliste', 'Eine 
 $GLOBALS['TL_LANG']['MOD']['bsa_ansetzungen'] = 'Ansetzungen';
 $GLOBALS['TL_LANG']['MOD']['swap_meet_settings'] = ['Einstellungen Tauschbörse', 'Hier werden Parameter für die Tauschbörse eingestellt.'];
 $GLOBALS['TL_LANG']['MOD']['export_matches_settings'] = ['Einstellungen für Exports', 'Einsicht in die Ansetzungen'];
-$GLOBALS['TL_LANG']['MOD']['bsa_spiele'] = ['Übersicht Spiele', 'Einsicht in die Ansetzungen'];
-$GLOBALS['TL_LANG']['MOD']['edit_vereinsansetzungen'] = ['Vereinsansetzungen', 'Hier korrigieren Sie die Spiele, an denen weder ein Verein noch ein Schiedsrichter eingetragen ist.'];
-$GLOBALS['TL_LANG']['MOD']['export_ansetzungen'] = ['XLS-Export Ansetzungen', 'Export der Ansetzungen und Vorbereitung eines Newsletters'];
-$GLOBALS['TL_LANG']['MOD']['export_ansetzungen_statistiken'] = ['XLS-Export Statistiken', 'Export der Statistiken der Ansetzungen'];
+$GLOBALS['TL_LANG']['MOD']['spiele'] = ['Übersicht Spiele', 'Einsicht in die Ansetzungen'];
+$GLOBALS['TL_LANG']['MOD']['edit_vereinsansetzungen'] = ['TODO | Vereinsansetzungen', 'Hier korrigieren Sie die Spiele, an denen weder ein Verein noch ein Schiedsrichter eingetragen ist.'];
+$GLOBALS['TL_LANG']['MOD']['export_ansetzungen'] = ['TODO | XLS-Export Ansetzungen', 'Export der Ansetzungen und Vorbereitung eines Newsletters'];
+$GLOBALS['TL_LANG']['MOD']['export_ansetzungen_statistiken'] = ['TODO | XLS-Export Statistiken', 'Export der Statistiken der Ansetzungen'];
 
 /*
 * Front end modules
