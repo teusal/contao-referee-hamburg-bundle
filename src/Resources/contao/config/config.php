@@ -147,8 +147,8 @@ ArrayUtil::arrayInsert($GLOBALS['BE_MOD'], 0, [
         'swap_meet_settings' => [
             'tables' => ['tl_bsa_swap_meet_settings'],
         ],
-        'export_ansetzungen_settings' => [
-            'tables' => ['tl_bsa_export_ansetzungen_settings'],
+        'export_matches_settings' => [
+            'tables' => ['tl_bsa_export_matches_settings'],
         ],
         'spiele' => [
             'tables' => ['tl_bsa_match'],

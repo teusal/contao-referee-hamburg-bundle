@@ -56,6 +56,11 @@ $GLOBALS['TL_LANG']['MOD']['bsa_newsletter'] = ['Mail an Verteilerliste', 'Eine 
 // group bsa_ansetzungen
 $GLOBALS['TL_LANG']['MOD']['bsa_ansetzungen'] = 'Ansetzungen';
 $GLOBALS['TL_LANG']['MOD']['swap_meet_settings'] = ['Einstellungen Tauschbörse', 'Hier werden Parameter für die Tauschbörse eingestellt.'];
+$GLOBALS['TL_LANG']['MOD']['export_matches_settings'] = ['Einstellungen für Exports', 'Einsicht in die Ansetzungen'];
+$GLOBALS['TL_LANG']['MOD']['bsa_spiele'] = ['Übersicht Spiele', 'Einsicht in die Ansetzungen'];
+$GLOBALS['TL_LANG']['MOD']['edit_vereinsansetzungen'] = ['Vereinsansetzungen', 'Hier korrigieren Sie die Spiele, an denen weder ein Verein noch ein Schiedsrichter eingetragen ist.'];
+$GLOBALS['TL_LANG']['MOD']['export_ansetzungen'] = ['XLS-Export Ansetzungen', 'Export der Ansetzungen und Vorbereitung eines Newsletters'];
+$GLOBALS['TL_LANG']['MOD']['export_ansetzungen_statistiken'] = ['XLS-Export Statistiken', 'Export der Statistiken der Ansetzungen'];
 
 /*
 * Front end modules
@@ -73,3 +78,5 @@ $GLOBALS['TL_LANG']['FMD']['bsa_geburtstag'] = ['Geburtstagsgruß', 'Zeigt einen
 $GLOBALS['TL_LANG']['FMD']['bsa_tauschboerse_add'] = ['Tauschbörse - Neues Spiel', 'Module zum Hinzufügen eines neuen Spiels in die Tasuchbörse'];
 $GLOBALS['TL_LANG']['FMD']['bsa_tauschboerse_edit'] = ['Tauschbörse - Bearbeitung', 'Module zum Bearbeiten der Spiele der Tasuchbörse des '.$GLOBALS['BSA_NAMES'][$GLOBALS['TL_CONFIG']['bsa_name']]];
 $GLOBALS['TL_LANG']['FMD']['bsa_tauschboerse_show'] = ['Tauschbörse - Übersicht', 'Module zum Anzeigen der Spiele der Tasuchbörse des '.$GLOBALS['BSA_NAMES'][$GLOBALS['TL_CONFIG']['bsa_name']]];
+$GLOBALS['TL_LANG']['FMD']['ansetzungen_statistik'] = ['Ansetzungen Statistik', 'Module zur Anzeige über Statistiken von Spielen.'];
+$GLOBALS['TL_LANG']['FMD']['bsa_spiele'] = ['Ansetzungen Liste', 'Module zur Anzeige von Spielen.'];

@@ -111,8 +111,9 @@ abstract class AbstractEmail extends Email
      * @var array<array<string>>
      */
     protected static $currentDate = [
-        ['colspan', '<h1 style="margin-top: 15px; font-weight: bold;">Ersetzungen durch Daten des Vereins des angeschriebenen Schiedsrichters</h1>'],
+        ['colspan', '<h1 style="margin-top: 15px; font-weight: bold;">Ersetzungen durch Werte des aktuellen Datums</h1>'],
         ['#DATUM_TTMMJJJJ#', 'Aktuelles Datum im Format Tag.Monat.Jahr, z.B. 31.12.1990'],
+        ['#DATUM_KW#', 'Aktuelle Kalenderwoche, z.B. 01'],
         ['#DATUM_MONAT#', 'Aktueller Monatsname, z.B. Dezember'],
         ['#DATUM_JAHR#', 'Aktuelles Kalenderjahr, z.B. 1990'],
     ];
@@ -160,6 +161,7 @@ abstract class AbstractEmail extends Email
 
         $this->replacementValues['DATUM'] = [
             'TTMMJJJJ' => Date::parse(Config::get('dateFormat'), time()),
+            'KW' => Date::parse('W', time()),
             'MONAT' => Date::parse('F', time()),
             'JAHR' => Date::parse('Y', time()),
         ];
